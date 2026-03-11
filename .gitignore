@@ -1,0 +1,10 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+android/.gradle/
+android/app/build/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
