@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>F1 Clash Companion - Registrierung</title>
+  <meta name="theme-color" content="#00ffcc" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/f1_neon_nights.png" />
+  <link rel="apple-touch-icon" href="assets/f1_neon_nights.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="lang-bar neon-card" style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 1.2rem;margin-bottom:0.75rem;">
+    <span id="i18nLangLabel" style="color:var(--text-muted);font-size:0.9rem;">Sprache</span>
+    <select id="langSelect" style="background:#0d0f1e;color:#f7f8fc;border:1px solid rgba(255,255,255,.18);border-radius:0.5rem;padding:0.3rem 0.7rem;font-size:0.9rem;cursor:pointer;">
+      <option value="de">🇩🇪 Deutsch</option>
+      <option value="it">🇮🇹 Italiano</option>
+      <option value="en">🇬🇧 English</option>
+    </select>
+  </div>
+
+  <div class="container">
+    <header class="topbar">
+      <h1 id="i18nH1">Spieler Registrierung</h1>
+      <div class="top-actions">
+        <a id="backToAppLink" class="btn-link" href="index.html"><span id="i18nBack">Zurueck zur App</span></a>
+      </div>
+    </header>
+
+    <section class="card">
+      <h2 id="i18nSectionTitle">Registrierungsdaten</h2>
+      <p class="hint" id="i18nHint">Bitte alle Felder ausfuellen. Die Daten werden lokal in deinem Browser gespeichert.</p>
+
+      <form id="registrationForm" class="form-grid" novalidate>
+        <div class="stat">
+          <label for="firstName" id="i18nLblFirstName">Vorname</label>
+          <input id="firstName" name="firstName" type="text" maxlength="60" required />
+        </div>
+
+        <div class="stat">
+          <label for="lastName" id="i18nLblLastName">Nachname</label>
+          <input id="lastName" name="lastName" type="text" maxlength="60" required />
+        </div>
+
+        <div class="stat">
+          <label for="playerType" id="i18nLblPlayerType">Spielertyp</label>
+          <select id="playerType" name="playerType" required>
+            <option value="" id="i18nOptPlaceholder">Bitte waehlen</option>
+            <option value="Einzelspieler" id="i18nOptSolo">Einzelspieler</option>
+            <option value="Teamspieler" id="i18nOptTeam">Teamspieler</option>
+          </select>
+        </div>
+
+        <div class="stat">
+          <label for="nationality" id="i18nLblNationality">Nationalitaet</label>
+          <input id="nationality" name="nationality" type="text" maxlength="60" required />
+        </div>
+
+        <div class="stat">
+          <label for="clashId" id="i18nLblClashId">F1 Clash ID</label>
+          <input id="clashId" name="clashId" type="text" maxlength="40" required />
+        </div>
+
+        <div class="row form-actions">
+          <button id="saveRegistrationButton" type="submit">Registrierung speichern</button>
+          <button id="clearRegistrationButton" type="button">Daten loeschen</button>
+        </div>
+      </form>
+
+      <div id="registrationResult" class="result"></div>
+    </section>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'f1clashRegistration';
+    const PROFILE_LIST_KEY = 'f1clashProfiles';
+    const ACTIVE_PROFILE_KEY = 'f1clashActiveClashId';
+    const LANG_KEY = 'f1clashLang';
+    const NEXT_DEFAULT = 'index.html';
+
+    const T = {
+      de: {
+        pageTitle: 'F1 Clash Companion \u2013 Registrierung',
+        htmlLang: 'de', langLabel: 'Sprache',
+        h1: 'Spieler Registrierung', back: 'Zur\u00fcck zur App',
+        sectionTitle: 'Registrierungsdaten',
+        hint: 'Bitte alle Felder ausf\u00fcllen. Die Daten werden lokal in deinem Browser gespeichert.',
+        firstName: 'Vorname', lastName: 'Nachname', playerType: 'Spielertyp',
+        placeholder: 'Bitte w\u00e4hlen', solo: 'Einzelspieler', team: 'Teamspieler',
+        nationality: 'Nationalit\u00e4t', clashId: 'F1 Clash ID',
+        save: 'Registrierung speichern', clear: 'Daten l\u00f6schen',
+        errFirstName: 'Vorname fehlt.', errLastName: 'Nachname fehlt.',
+        errPlayerType: 'Bitte Spielertyp w\u00e4hlen.',
+        errNationality: 'Nationalit\u00e4t fehlt.', errClashId: 'F1 Clash ID fehlt.',
+        noData: 'Noch keine Registrierungsdaten gespeichert.',
+        invalid: 'Gespeicherte Daten sind ung\u00fcltig.',
+        loaded: 'Gespeicherte Registrierung geladen.',
+        saved: 'Registrierung gespeichert. Weiterleitung\u2026',
+        cleared: 'Registrierungsdaten gel\u00f6scht.'
+      },
+      it: {
+        pageTitle: 'F1 Clash Companion \u2013 Registrazione',
+        htmlLang: 'it', langLabel: 'Lingua',
+        h1: 'Registrazione Giocatore', back: "Torna all'App",
+        sectionTitle: 'Dati di Registrazione',
+        hint: 'Compila tutti i campi. I dati vengono salvati localmente nel browser.',
+        firstName: 'Nome', lastName: 'Cognome', playerType: 'Tipo Giocatore',
+        placeholder: 'Seleziona', solo: 'Giocatore Singolo', team: 'Giocatore di Squadra',
+        nationality: 'Nazionalit\u00e0', clashId: 'F1 Clash ID',
+        save: 'Salva Registrazione', clear: 'Cancella Dati',
+        errFirstName: 'Nome mancante.', errLastName: 'Cognome mancante.',
+        errPlayerType: 'Seleziona il tipo di giocatore.',
+        errNationality: 'Nazionalit\u00e0 mancante.', errClashId: 'F1 Clash ID mancante.',
+        noData: 'Nessun dato di registrazione salvato.',
+        invalid: 'I dati salvati non sono validi.',
+        loaded: 'Registrazione caricata.',
+        saved: "Registrazione salvata. Reindirizzamento all'app\u2026",
+        cleared: 'Dati cancellati.'
+      },
+      en: {
+        pageTitle: 'F1 Clash Companion \u2013 Registration',
+        htmlLang: 'en', langLabel: 'Language',
+        h1: 'Player Registration', back: 'Back to App',
+        sectionTitle: 'Registration Data',
+        hint: 'Please fill in all fields. Data is stored locally in your browser.',
+        firstName: 'First Name', lastName: 'Last Name', playerType: 'Player Type',
+        placeholder: 'Please select', solo: 'Solo Player', team: 'Team Player',
+        nationality: 'Nationality', clashId: 'F1 Clash ID',
+        save: 'Save Registration', clear: 'Delete Data',
+        errFirstName: 'First name missing.', errLastName: 'Last name missing.',
+        errPlayerType: 'Please select a player type.',
+        errNationality: 'Nationality missing.', errClashId: 'F1 Clash ID missing.',
+        noData: 'No registration data saved yet.',
+        invalid: 'Saved registration data is invalid.',
+        loaded: 'Saved registration loaded.',
+        saved: 'Registration saved. Redirecting\u2026',
+        cleared: 'Registration data deleted.'
+      }
+    };
+
+    function byId(id) { return document.getElementById(id); }
+
+    function getLang() {
+      const stored = localStorage.getItem(LANG_KEY);
+      if (stored && T[stored]) return stored;
+      const browser = (navigator.language || '').split('-')[0].toLowerCase();
+      if (T[browser]) return browser;
+      return 'de';
+    }
+
+    function applyLang(lang) {
+      const t = T[lang] || T.de;
+      document.documentElement.lang = t.htmlLang;
+      document.title = t.pageTitle;
+      byId('i18nLangLabel').textContent = t.langLabel;
+      byId('i18nH1').textContent = t.h1;
+      byId('i18nBack').textContent = t.back;
+      byId('i18nSectionTitle').textContent = t.sectionTitle;
+      byId('i18nHint').textContent = t.hint;
+      byId('i18nLblFirstName').textContent = t.firstName;
+      byId('i18nLblLastName').textContent = t.lastName;
+      byId('i18nLblPlayerType').textContent = t.playerType;
+      byId('i18nOptPlaceholder').textContent = t.placeholder;
+      byId('i18nOptSolo').textContent = t.solo;
+      byId('i18nOptTeam').textContent = t.team;
+      byId('i18nLblNationality').textContent = t.nationality;
+      byId('i18nLblClashId').textContent = t.clashId;
+      byId('saveRegistrationButton').textContent = t.save;
+      byId('clearRegistrationButton').textContent = t.clear;
+      byId('langSelect').value = lang;
+    }
+
+    function getNextTarget() {
+      const params = new URLSearchParams(window.location.search);
+      const next = (params.get('next') || '').trim();
+      if (!next) return NEXT_DEFAULT;
+      if (next.startsWith('http://') || next.startsWith('https://') || next.startsWith('//')) return NEXT_DEFAULT;
+      return next;
+    }
+
+    function applyNextLink() {
+      const link = byId('backToAppLink');
+      if (link) link.href = getNextTarget();
+    }
+
+    function setResult(text, kind = 'info') {
+      const out = byId('registrationResult');
+      if (!out) return;
+      out.textContent = text;
+      out.dataset.kind = kind;
+    }
+
+    function normalize(value) { return String(value || '').trim(); }
+
+    function getFormData() {
+      return {
+        firstName: normalize(byId('firstName').value),
+        lastName: normalize(byId('lastName').value),
+        playerType: normalize(byId('playerType').value),
+        nationality: normalize(byId('nationality').value),
+        clashId: normalize(byId('clashId').value)
+      };
+    }
+
+    function validate(data) {
+      const t = T[getLang()] || T.de;
+      if (!data.firstName) return t.errFirstName;
+      if (!data.lastName) return t.errLastName;
+      if (!data.playerType) return t.errPlayerType;
+      if (!data.nationality) return t.errNationality;
+      if (!data.clashId) return t.errClashId;
+      return null;
+    }
+
+    function fillForm(data) {
+      byId('firstName').value = data.firstName || '';
+      byId('lastName').value = data.lastName || '';
+      byId('playerType').value = data.playerType || '';
+      byId('nationality').value = data.nationality || '';
+      byId('clashId').value = data.clashId || '';
+    }
+
+    function loadRegistration() {
+      const t = T[getLang()] || T.de;
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) { setResult(t.noData, 'error'); return; }
+      try {
+        const data = JSON.parse(raw);
+        fillForm(data);
+        setResult(t.loaded);
+      } catch {
+        setResult(t.invalid, 'error');
+      }
+    }
+
+    function saveRegistration(event) {
+      event.preventDefault();
+      const t = T[getLang()] || T.de;
+      const data = getFormData();
+      const error = validate(data);
+      if (error) { setResult(error, 'error'); return; }
+      const payload = { ...data, lang: getLang(), updatedAt: new Date().toISOString() };
+      const listRaw = localStorage.getItem(PROFILE_LIST_KEY);
+      let list = [];
+      try { list = JSON.parse(listRaw) || []; } catch { list = []; }
+      if (!Array.isArray(list)) list = [];
+      const idx = list.findIndex((e) => e && e.clashId === payload.clashId);
+      if (idx >= 0) list[idx] = { ...list[idx], ...payload };
+      else list.push(payload);
+      localStorage.setItem(PROFILE_LIST_KEY, JSON.stringify(list));
+      localStorage.setItem(ACTIVE_PROFILE_KEY, payload.clashId);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      setResult(t.saved);
+      setTimeout(() => { window.location.href = getNextTarget(); }, 350);
+    }
+
+    function clearRegistration() {
+      const t = T[getLang()] || T.de;
+      localStorage.removeItem(STORAGE_KEY);
+      fillForm({});
+      setResult(t.cleared);
+    }
+
+    const _initLang = getLang();
+    applyLang(_initLang);
+    applyNextLink();
+    loadRegistration();
+
+    byId('langSelect').addEventListener('change', function(e) {
+      const lang = e.target.value;
+      localStorage.setItem(LANG_KEY, lang);
+      applyLang(lang);
+      loadRegistration();
+    });
+    byId('registrationForm').addEventListener('submit', saveRegistration);
+    byId('clearRegistrationButton').addEventListener('click', clearRegistration);
+  </script>
+  <footer style="text-align:center;padding:1rem;color:#9aa2c0;font-size:0.85rem;">Copyright © Sunwalker NP</footer>
+</body>
+</html>
+
+
+
+
+

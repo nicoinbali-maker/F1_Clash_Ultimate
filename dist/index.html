@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>F1 Clash Companion 2026 – Ultimate</title>
+  <meta name="theme-color" content="#0a0d17" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/f1_neon_nights.png" />
+  <link rel="apple-touch-icon" href="assets/f1_neon_nights.png" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+  <script src="i18n.js"></script>
+  <script defer src="script.js"></script>
+  <script defer src="advanced.js"></script>
+</head>
+<body class="neon-body">
+  <script>if (!localStorage.getItem('f1clashRegistration')) { window.location.replace('registration.html?next=index.html'); }</script>
+  <div class="app-shell">
+    <div class="lang-bar neon-card" style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 1.2rem;">
+      <span data-i18n="lang_label" style="color:var(--text-muted,#9aa2c0);font-size:0.9rem;">Sprache</span>
+      <select id="appLangSelect" style="background:#0d0f1e;color:#f7f8fc;border:1px solid rgba(255,255,255,.18);border-radius:0.5rem;padding:0.3rem 0.7rem;font-size:0.9rem;cursor:pointer;">
+        <option value="de">🇩🇪 Deutsch</option>
+        <option value="it">🇮🇹 Italiano</option>
+        <option value="en">🇬🇧 English</option>
+      </select>
+    </div>
+    <header class="topbar neon-card">
+      <div class="brand">
+        <img src="assets/f1_neon_nights.png" alt="F1 Neon Nights" class="brand-icon" />
+        <div>
+          <h1>F1 Clash Companion</h1>
+          <p data-i18n="brand_subtitle">Ultimate Toolkit für saisonale Optimierung & Hall of Fame</p>
+        </div>
+      </div>
+      <div class="season-control">
+        <div>
+          <span data-i18n="app_start_label">App-Start</span>
+          <strong>2025</strong>
+        </div>
+        <div>
+          <span data-i18n="sync_label">Sync mit F1 Clash Update</span>
+          <button id="seasonSyncButton" class="pill" data-i18n="season_begin_btn">2026 beginnen</button>
+        </div>
+        <div>
+          <span data-i18n="current_season_label">Aktuelle Saison</span>
+          <button id="seasonBadge" class="badge neon-badge">2025</button>
+        </div>
+      </div>
+    </header>
+
+    <nav class="subnav neon-card">
+      <a href="#dashboard" data-i18n="nav_dashboard">Dashboard</a>
+      <a href="#garage" data-i18n="nav_garage">Garage</a>
+      <a href="optimizer.html" data-i18n="nav_optimizer">Optimizer</a>
+      <a href="#race" data-i18n="nav_race">Simulator</a>
+      <a href="#team" data-i18n="nav_clan">Clan</a>
+      <a href="#leaderboard" data-i18n="nav_leaderboard">Leaderboard</a>
+      <a href="#hallOfFame" data-i18n="nav_hof">Hall of Fame</a>
+      <a href="#personal" data-i18n="nav_personal">Persönlich</a>
+      <a href="#registration" data-i18n="nav_registration">Registrierung</a>
+    </nav>
+
+    <main>
+      <section id="dashboard" class="panel neon-card">
+        <header>
+          <h2 data-i18n="dash_h2">Manager Dashboard</h2>
+          <p data-i18n="dash_p">Neon Gamer UI mit KPIs, Export/Import & komplettem DB-Zugriff</p>
+        </header>
+        <div class="kpi-grid">
+          <div class="kpi">
+            <span data-i18n="kpi_parts">Teile DB</span>
+            <strong id="partsCount">0</strong>
+          </div>
+          <div class="kpi">
+            <span data-i18n="kpi_drivers">Fahrer DB</span>
+            <strong id="driversCount">0</strong>
+          </div>
+          <div class="kpi">
+            <span data-i18n="kpi_owned">Owned Teile</span>
+            <strong id="ownedCount">0</strong>
+          </div>
+          <div class="kpi">
+            <span data-i18n="kpi_combos">Kombinationen</span>
+            <strong id="comboCount">0</strong>
+          </div>
+        </div>
+        <div class="db-row">
+          <div>
+            <h3 data-i18n="parts_db_h3">Teile-Datenbank</h3>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th data-i18n="th_part">Teil</th>
+                  <th data-i18n="th_cat">Kat.</th>
+                  <th data-i18n="th_speed">Tempo</th>
+                  <th data-i18n="th_corner">Kurven</th>
+                  <th data-i18n="th_power">Antrieb</th>
+                  <th data-i18n="th_quali">Quali</th>
+                  <th data-i18n="th_tire">Reifen</th>
+                </tr>
+              </thead>
+              <tbody id="partsTableBody"></tbody>
+            </table>
+          </div>
+          <div class="export-panel">
+            <h3 data-i18n="export_import_h3">Saison-Setup Export / Import</h3>
+            <textarea id="exportJson" data-i18n-ph="export_ph" placeholder="Export (JSON)"></textarea>
+            <button id="exportButton" class="pill" data-i18n="export_btn">Export vorbereiten</button>
+            <textarea id="importJson" data-i18n-ph="import_ph" placeholder="Import (JSON)"></textarea>
+            <button id="importButton" class="pill" data-i18n="import_btn">Import durchführen</button>
+            <p class="hint" data-i18n="export_hint">Jede Saison speichert Arrays mit Setup-IDs, Reifenstrategie und Teamwert.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="syncConsent" class="panel neon-card">
+        <header>
+          <h2 data-i18n="sync_h2">Account-Sync & Datenfreigabe</h2>
+          <p data-i18n="sync_p">Nur mit ausdruecklicher Zustimmung. Direkter Zugriff auf interne F1-Clash-Appdaten ist nicht moeglich.</p>
+        </header>
+        <div class="row">
+          <label for="f1SyncMethod" data-i18n="sync_method_label">Sync-Methode</label>
+          <select id="f1SyncMethod">
+            <option value="official_api" data-i18n="opt_official_api">Offizielle API (bevorzugt)</option>
+            <option value="screenshot_ocr" data-i18n="opt_ocr">Screenshot OCR (Fallback)</option>
+            <option value="manual_import" data-i18n="opt_manual">Manueller JSON-Import</option>
+          </select>
+          <label for="f1SyncConsent">
+            <input id="f1SyncConsent" type="checkbox" />
+            <span data-i18n="sync_consent_cb">Ich erlaube die Verarbeitung meiner Fahrer-, Parts- und Setup-Daten.</span>
+          </label>
+        </div>
+        <div class="row">
+          <button id="f1SyncGrantButton" class="pill" type="button" data-i18n="sync_grant_btn">Zustimmung speichern</button>
+          <button id="f1SyncFetchButton" class="pill" type="button" data-i18n="sync_fetch_btn">Datenabruf starten</button>
+          <button id="f1SyncTestButton" class="pill" type="button" data-i18n="sync_test_btn">API-Verbindung testen</button>
+          <button id="f1SyncRevokeButton" class="pill" type="button" data-i18n="sync_revoke_btn">Zustimmung widerrufen</button>
+        </div>
+        <div class="sync-config">
+          <label for="f1ApiBaseUrl" data-i18n="api_url_label">API Base URL</label>
+          <input id="f1ApiBaseUrl" type="url" placeholder="https://api.example.com" />
+          <label for="f1ApiClientId" data-i18n="api_client_label">Client ID</label>
+          <input id="f1ApiClientId" type="text" placeholder="client-id" />
+          <label for="f1ApiToken" data-i18n="api_token_label">Access Token</label>
+          <input id="f1ApiToken" type="password" placeholder="Bearer Token" />
+          <button id="f1ApiSaveButton" class="pill" type="button" data-i18n="api_save_btn">API-Konfig speichern</button>
+        </div>
+        <div class="row">
+          <label for="f1SyncMockMode">
+            <input id="f1SyncMockMode" type="checkbox" />
+            <span data-i18n="mock_mode_cb">Mock-Modus (lokale Testdaten statt echter API)</span>
+          </label>
+          <button id="f1SyncPreviewMock" class="pill" type="button" data-i18n="mock_preview_btn">Mock-Snapshot anzeigen</button>
+        </div>
+        <div class="sync-meta">
+          <span data-i18n="sync_profile_lbl">Profil:</span> <strong id="f1SyncProfile">-</strong>
+          <span data-i18n="sync_state_lbl">Freigabe:</span> <strong id="f1SyncState">nicht erteilt</strong>
+          <span data-i18n="sync_updated_lbl">Zuletzt geaendert:</span> <strong id="f1SyncUpdatedAt">-</strong>
+          <span data-i18n="sync_mode_lbl">Modus:</span> <strong id="f1SyncModeLabel">Live</strong>
+        </div>
+        <div id="f1SyncResult" class="result"></div>
+      </section>
+
+      <section id="garage" class="panel neon-card">
+        <header>
+          <h2 data-i18n="garage_h2">Drag-and-Drop Garage & Inventar-Scanner</h2>
+          <p data-i18n="garage_p">Inventarscanner + OCR + Setup-Zuweisung pro Spielerprofil (Einzel/Team).</p>
+        </header>
+        <div class="row">
+          <label for="inventorySearch" data-i18n="inventory_search_lbl">Inventar suchen</label>
+          <input id="inventorySearch" type="search" data-i18n-ph="inventory_search_ph" placeholder="Part-Name oder ID" />
+        </div>
+        <div id="garageGrid" class="builder-grid six">
+          <div class="drop-slot" data-category="engine" id="slot_engine">Engine: Drop Part here</div>
+          <div class="drop-slot" data-category="front_wing" id="slot_front_wing">Front Wing: Drop Part here</div>
+          <div class="drop-slot" data-category="rear_wing" id="slot_rear_wing">Rear Wing: Drop Part here</div>
+          <div class="drop-slot" data-category="gearbox" id="slot_gearbox">Gearbox: Drop Part here</div>
+          <div class="drop-slot" data-category="suspension" id="slot_suspension">Suspension: Drop Part here</div>
+          <div class="drop-slot" data-category="brakes" id="slot_brakes">Brakes: Drop Part here</div>
+        </div>
+        <h3 data-i18n="parts_inventory_h3">Teile-Garage (draggable)</h3>
+        <div id="partsInventory" class="inventory-grid"></div>
+        <h3 data-i18n="drivers_h3">Fahrer-Manager</h3>
+        <p data-i18n="drivers_p">Fahrerstufen als Dropdown von S1 bis S12, inkl. Untersektionen Legendäre Fahrer und Spezial Edition.</p>
+        <div class="driver-sections">
+          <div>
+            <h4 data-i18n="drivers_standard_h4">Standard Fahrer</h4>
+            <div id="driversStandardList" class="inventory-grid"></div>
+          </div>
+          <div>
+            <h4 data-i18n="drivers_legendary_h4">Legendäre Fahrer</h4>
+            <div id="driversLegendaryList" class="inventory-grid"></div>
+          </div>
+          <div>
+            <h4 data-i18n="drivers_special_h4">Spezial Edition</h4>
+            <div id="driversSpecialList" class="inventory-grid"></div>
+          </div>
+        </div>
+        <div class="row">
+          <button id="manualScoreButton" class="pill" data-i18n="score_btn">Setup bewerten</button>
+          <button id="saveSetupButton" class="pill" data-i18n="save_setup_btn">Saison Setup speichern</button>
+        </div>
+        <div id="builderResult" class="result"></div>
+        <div class="ocr-panel">
+          <h3 data-i18n="ocr_h3">Inventar-Scanner (OCR)</h3>
+          <input id="ocrFile" type="file" accept="image/*" aria-label="Inventar Bild" />
+          <button id="ocrButton" class="pill" data-i18n="ocr_btn">OCR starten</button>
+          <div id="ocrResult" class="result"></div>
+        </div>
+      </section>
+
+      <section id="optimizer" class="panel neon-card">
+        <header>
+          <h2 data-i18n="optimizer_h2">Setup-Optimizer & KI-Strategie</h2>
+        </header>
+        <div class="row">
+          <label for="trackSelect" data-i18n="track_lbl">Strecke</label>
+          <select id="trackSelect"></select>
+          <button id="autoBuildButton" class="pill" data-i18n="auto_setup_btn">AutoSetup erstellen</button>
+        </div>
+        <div class="row">
+          <button id="optimizeButton" class="pill" data-i18n="best_setup_btn">Bestes Setup für Strecke</button>
+          <button id="optimizeAllButton" class="pill" data-i18n="all_tracks_btn">Alle Strecken simulieren</button>
+        </div>
+        <div class="radar-wrap">
+          <svg id="trackCircuitSvg" class="circuit-bg" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
+          <canvas id="trackRadarChart" height="220"></canvas>
+        </div>
+        <canvas id="seasonBestChart" height="200"></canvas>
+        <div id="optimizerResult" class="result"></div>
+        <div class="row">
+          <label for="strategyTrackSelect" data-i18n="strategy_track_lbl">Strategie-Strecke</label>
+          <select id="strategyTrackSelect"></select>
+          <label for="strategyMode" data-i18n="strategy_mode_lbl">Strategie</label>
+          <select id="strategyMode">
+            <option value="auto" data-i18n="opt_auto">Auto</option>
+            <option value="one_stop" data-i18n="opt_one_stop">1-Stop</option>
+            <option value="two_stop" data-i18n="opt_two_stop">2-Stop</option>
+            <option value="balanced" data-i18n="opt_balanced">Balanced</option>
+            <option value="aggressive" data-i18n="opt_aggressive">Aggressive</option>
+          </select>
+          <button id="strategyButton" class="pill" data-i18n="strategy_btn">Strategie kalkulieren</button>
+          <button id="raceSimButton" class="pill" data-i18n="race_sim_btn">Rennen simulieren</button>
+        </div>
+        <canvas id="strategyChart" height="180"></canvas>
+        <canvas id="raceChart" height="200"></canvas>
+        <canvas id="positionChart" height="180"></canvas>
+        <div id="strategyResult" class="result"></div>
+        <div class="row">
+          <label for="driverImpactMode" data-i18n="driver_impact_lbl">Driver Impact Modus</label>
+          <select id="driverImpactMode">
+            <option value="effective" data-i18n="opt_effective">Top 5 Effektivwert</option>
+            <option value="stage" data-i18n="opt_stage">Top 5 Stage-Einfluss</option>
+            <option value="community" data-i18n="opt_community">Top 5 Community-Boosted</option>
+          </select>
+        </div>
+        <div id="driverImpactResult" class="result"></div>
+        <canvas id="driverImpactChart" height="180"></canvas>
+        <div id="raceResult" class="result"></div>
+      </section>
+
+      <section id="team" class="panel neon-card">
+        <header>
+          <h2 data-i18n="team_h2">Team- / Clan-Dashboard</h2>
+          <p data-i18n="team_p">Cloud-Sync, Team-Setups und Score-Prognosen für mehrere Spieler.</p>
+        </header>
+        <div class="row">
+          <label for="teamNameInput" data-i18n="team_name_lbl">Teamname</label>
+          <input id="teamNameInput" type="text" data-i18n-ph="team_name_ph" placeholder="Neon Clan" />
+          <label for="teamMemberSelect" data-i18n="team_member_lbl">Mitglied</label>
+          <select id="teamMemberSelect"></select>
+          <button id="teamAddMemberButton" class="pill" data-i18n="add_member_btn">Mitglied hinzufügen</button>
+        </div>
+        <div class="row">
+          <button id="teamSaveButton" class="pill" data-i18n="save_team_btn">Team speichern</button>
+          <button id="teamLoadButton" class="pill" data-i18n="load_team_btn">Team laden</button>
+          <button id="teamExportButton" class="pill" data-i18n="export_team_btn">Team exportieren</button>
+          <button id="teamImportButton" class="pill" data-i18n="import_team_btn">Team importieren</button>
+          <input id="teamImportFile" type="file" accept="application/json" hidden />
+        </div>
+        <div id="teamMembersView" class="result"></div>
+        <div class="row">
+          <button id="cloudSyncButton" class="pill" data-i18n="cloud_sync_btn">Team-Cloud synchronisieren</button>
+          <button id="notifyButton" class="pill" data-i18n="notify_btn">Push für Rennen senden</button>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th data-i18n="table_player">Spieler</th>
+              <th data-i18n="table_role">Rolle</th>
+              <th data-i18n="table_strategy">Strategie</th>
+              <th data-i18n="table_score">Teamscore</th>
+              <th data-i18n="table_setup">Letztes Setup</th>
+            </tr>
+          </thead>
+          <tbody id="teamScoreTable"></tbody>
+        </table>
+        <div id="teamScoreResult" class="result"></div>
+        <div id="teamResult" class="result"></div>
+      </section>
+
+      <section id="leaderboard" class="panel neon-card">
+        <header>
+          <h2 data-i18n="lb_h2">Leaderboard & KI-Analyse</h2>
+        </header>
+        <div class="row">
+          <button id="refreshLeaderboardButton" class="pill" data-i18n="lb_refresh_btn">Leaderboard aktualisieren</button>
+          <button id="analyzePerformanceButton" class="pill" data-i18n="lb_analyze_btn">KI-Analyse ausführen</button>
+        </div>
+        <div class="leader-grid">
+          <ul id="leaderboardList"></ul>
+          <div>
+            <h3 data-i18n="ai_recommendations_h3">KI-Empfehlungen</h3>
+            <ul id="aiSuggestions"></ul>
+          </div>
+          <div id="competitorPanel"></div>
+        </div>
+        <div id="leaderboardResult" class="result"></div>
+        <div id="aiAnalysisResult" class="result"></div>
+      </section>
+
+      <section id="hallOfFame" class="panel neon-card">
+        <header>
+          <h2 data-i18n="hof_h2">Ruhmeshalle</h2>
+          <p data-i18n="hof_p">Alle Erfolge, Items und Fahrer werden bei Saisonwechsel 2025→2026 exportiert.</p>
+        </header>
+        <div class="row">
+          <div>
+            <h3 data-i18n="hof_achievements_h3">Erfolge</h3>
+            <ol id="hallOfFameRecords"></ol>
+          </div>
+          <div>
+            <h3 data-i18n="hof_items_h3">Items</h3>
+            <ul id="hallOfFameItems"></ul>
+          </div>
+          <div>
+            <h3 data-i18n="hof_drivers_h3">Fahrer</h3>
+            <ul id="hallOfFameDrivers"></ul>
+          </div>
+        </div>
+        <div class="row">
+          <button id="seasonAdvanceButton" class="pill" data-i18n="season_advance_btn">Saison 2025 abschließen → 2026 starten</button>
+          <div id="seasonNotes" class="result"></div>
+        </div>
+      </section>
+
+      <section id="personal" class="panel neon-card">
+        <header>
+          <h2 data-i18n="personal_h2">Persönliches Dashboard</h2>
+        </header>
+        <div class="row">
+          <button id="refreshPersonalSuggestionsButton" class="pill" data-i18n="refresh_suggestions_btn">Empfehlungen aktualisieren</button>
+          <button id="enableNotificationsButton" class="pill" data-i18n="enable_notif_btn">Push aktivieren</button>
+          <button id="notifyRaceButton" class="pill" data-i18n="notify_race_btn">Race-Push senden</button>
+          <button id="notifyPitButton" class="pill" data-i18n="notify_pit_btn">Pit-Push planen</button>
+        </div>
+        <div class="row">
+          <label for="friendCompareSelect" data-i18n="friend_compare_lbl">Freund/Clanmitglied</label>
+          <select id="friendCompareSelect"></select>
+          <button id="compareFriendButton" class="pill" data-i18n="compare_btn">Vergleichen</button>
+        </div>
+        <div class="suggestion-grid" id="personalSuggestions"></div>
+        <div id="personalSuggestionsResult" class="result"></div>
+        <div id="friendCompareResult" class="result"></div>
+        <div class="notifications">
+            <h3 data-i18n="push_log_h3">Push-Log & Empfehlungen</h3>
+          <div id="notificationLog"></div>
+        </div>
+        <div id="notificationStatusResult" class="result"></div>
+      </section>
+
+      <section id="registration" class="panel neon-card">
+        <header>
+          <h2 data-i18n="reg_h2">Gamer Registration</h2>
+          <p data-i18n="reg_p">Egal ob Einzelspieler oder Team-Lead – alle Daten landen in der Clan-Cloud.</p>
+        </header>
+        <form id="registrationForm">
+          <div class="grid two">
+            <label>
+              <span data-i18n="reg_first_name">Vorname</span>
+              <input type="text" name="firstName" required />
+            </label>
+            <label>
+              <span data-i18n="reg_last_name">Nachname</span>
+              <input type="text" name="lastName" required />
+            </label>
+          </div>
+          <div class="grid two">
+            <label>
+              <span data-i18n="reg_player_type">Einzel- oder Teamspieler</span>
+              <select name="playerType" required>
+                <option value="single" data-i18n="reg_single_opt">Einzel</option>
+                <option value="team" data-i18n="reg_team_opt">Team</option>
+              </select>
+            </label>
+            <label>
+              <span data-i18n="reg_nationality">Nationalität</span>
+              <input type="text" name="nationality" required />
+            </label>
+          </div>
+          <div class="row">
+            <label>
+              <span data-i18n="reg_clash_id">F1 Clash ID</span>
+              <input type="text" name="f1Id" required />
+            </label>
+          </div>
+          <button type="submit" class="pill" data-i18n="reg_submit_btn">Registrieren</button>
+        </form>
+        <div id="registrationResult" class="result"></div>
+      </section>
+    </main>
+
+    <div id="chartPopup" class="chart-popup" hidden>
+      <div class="chart-popup-backdrop" data-popup-close="true"></div>
+      <div class="chart-popup-dialog neon-card" role="dialog" aria-modal="true" aria-labelledby="chartPopupTitle">
+        <div class="chart-popup-header">
+          <div>
+            <h3 id="chartPopupTitle">Diagrammwerte</h3>
+            <p id="chartPopupSubtitle" class="chart-popup-subtitle"></p>
+          </div>
+          <button id="chartPopupClose" class="pill" type="button" data-i18n="close_btn">Schließen</button>
+        </div>
+        <div class="chart-popup-table-wrap">
+          <table class="data-table chart-popup-table">
+            <thead id="chartPopupHead"></thead>
+            <tbody id="chartPopupBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer neon-card">
+      <p data-i18n="copyright">Copyright © Sunwalker NP</p>
+    </footer>
+  </div>
+</body>
+</html>

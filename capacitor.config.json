@@ -1,0 +1,9 @@
+{
+  "appId": "com.sunwalker.f1clashcompanion",
+  "appName": "F1 Clash Companion",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}

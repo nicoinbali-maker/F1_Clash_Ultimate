@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ruhmeshalle</title>
+  <meta name="theme-color" content="#00ffcc" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/f1_neon_nights.png" />
+  <link rel="apple-touch-icon" href="assets/f1_neon_nights.png" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="i18n.js"></script>
+  <script defer src="hallOfFame.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="lang-bar" style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 1.2rem;background:rgba(13,15,30,.85);border-bottom:1px solid rgba(255,255,255,.08);">
+      <span data-i18n="lang_label" style="color:#9aa2c0;font-size:0.9rem;">Sprache</span>
+      <select id="appLangSelect" style="background:#0d0f1e;color:#f7f8fc;border:1px solid rgba(255,255,255,.18);border-radius:0.5rem;padding:0.3rem 0.7rem;font-size:0.9rem;cursor:pointer;">
+        <option value="de">🇩🇪 Deutsch</option>
+        <option value="it">🇮🇹 Italiano</option>
+        <option value="en">🇬🇧 English</option>
+      </select>
+    </div>
+    <header class="topbar">
+      <h1 data-i18n="hof_page_h1">Ruhmeshalle</h1>
+      <div class="top-actions">
+        <a class="btn-link" href="index.html" data-i18n="hof_page_back">Zurueck zur App</a>
+        <a class="btn-link" href="registration.html" data-i18n="hof_page_edit_profile">Profil bearbeiten</a>
+      </div>
+    </header>
+
+    <section class="card hall-hero">
+      <div class="hall-hero__content">
+        <p class="hall-hero__lead" data-i18n="hof_page_hero_lead">
+          Start 2025, Synchronisation 2026 – die Ruhmeshalle bewahrt jeden Erfolg, jedes Teil und jeden Fahrer aus der Vorjahressaison.
+          Gleichzeitig beginnt 2026 wieder bei Null, damit du jeden neuen Fund direkt im Neon-Archiv siehst.
+        </p>
+        <div class="hall-hero__chips">
+          <span data-i18n="hof_chip_archive">2025 Archiv</span>
+          <span data-i18n="hof_chip_restart">2026 Neustart</span>
+          <span data-i18n="hof_chip_neon">Neon Gamer</span>
+        </div>
+        <div id="hallTimeline" class="hall-timeline"></div>
+        <div class="hall-hero__actions">
+          <button id="exportHallButton" type="button" data-i18n="hof_export_btn">Ruhmeshalle exportieren (JSON)</button>
+          <button id="refreshHallButton" type="button" data-i18n="hof_refresh_btn">Daten neu laden</button>
+        </div>
+        <div id="hallExportResult" class="result"></div>
+      </div>
+    </section>
+
+    <section class="card hall-grid">
+      <div class="hall-column">
+        <h2 data-i18n="hof_col_achievements_h2">Erfolge & Chronik</h2>
+        <div id="achievementList" class="hall-list"></div>
+        <div id="seasonHistory" class="hall-season-list"></div>
+      </div>
+      <div class="hall-column">
+        <h2 data-i18n="hof_col_items_h2">Items & Inventar</h2>
+        <div id="itemSummary" class="hall-item-summary"></div>
+        <div id="itemList" class="hall-item-list"></div>
+      </div>
+      <div class="hall-column">
+        <h2 data-i18n="hof_col_drivers_h2">Fahrer</h2>
+        <div id="driverShowcase" class="hall-table"></div>
+      </div>
+    </section>
+
+    <footer class="footer" data-i18n="copyright">Copyright © Sunwalker NP</footer>
+  </div>
+</body>
+</html>

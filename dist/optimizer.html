@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>F1 Clash Companion – Setup-Optimizer</title>
+  <meta name="theme-color" content="#0a0d17" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/f1_neon_nights.png" />
+  <link rel="apple-touch-icon" href="assets/f1_neon_nights.png" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+  <script src="i18n.js"></script>
+  <script defer src="script.js"></script>
+  <script defer src="advanced.js"></script>
+</head>
+<body class="neon-body">
+  <div class="app-shell">
+    <div class="lang-bar neon-card" style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 1.2rem;">
+      <span data-i18n="lang_label" style="color:var(--text-muted,#9aa2c0);font-size:0.9rem;">Sprache</span>
+      <select id="appLangSelect" style="background:#0d0f1e;color:#f7f8fc;border:1px solid rgba(255,255,255,.18);border-radius:0.5rem;padding:0.3rem 0.7rem;font-size:0.9rem;cursor:pointer;">
+        <option value="de">🇩🇪 Deutsch</option>
+        <option value="it">🇮🇹 Italiano</option>
+        <option value="en">🇬🇧 English</option>
+      </select>
+    </div>
+    <header class="topbar neon-card">
+      <div class="brand">
+        <img src="assets/f1_neon_nights.png" alt="F1 Neon Nights" class="brand-icon" />
+        <div>
+          <h1 data-i18n="optPage_h1">Setup-Optimizer & KI-Strategie</h1>
+          <p data-i18n="optPage_sub">Eigenständige Optimizer-Seite für F1 Clash Companion</p>
+        </div>
+      </div>
+      <div class="season-control">
+        <a class="pill" href="index.html" data-i18n="back_main_btn">Zurück zur Hauptseite</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel neon-card">
+        <header>
+          <h2 data-i18n="community_import_h2">Community-Knowledge Import</h2>
+          <p data-i18n="community_import_p">Importiere Reddit/YouTube-Analysen als JSON, um Optimizer- und Strategie-Scoring zu beeinflussen.</p>
+        </header>
+        <div class="row">
+          <input id="communityKnowledgeFile" type="file" accept="application/json" aria-label="Community JSON Datei" />
+          <button id="communityImportFileButton" class="pill" type="button" data-i18n="community_file_btn">Datei importieren</button>
+          <button id="communityExportButton" class="pill" type="button" data-i18n="community_show_btn">Aktive Daten anzeigen</button>
+          <button id="communityResetButton" class="pill" type="button" data-i18n="community_reset_btn">Community-Daten zurücksetzen</button>
+        </div>
+        <div class="row">
+          <label for="communityMergeMode">
+            <input id="communityMergeMode" type="checkbox" checked />
+            <span data-i18n="community_merge_cb">Auto-Merge: neue Daten zu bestehenden hinzufügen</span>
+          </label>
+        </div>
+        <textarea id="communityKnowledgeInput" placeholder='JSON Beispiel: {"sources":[{"type":"reddit","url":"..."}],"tracks":{"Bahrain":{"partBoosts":{"Quantum":2.5},"strategyBoosts":{"one_stop":1.3}}}}'></textarea>
+        <div class="row">
+          <button id="communityImportButton" class="pill" type="button" data-i18n="community_import_btn">JSON aus Feld importieren</button>
+        </div>
+        <div id="communityKnowledgeResult" class="result"></div>
+      </section>
+
+      <section class="panel neon-card">
+        <header>
+          <h2 data-i18n="sync_h2">Account-Sync & Datenfreigabe</h2>
+          <p data-i18n="sync_p">Nur mit Zustimmung. Interne F1-Clash-Appdaten koennen nicht direkt ausgelesen werden.</p>
+        </header>
+        <div class="row">
+          <label for="f1SyncMethod" data-i18n="sync_method_label">Sync-Methode</label>
+          <select id="f1SyncMethod">
+            <option value="official_api" data-i18n="opt_official_api">Offizielle API (bevorzugt)</option>
+            <option value="screenshot_ocr" data-i18n="opt_ocr">Screenshot OCR (Fallback)</option>
+            <option value="manual_import" data-i18n="opt_manual">Manueller JSON-Import</option>
+          </select>
+          <label for="f1SyncConsent">
+            <input id="f1SyncConsent" type="checkbox" />
+            <span data-i18n="sync_consent_cb">Ich erlaube die Verarbeitung meiner Fahrer-, Parts- und Setup-Daten.</span>
+          </label>
+        </div>
+        <div class="row">
+          <button id="f1SyncGrantButton" class="pill" type="button" data-i18n="sync_grant_btn">Zustimmung speichern</button>
+          <button id="f1SyncFetchButton" class="pill" type="button" data-i18n="sync_fetch_btn">Datenabruf starten</button>
+          <button id="f1SyncTestButton" class="pill" type="button" data-i18n="sync_test_btn">API-Verbindung testen</button>
+          <button id="f1SyncRevokeButton" class="pill" type="button" data-i18n="sync_revoke_btn">Zustimmung widerrufen</button>
+        </div>
+        <div class="sync-config">
+          <label for="f1ApiBaseUrl" data-i18n="api_url_label">API Base URL</label>
+          <input id="f1ApiBaseUrl" type="url" placeholder="https://api.example.com" />
+          <label for="f1ApiClientId" data-i18n="api_client_label">Client ID</label>
+          <input id="f1ApiClientId" type="text" placeholder="client-id" />
+          <label for="f1ApiToken" data-i18n="api_token_label">Access Token</label>
+          <input id="f1ApiToken" type="password" placeholder="Bearer Token" />
+          <button id="f1ApiSaveButton" class="pill" type="button" data-i18n="api_save_btn">API-Konfig speichern</button>
+        </div>
+        <div class="row">
+          <label for="f1SyncMockMode">
+            <input id="f1SyncMockMode" type="checkbox" />
+            <span data-i18n="mock_mode_cb">Mock-Modus (lokale Testdaten statt echter API)</span>
+          </label>
+          <button id="f1SyncPreviewMock" class="pill" type="button" data-i18n="mock_preview_btn">Mock-Snapshot anzeigen</button>
+        </div>
+        <div class="sync-meta">
+          <span data-i18n="sync_profile_lbl">Profil:</span> <strong id="f1SyncProfile">-</strong>
+          <span data-i18n="sync_state_lbl">Freigabe:</span> <strong id="f1SyncState">nicht erteilt</strong>
+          <span data-i18n="sync_updated_lbl">Zuletzt geaendert:</span> <strong id="f1SyncUpdatedAt">-</strong>
+          <span data-i18n="sync_mode_lbl">Modus:</span> <strong id="f1SyncModeLabel">Live</strong>
+        </div>
+        <div id="f1SyncResult" class="result"></div>
+      </section>
+
+      <section id="optimizer" class="panel neon-card">
+        <header>
+          <h2 data-i18n="optimizer_h2">Setup-Optimizer & KI-Strategie</h2>
+        </header>
+        <div class="row">
+          <label for="trackSelect" data-i18n="track_lbl">Strecke</label>
+          <select id="trackSelect"></select>
+          <button id="autoBuildButton" class="pill" data-i18n="auto_setup_btn">AutoSetup erstellen</button>
+        </div>
+        <div class="row">
+          <button id="optimizeButton" class="pill" data-i18n="best_setup_btn">Bestes Setup für Strecke</button>
+          <button id="optimizeAllButton" class="pill" data-i18n="all_tracks_btn">Alle Strecken simulieren</button>
+        </div>
+        <div class="radar-wrap">
+          <svg id="trackCircuitSvg" class="circuit-bg" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
+          <canvas id="trackRadarChart" height="220"></canvas>
+        </div>
+        <canvas id="seasonBestChart" height="200"></canvas>
+        <div id="optimizerResult" class="result"></div>
+        <div class="row">
+          <label for="strategyTrackSelect" data-i18n="strategy_track_lbl">Strategie-Strecke</label>
+          <select id="strategyTrackSelect"></select>
+          <label for="strategyMode" data-i18n="strategy_mode_lbl">Strategie</label>
+          <select id="strategyMode">
+            <option value="auto" data-i18n="opt_auto">Auto</option>
+            <option value="one_stop" data-i18n="opt_one_stop">1-Stop</option>
+            <option value="two_stop" data-i18n="opt_two_stop">2-Stop</option>
+            <option value="balanced" data-i18n="opt_balanced">Balanced</option>
+            <option value="aggressive" data-i18n="opt_aggressive">Aggressive</option>
+          </select>
+          <button id="strategyButton" class="pill" data-i18n="strategy_btn">Strategie kalkulieren</button>
+          <button id="raceSimButton" class="pill" data-i18n="race_sim_btn">Rennen simulieren</button>
+        </div>
+        <canvas id="strategyChart" height="180"></canvas>
+        <canvas id="raceChart" height="200"></canvas>
+        <canvas id="positionChart" height="180"></canvas>
+        <div id="strategyResult" class="result"></div>
+        <div class="row">
+          <label for="driverImpactMode" data-i18n="driver_impact_lbl">Driver Impact Modus</label>
+          <select id="driverImpactMode">
+            <option value="effective" data-i18n="opt_effective">Top 5 Effektivwert</option>
+            <option value="stage" data-i18n="opt_stage">Top 5 Stage-Einfluss</option>
+            <option value="community" data-i18n="opt_community">Top 5 Community-Boosted</option>
+          </select>
+        </div>
+        <div id="driverImpactResult" class="result"></div>
+        <canvas id="driverImpactChart" height="180"></canvas>
+        <div id="raceResult" class="result"></div>
+      </section>
+    </main>
+
+    <div id="chartPopup" class="chart-popup" hidden>
+      <div class="chart-popup-backdrop" data-popup-close="true"></div>
+      <div class="chart-popup-dialog neon-card" role="dialog" aria-modal="true" aria-labelledby="chartPopupTitle">
+        <div class="chart-popup-header">
+          <div>
+            <h3 id="chartPopupTitle">Diagrammwerte</h3>
+            <p id="chartPopupSubtitle" class="chart-popup-subtitle"></p>
+          </div>
+          <button id="chartPopupClose" class="pill" type="button">Schließen</button>
+        </div>
+        <div class="chart-popup-table-wrap">
+          <table class="data-table chart-popup-table">
+            <thead id="chartPopupHead"></thead>
+            <tbody id="chartPopupBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer neon-card">
+      <p>Copyright © Sunwalker NP</p>
+    </footer>
+  </div>
+</body>
+</html>
