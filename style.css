@@ -1066,6 +1066,35 @@ body.main-cockpit {
   aspect-ratio: 1 / 1;
   object-fit: cover;
   border-radius: 0.8rem;
+/* ── APK Download ─────────────────────────────────────────── */
+.apk-download-btn {
+  background: linear-gradient(135deg, #00c853 0%, #00897b 100%);
+  color: #fff !important;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 4px 18px rgba(0, 200, 83, 0.35);
+  letter-spacing: 0.03em;
+}
+.apk-download-btn:hover {
+  background: linear-gradient(135deg, #00e676 0%, #00acc1 100%);
+  box-shadow: 0 6px 24px rgba(0, 230, 118, 0.45);
+  transform: translateY(-1px);
+}
+
+.main-cockpit .apk-qr-card {
+  border-color: rgba(0, 200, 83, 0.4);
+  background: rgba(0, 200, 83, 0.07);
+}
+.main-cockpit .apk-qr-card:hover {
+  border-color: rgba(0, 230, 118, 0.7);
+  box-shadow: 0 12px 28px rgba(0, 200, 83, 0.22);
+}
+.apk-dl-icon {
+  font-size: 3rem;
+  line-height: 1;
+  text-align: center;
+  padding: 1rem 0 0.5rem;
+}
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: #05070e;
 }
