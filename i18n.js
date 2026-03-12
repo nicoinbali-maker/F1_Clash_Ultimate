@@ -302,6 +302,11 @@
       hall_reloaded: 'Daten neu geladen ({time}).',
       hall_exported: 'Ruhmeshalle exportiert als {file}.',
       hall_export_failed: 'Export fehlgeschlagen: {message}',
+      apk_h2: 'Android App herunterladen',
+      apk_p: 'Lade die F1 Clash Companion App direkt auf dein Android-Gerät herunter. Aktiviere vor der Installation „Unbekannte Quellen" in den Geräteeinstellungen.',
+      apk_ultimate_btn: 'Ultimate APK herunterladen',
+      apk_external_btn: 'External-Test APK herunterladen',
+      apk_firebase_btn: 'Firebase-Auth APK herunterladen',
       copyright: 'Copyright © Sunwalker NP',
     },
 
@@ -599,6 +604,11 @@
       hall_reloaded: 'Dati ricaricati ({time}).',
       hall_exported: 'Hall of Fame esportata come {file}.',
       hall_export_failed: 'Esportazione fallita: {message}',
+      apk_h2: "Scarica l'App Android",
+      apk_p: "Scarica l'app F1 Clash Companion direttamente sul tuo dispositivo Android. Abilita \"Sorgenti sconosciute\" nelle impostazioni del dispositivo prima di installare.",
+      apk_ultimate_btn: 'Scarica APK Ultimate',
+      apk_external_btn: 'Scarica APK External Test',
+      apk_firebase_btn: 'Scarica APK Firebase Auth',
       copyright: 'Copyright © Sunwalker NP',
     },
 
@@ -896,6 +906,11 @@
       hall_reloaded: 'Data reloaded ({time}).',
       hall_exported: 'Hall of Fame exported as {file}.',
       hall_export_failed: 'Export failed: {message}',
+      apk_h2: 'Download Android App',
+      apk_p: 'Download the F1 Clash Companion app directly to your Android device. Enable "Unknown sources" in your device settings before installing.',
+      apk_ultimate_btn: 'Download Ultimate APK',
+      apk_external_btn: 'Download External Test APK',
+      apk_firebase_btn: 'Download Firebase Auth APK',
       copyright: 'Copyright © Sunwalker NP',
     }
   };
