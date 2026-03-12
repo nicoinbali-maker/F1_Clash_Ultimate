@@ -2495,7 +2495,247 @@ async function runOcr() {
   }
 }
 
+// ===== PERSONAL PAGE =====
+
+const NOTIF_LOG_KEY = 'f1_notif_log';
+const NOTIF_MAX = 30;
+const PIT_REMINDER_MIN = 25;
+
+function loadNotifLog() {
+  const raw = localStorage.getItem(NOTIF_LOG_KEY);
+  try { const p = JSON.parse(raw); return Array.isArray(p) ? p : []; } catch { return []; }
+}
+
+function saveNotifLog(log) {
+  localStorage.setItem(NOTIF_LOG_KEY, JSON.stringify(Array.isArray(log) ? log.slice(-NOTIF_MAX) : []));
+}
+
+function appendNotifLog(entry) {
+  const log = loadNotifLog();
+  log.push({ ...entry, ts: Date.now() });
+  saveNotifLog(log);
+  renderNotifLog();
+}
+
+function renderNotifLog() {
+  const container = byId('notificationLog');
+  if (!container) return;
+  const log = loadNotifLog();
+  if (!log.length) { container.innerHTML = '<p style="color:var(--text-muted,#9aa2c0);font-size:0.85rem;">Noch keine Push-Ereignisse.</p>'; return; }
+  container.innerHTML = log
+    .slice().reverse().slice(0, 10)
+    .map((e) => {
+      const time = new Date(e.ts).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      return `<div class="notification"><span>${escapeHtml(e.text)}</span><span class="lb-date">${time}</span></div>`;
+    })
+    .join('');
+}
+
+async function enablePushNotifications() {
+  const statusEl = byId('notificationStatusResult');
+  if (!('Notification' in window)) {
+    if (statusEl) statusEl.textContent = 'Push-Benachrichtigungen werden in diesem Browser nicht unterstützt.';
+    return;
+  }
+  const perm = await Notification.requestPermission();
+  if (statusEl) {
+    if (perm === 'granted') {
+      statusEl.textContent = '✅ Push-Benachrichtigungen aktiviert.';
+      appendNotifLog({ text: 'Push-Benachrichtigungen aktiviert' });
+    } else {
+      statusEl.textContent = '⚠️ Berechtigung verweigert. Bitte in den Browser-Einstellungen erlauben.';
+    }
+  }
+}
+
+function sendLocalNotification(title, body) {
+  if (Notification.permission !== 'granted') {
+    appendNotifLog({ text: `[Ohne Push] ${title}: ${body}` });
+    return;
+  }
+  try {
+    new Notification(title, { body, icon: 'assets/ferrari2000_candyred_192.png' });
+  } catch {}
+  appendNotifLog({ text: `${title}: ${body}` });
+}
+
+function sendRacePush() {
+  sendLocalNotification('F1 Clash – Race', 'Das nächste Rennen startet! Überprüfe deinen Setup und fahre los. 🏎️');
+  const el = byId('notificationStatusResult');
+  if (el) el.textContent = 'Race-Push gesendet.';
+}
+
+function schedulePitPush() {
+  sendLocalNotification('F1 Clash – Pit', `Box in ${PIT_REMINDER_MIN} Minuten – Boxenstrategie prüfen! 🛞`);
+  const el = byId('notificationStatusResult');
+  if (el) el.textContent = `Pit-Push gesendet (${PIT_REMINDER_MIN} Min-Erinnerung).`;
+}
+
+function buildPersonalSuggestions() {
+  const container = byId('personalSuggestions');
+  const resultEl = byId('personalSuggestionsResult');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  const meta = loadPartMetaMap();
+  const stages = loadDriverStageMap();
+  const owned = new Set(ownedParts);
+
+  // Find parts with room to upgrade (level < 15)
+  const upgradableByCategory = {};
+  PART_CATEGORIES.forEach((cat) => {
+    upgradableByCategory[cat] = partCatalog
+      .filter((p) => p.category === cat && owned.has(p.name))
+      .map((p) => ({ ...p, level: Number(meta[p.name]?.level || 1), mod: Number(meta[p.name]?.mod || 0) }))
+      .sort((a, b) => a.level - b.level)
+      .slice(0, 3);
+  });
+
+  PART_CATEGORIES.forEach((cat) => {
+    const parts = upgradableByCategory[cat];
+    if (!parts.length) return;
+    const card = document.createElement('div');
+    card.className = 'personal-card';
+    const title = document.createElement('strong');
+    title.style.cssText = 'display:block;color:var(--accent-cyan,#79e9ff);margin-bottom:0.4rem;';
+    title.textContent = `🔧 ${cat}`;
+    card.appendChild(title);
+    parts.forEach((part) => {
+      const row = document.createElement('div');
+      row.className = 'suggest-row';
+      const lvBar = part.level < 5 ? '⬜⬜⬜' : part.level < 10 ? '🟨🟨⬜' : '🟩🟩🟩';
+      row.innerHTML = `<span>${escapeHtml(part.name)}</span><span class="lb-score">LV ${part.level} ${lvBar}</span>`;
+      card.appendChild(row);
+    });
+    container.appendChild(card);
+  });
+
+  // Driver stages summary card
+  const stageEntries = Object.entries(stages);
+  if (stageEntries.length) {
+    const card = document.createElement('div');
+    card.className = 'personal-card';
+    const title = document.createElement('strong');
+    title.style.cssText = 'display:block;color:#ffca28;margin-bottom:0.4rem;';
+    title.textContent = '🏁 Fahrer-Stages';
+    card.appendChild(title);
+    stageEntries.slice(0, 8).forEach(([name, s]) => {
+      const row = document.createElement('div');
+      row.className = 'suggest-row';
+      row.innerHTML = `<span>${escapeHtml(name)}</span><span class="lb-score">${escapeHtml(String(s?.stage || 'S1'))}</span>`;
+      card.appendChild(row);
+    });
+    container.appendChild(card);
+  }
+
+  // Missing parts card
+  const missing = partCatalog.filter((p) => !owned.has(p.name)).slice(0, 12);
+  if (missing.length) {
+    const card = document.createElement('div');
+    card.className = 'personal-card';
+    const title = document.createElement('strong');
+    title.style.cssText = 'display:block;color:#ff6b6b;margin-bottom:0.4rem;';
+    title.textContent = `❌ Noch nicht vorhanden (${missing.length}+ Parts)`;
+    card.appendChild(title);
+    const list = document.createElement('p');
+    list.style.fontSize = '0.82rem';
+    list.style.color = 'var(--text-muted,#9aa2c0)';
+    list.textContent = missing.map((p) => p.name).join(', ');
+    card.appendChild(list);
+    container.appendChild(card);
+  }
+
+  if (!container.children.length) {
+    container.innerHTML = '<p style="color:var(--text-muted,#9aa2c0);">Keine Daten – zuerst Parts in der Garage eintragen.</p>';
+  }
+
+  if (resultEl) resultEl.textContent = `${owned.size} Parts / ${stageEntries.length} Fahrer in deiner Garage.`;
+}
+
+async function populateFriendCompareSelect() {
+  const sel = byId('friendCompareSelect');
+  if (!sel) return;
+  const currentValue = sel.value;
+  sel.innerHTML = '<option value="">– Spieler wählen –</option>';
+  try {
+    const docs = await fetchLeaderboardDocs();
+    const entries = parseLeaderboardEntries(docs);
+    entries.sort((a, b) => b.score - a.score);
+    const myId = String(getActiveProfileIdLocal() || '').toLowerCase();
+    entries.forEach((entry) => {
+      if (myId && String(entry.name).toLowerCase().includes(myId)) return;
+      const opt = document.createElement('option');
+      opt.value = entry.name;
+      opt.textContent = `${escapeHtml(entry.name)} (${entry.score} Pts)`;
+      sel.appendChild(opt);
+    });
+    if (currentValue) sel.value = currentValue;
+  } catch {}
+}
+
+async function compareFriend() {
+  const sel = byId('friendCompareSelect');
+  const resultEl = byId('friendCompareResult');
+  if (!resultEl) return;
+  const friendName = sel?.value || '';
+  if (!friendName) { resultEl.textContent = 'Bitte zuerst einen Spieler auswählen.'; return; }
+
+  resultEl.textContent = 'Lade Vergleich…';
+  try {
+    const docs = await fetchLeaderboardDocs();
+    const entries = parseLeaderboardEntries(docs);
+    const friend = entries.find((e) => e.name === friendName);
+    if (!friend) { resultEl.textContent = 'Spieler nicht gefunden.'; return; }
+
+    const myMeta = loadPartMetaMap();
+    const myOwned = new Set(ownedParts);
+    const friendMeta = friend.payload.partMeta || {};
+    const friendOwned = new Set(Array.isArray(friend.payload.ownedParts) ? friend.payload.ownedParts : []);
+
+    const onlyMine = [...myOwned].filter((n) => !friendOwned.has(n));
+    const onlyFriend = [...friendOwned].filter((n) => !myOwned.has(n));
+
+    const levelComparisons = [];
+    [...myOwned].forEach((name) => {
+      if (!friendOwned.has(name)) return;
+      const myLv = Number(myMeta[name]?.level || 1);
+      const friendLv = Number(friendMeta[name]?.level || 1);
+      if (myLv !== friendLv) levelComparisons.push({ name, myLv, friendLv });
+    });
+    levelComparisons.sort((a, b) => Math.abs(b.friendLv - b.myLv) - Math.abs(a.friendLv - a.myLv));
+
+    const lines = [
+      `Vergleich mit ${friendName}:`,
+      `Parts du: ${myOwned.size} | ${friendName}: ${friendOwned.size}`,
+    ];
+    if (onlyFriend.length) lines.push(`Nur ${friendName} hat: ${onlyFriend.slice(0, 8).join(', ')}`);
+    if (onlyMine.length) lines.push(`Nur du hast: ${onlyMine.slice(0, 8).join(', ')}`);
+    if (levelComparisons.length) {
+      lines.push('Level-Unterschiede (top 8):');
+      levelComparisons.slice(0, 8).forEach(({ name, myLv, friendLv }) => {
+        const diff = friendLv - myLv;
+        const arrow = diff > 0 ? `↑ ${diff} hinter` : `↓ ${Math.abs(diff)} vorne`;
+        lines.push(`  ${name}: du LV${myLv} / ${friendName} LV${friendLv} (${arrow})`);
+      });
+    }
+
+    resultEl.textContent = lines.join('\n');
+  } catch (err) {
+    resultEl.textContent = `Fehler: ${err.message}`;
+  }
+}
+
+function initPersonalPage() {
+  buildPersonalSuggestions();
+  renderNotifLog();
+  deferUiTask(() => populateFriendCompareSelect(), 100);
+}
+
+// ===== END PERSONAL PAGE =====
+
 // ===== LEADERBOARD =====
+
 
 function leaderboardListUrl(config) {
   const projectId = encodeURIComponent(config.projectId);
@@ -3123,6 +3363,16 @@ async function init() {
   if (hasUi('leaderboardList', 'leaderboardResult')) {
     deferUiTask(() => loadLeaderboard(), 80);
   }
+
+  if (hasUi('personalSuggestions', 'notificationLog')) {
+    deferUiTask(() => initPersonalPage(), 50);
+  }
+
+  addListener('refreshPersonalSuggestionsButton', 'click', buildPersonalSuggestions);
+  addListener('enableNotificationsButton', 'click', enablePushNotifications);
+  addListener('notifyRaceButton', 'click', sendRacePush);
+  addListener('notifyPitButton', 'click', schedulePitPush);
+  addListener('compareFriendButton', 'click', compareFriend);
 
   addListener('trackAnalysisButton', 'click', renderTrackRadar);
   addListener('allChartsButton', 'click', renderAllTrackCharts);
