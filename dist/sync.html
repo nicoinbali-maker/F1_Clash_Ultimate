@@ -9,6 +9,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="assets/ferrari2000_candyred_192.png" />
   <link rel="apple-touch-icon" href="assets/ferrari2000_candyred_192.png" />
   <link rel="stylesheet" href="style.css" />
+  <script src="vendor/tesseract.min.js"></script>
   <script src="i18n.js"></script>
   <script defer src="script.js"></script>
 </head>
@@ -81,9 +82,11 @@
         <div class="row">
           <button id="f1SyncGrantButton" class="pill pill--ghost" type="button" data-i18n="sync_grant_btn">Zustimmung speichern</button>
           <button id="f1SyncFetchButton" class="pill pill--primary" type="button" data-i18n="sync_fetch_btn">Datenabruf starten</button>
+          <button id="f1SyncOcrSelectButton" class="pill pill--ghost" type="button">Screenshot waehlen (OCR)</button>
           <button id="f1SyncTestButton" class="pill pill--ghost" type="button" data-i18n="sync_test_btn">API-Verbindung testen</button>
           <button id="f1SyncRevokeButton" class="pill pill--danger" type="button" data-i18n="sync_revoke_btn">Zustimmung widerrufen</button>
         </div>
+        <input id="ocrFile" type="file" accept="image/*" capture="environment" aria-label="F1 Clash Screenshot" style="display:none" />
         <div class="sync-config">
           <label for="f1ApiBaseUrl" data-i18n="api_url_label">API Base URL</label>
           <input id="f1ApiBaseUrl" type="url" placeholder="https://api.example.com" />
@@ -136,6 +139,15 @@
           <span data-i18n="sync_mode_lbl">Modus:</span> <strong id="f1SyncModeLabel">Live</strong>
         </div>
         <div id="f1SyncResult" class="result"></div>
+        <div id="ocrReviewPanel" class="sync-ocr-review" hidden>
+          <h3>OCR-Vorschau (bitte pruefen)</h3>
+          <p>Erkannte Werte werden erst nach Bestaetigung uebernommen.</p>
+          <pre id="ocrReviewText"></pre>
+          <div class="row">
+            <button id="ocrApplyButton" class="pill pill--primary" type="button">OCR uebernehmen</button>
+            <button id="ocrDiscardButton" class="pill pill--ghost" type="button">Verwerfen</button>
+          </div>
+        </div>
       </section>
 
       <section id="communitySection" class="panel neon-card">

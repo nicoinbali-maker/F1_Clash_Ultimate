@@ -106,6 +106,7 @@ const chartTouchState = {};
 let activePopupChartId = null;
 let firebaseAutoSyncTimer = null;
 let firebaseAutoSyncMuted = false;
+let pendingOcrSyncSnapshot = null;
 
 function byId(...ids) {
   for (const id of ids) {
@@ -878,6 +879,15 @@ function initSyncConsentPanel() {
   addListener('f1SyncGrantButton', 'click', saveSyncConsentFromUi);
   addListener('f1SyncRevokeButton', 'click', revokeSyncConsentFromUi);
   addListener('f1SyncFetchButton', 'click', runSyncFetchFlow);
+  addListener('f1SyncOcrSelectButton', 'click', () => {
+    const ocrInput = byId('ocrFile');
+    if (ocrInput) ocrInput.click();
+  });
+  addListener('ocrApplyButton', 'click', applyPendingSyncOcrSnapshot);
+  addListener('ocrDiscardButton', 'click', () => {
+    clearSyncOcrReview();
+    setSyncResult('OCR-Vorschau verworfen.');
+  });
   addListener('f1SyncTestButton', 'click', testApiConnection);
   addListener('f1ApiSaveButton', 'click', saveApiConfigFromUi);
   addListener('firebaseConfigSaveButton', 'click', saveFirebaseConfigFromUi);
@@ -2437,10 +2447,14 @@ function updateKpis(comboCount) {
 
 async function runOcr() {
   const fileInput = byId('ocrFile');
-  const out = byId('ocrResult');
+  const out = byId('ocrResult') || byId('f1SyncResult');
   if (!fileInput || !out) return;
   const file = fileInput.files[0];
   if (!file) { out.textContent = tr('ocr_choose_file'); return; }
+  if (typeof Tesseract === 'undefined' || !Tesseract?.recognize) {
+    out.textContent = 'OCR-Modul nicht geladen. Bitte Seite neu laden.';
+    return;
+  }
   out.textContent = tr('ocr_running');
   try {
     const { data } = await Tesseract.recognize(file, 'eng', {
@@ -2449,6 +2463,14 @@ async function runOcr() {
       logger: (m) => { if (m.status === 'recognizing text') out.textContent = tr('ocr_running_pct', { percent: Math.round(m.progress * 100) }); }
     });
     const snapshot = parseOcrSnapshot(data.text || '');
+
+    if (byId('ocrReviewPanel')) {
+      pendingOcrSyncSnapshot = snapshot;
+      renderSyncOcrReview(snapshot);
+      out.textContent = 'OCR fertig. Bitte Vorschau pruefen und dann uebernehmen.';
+      return;
+    }
+
     const applied = applyOcrSnapshot(snapshot);
     if (applied.total > 0) {
       out.textContent = tr('ocr_snapshot_detected', {
@@ -2465,13 +2487,165 @@ async function runOcr() {
   }
 }
 
+function summarizeOcrSnapshot(snapshot) {
+  const safe = snapshot || { parts: [], drivers: [], tracks: [], partMetaByName: {}, driverStageByName: {} };
+  const currentPartMeta = loadPartMetaMap();
+  const currentDriverStages = loadDriverStageMap();
+  const newOwnedParts = safe.parts.filter((name) => !ownedParts.includes(name));
+  const partLevelChanges = [];
+  const driverStageChanges = [];
+
+  safe.parts.forEach((name) => {
+    const meta = safe.partMetaByName?.[name];
+    if (!meta || typeof meta !== 'object') return;
+    const oldLevel = Number(currentPartMeta?.[name]?.level || 1);
+    const oldMod = Number(currentPartMeta?.[name]?.mod || 0);
+    const nextLevel = meta.level != null ? clampNumber(meta.level, 1, 15) : null;
+    const nextMod = meta.mod != null ? clampNumber(meta.mod, 0, 5) : null;
+    const chunks = [];
+    if (nextLevel != null && nextLevel !== oldLevel) chunks.push(`Level ${oldLevel} -> ${nextLevel}`);
+    if (nextMod != null && nextMod !== oldMod) chunks.push(`Mod ${oldMod} -> ${nextMod}`);
+    if (chunks.length) partLevelChanges.push(`${name}: ${chunks.join(' | ')}`);
+  });
+
+  safe.drivers.forEach((name) => {
+    const parsed = safe.driverStageByName?.[name];
+    if (parsed == null) return;
+    const next = clampNumber(parsed, 1, 12);
+    if (next == null) return;
+    const prevRaw = String(currentDriverStages?.[name]?.stage || 'S1').replace(/^S/i, '');
+    const prev = clampNumber(prevRaw, 1, 12) || 1;
+    if (prev !== next) driverStageChanges.push(`${name}: S${prev} -> S${next}`);
+  });
+
+  const lines = [];
+  lines.push(`Parts erkannt: ${safe.parts.length}`);
+  if (safe.parts.length) lines.push(`- ${safe.parts.slice(0, 12).join(', ')}`);
+  if (newOwnedParts.length) {
+    lines.push(`Neue Parts im Besitz: ${newOwnedParts.length}`);
+    lines.push(`- ${newOwnedParts.slice(0, 12).join(', ')}`);
+  }
+  lines.push(`Fahrer erkannt: ${safe.drivers.length}`);
+  if (safe.drivers.length) lines.push(`- ${safe.drivers.slice(0, 10).join(', ')}`);
+  lines.push(`Strecken erkannt: ${safe.tracks.length}`);
+  if (safe.tracks.length) lines.push(`- ${safe.tracks.slice(0, 6).join(', ')}`);
+  const levelCount = Object.keys(safe.partMetaByName || {}).length;
+  const stageCount = Object.keys(safe.driverStageByName || {}).length;
+  lines.push(`Part-Level erkannt: ${levelCount}`);
+  lines.push(`Fahrer-Stage erkannt: ${stageCount}`);
+  if (partLevelChanges.length) {
+    lines.push('Part-Aenderungen:');
+    partLevelChanges.slice(0, 14).forEach((line) => lines.push(`- ${line}`));
+  }
+  if (driverStageChanges.length) {
+    lines.push('Fahrer-Aenderungen:');
+    driverStageChanges.slice(0, 14).forEach((line) => lines.push(`- ${line}`));
+  }
+  return lines.join('\n');
+}
+
+function renderSyncOcrReview(snapshot) {
+  const panel = byId('ocrReviewPanel');
+  const text = byId('ocrReviewText');
+  if (!panel || !text) return;
+  text.textContent = summarizeOcrSnapshot(snapshot);
+  panel.hidden = false;
+}
+
+function clearSyncOcrReview() {
+  const panel = byId('ocrReviewPanel');
+  const text = byId('ocrReviewText');
+  pendingOcrSyncSnapshot = null;
+  if (text) text.textContent = '';
+  if (panel) panel.hidden = true;
+}
+
+function applyPendingSyncOcrSnapshot() {
+  const out = byId('f1SyncResult') || byId('ocrResult');
+  if (!pendingOcrSyncSnapshot) {
+    if (out) out.textContent = 'Keine OCR-Vorschau vorhanden.';
+    return;
+  }
+  const applied = applyOcrSnapshot(pendingOcrSyncSnapshot);
+  if (out) {
+    if (applied.total > 0) {
+      out.textContent = tr('ocr_snapshot_detected', {
+        parts: String(applied.parts),
+        drivers: String(applied.drivers),
+        tracks: String(applied.tracks),
+        details: applied.detailText
+      });
+    } else {
+      out.textContent = tr('ocr_none');
+    }
+  }
+  clearSyncOcrReview();
+}
+
 function normalizeOcrToken(value) {
   return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function clampNumber(value, min, max) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return null;
+  return Math.max(min, Math.min(max, Math.round(num)));
+}
+
+function findOcrLineForName(lines, name) {
+  const target = normalizeOcrToken(name);
+  if (!target) return '';
+  const direct = lines.find((line) => normalizeOcrToken(line).includes(target));
+  if (direct) return direct;
+
+  const words = String(name || '')
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w) => w.replace(/[^a-z0-9]/g, ''))
+    .filter((w) => w.length >= 3);
+
+  if (!words.length) return '';
+
+  return lines.find((line) => {
+    const normalizedLine = normalizeOcrToken(line);
+    return words.every((word) => normalizedLine.includes(word));
+  }) || '';
+}
+
+function parsePartLevelFromLine(line) {
+  const text = String(line || '');
+  const explicit = text.match(/(?:\blv\b|\blvl\b|\blevel\b)\s*[:.]?\s*(\d{1,2})/i);
+  if (explicit) return clampNumber(explicit[1], 1, 15);
+
+  const suffix = text.match(/\b(\d{1,2})\b\s*$/);
+  if (suffix) return clampNumber(suffix[1], 1, 15);
+  return null;
+}
+
+function parsePartModFromLine(line) {
+  const text = String(line || '');
+  const mod = text.match(/\bmod\b\s*[:.]?\s*(\d{1,2})/i);
+  if (!mod) return null;
+  return clampNumber(mod[1], 0, 5);
+}
+
+function parseDriverStageFromLine(line) {
+  const text = String(line || '');
+  const explicit = text.match(/(?:\bstage\b|\bs\b)\s*[:.]?\s*(\d{1,2})/i);
+  if (explicit) return clampNumber(explicit[1], 1, 12);
+
+  const suffix = text.match(/\b(\d{1,2})\b\s*$/);
+  if (suffix) return clampNumber(suffix[1], 1, 12);
+  return null;
 }
 
 function parseOcrSnapshot(rawText) {
   const textLower = String(rawText || '').toLowerCase();
   const textToken = normalizeOcrToken(rawText || '');
+  const lines = String(rawText || '')
+    .split(/\r?\n/)
+    .map((line) => String(line || '').trim())
+    .filter(Boolean);
 
   const detectByName = (list, nameKey = 'name') => list.filter((entry) => {
     const name = String(entry?.[nameKey] || '');
@@ -2485,38 +2659,112 @@ function parseOcrSnapshot(rawText) {
   const drivers = detectByName(driversDb);
   const tracks = detectByName(tracksDb);
 
+  const partMetaByName = {};
+  parts.forEach((name) => {
+    const line = findOcrLineForName(lines, name);
+    if (!line) return;
+    const level = parsePartLevelFromLine(line);
+    const mod = parsePartModFromLine(line);
+    if (level == null && mod == null) return;
+    partMetaByName[name] = {
+      ...(level != null ? { level } : {}),
+      ...(mod != null ? { mod } : {}),
+      source: 'ocr',
+      updatedAt: new Date().toISOString()
+    };
+  });
+
+  const driverStageByName = {};
+  drivers.forEach((name) => {
+    const line = findOcrLineForName(lines, name);
+    if (!line) return;
+    const stage = parseDriverStageFromLine(line);
+    if (stage == null) return;
+    driverStageByName[name] = stage;
+  });
+
   return {
     parts: Array.from(new Set(parts)),
     drivers: Array.from(new Set(drivers)),
-    tracks: Array.from(new Set(tracks))
+    tracks: Array.from(new Set(tracks)),
+    partMetaByName,
+    driverStageByName
   };
 }
 
 function applyOcrSnapshot(snapshot) {
-  const safeSnapshot = snapshot || { parts: [], drivers: [], tracks: [] };
+  const safeSnapshot = snapshot || { parts: [], drivers: [], tracks: [], partMetaByName: {}, driverStageByName: {} };
   let addedParts = 0;
   let addedDrivers = 0;
+  let updatedPartMeta = 0;
+  let updatedDriverStages = 0;
+
+  const partMeta = loadPartMetaMap();
+  const parsedPartMeta = safeSnapshot.partMetaByName && typeof safeSnapshot.partMetaByName === 'object'
+    ? safeSnapshot.partMetaByName
+    : {};
 
   safeSnapshot.parts.forEach((name) => {
     if (!ownedParts.includes(name)) {
       ownedParts.push(name);
       addedParts += 1;
     }
+
+    const parsedMeta = parsedPartMeta[name];
+    if (!parsedMeta || typeof parsedMeta !== 'object') return;
+
+    const current = partMeta[name] && typeof partMeta[name] === 'object' ? partMeta[name] : {};
+    const nextLevel = parsedMeta.level != null ? clampNumber(parsedMeta.level, 1, 15) : null;
+    const nextMod = parsedMeta.mod != null ? clampNumber(parsedMeta.mod, 0, 5) : null;
+
+    const changed =
+      (nextLevel != null && Number(current.level || 0) !== nextLevel) ||
+      (nextMod != null && Number(current.mod || 0) !== nextMod);
+
+    partMeta[name] = {
+      ...current,
+      ...(nextLevel != null ? { level: nextLevel } : {}),
+      ...(nextMod != null ? { mod: nextMod } : {}),
+      source: 'ocr',
+      updatedAt: new Date().toISOString()
+    };
+
+    if (changed) updatedPartMeta += 1;
   });
   if (addedParts > 0) saveOwnedParts();
+  if (updatedPartMeta > 0) savePartMetaMap(partMeta);
 
   const stageMap = loadDriverStageMap();
+  const parsedDriverStages = safeSnapshot.driverStageByName && typeof safeSnapshot.driverStageByName === 'object'
+    ? safeSnapshot.driverStageByName
+    : {};
+
   safeSnapshot.drivers.forEach((name) => {
+    const parsedStage = parsedDriverStages[name] != null ? clampNumber(parsedDriverStages[name], 1, 12) : null;
     if (!stageMap[name]) {
       stageMap[name] = {
-        stage: 'S1',
+        stage: `S${parsedStage || 1}`,
         source: 'ocr',
         updatedAt: new Date().toISOString()
       };
       addedDrivers += 1;
+      return;
+    }
+
+    if (parsedStage == null) return;
+    const prevStageRaw = String(stageMap[name]?.stage || '').replace(/^S/i, '');
+    const prevStage = clampNumber(prevStageRaw, 1, 12) || 1;
+    if (prevStage !== parsedStage) {
+      stageMap[name] = {
+        ...stageMap[name],
+        stage: `S${parsedStage}`,
+        source: 'ocr',
+        updatedAt: new Date().toISOString()
+      };
+      updatedDriverStages += 1;
     }
   });
-  if (addedDrivers > 0) saveDriverStageMap(stageMap);
+  if (addedDrivers > 0 || updatedDriverStages > 0) saveDriverStageMap(stageMap);
 
   const firstTrack = safeSnapshot.tracks[0] || '';
   if (firstTrack) {
@@ -2541,6 +2789,8 @@ function applyOcrSnapshot(snapshot) {
   if (safeSnapshot.parts.length) detail.push(`Parts: ${safeSnapshot.parts.slice(0, 8).join(', ')}`);
   if (safeSnapshot.drivers.length) detail.push(`Fahrer: ${safeSnapshot.drivers.slice(0, 6).join(', ')}`);
   if (safeSnapshot.tracks.length) detail.push(`Strecken: ${safeSnapshot.tracks.slice(0, 4).join(', ')}`);
+  if (updatedPartMeta > 0) detail.push(`Part-Levels aktualisiert: ${updatedPartMeta}`);
+  if (updatedDriverStages > 0) detail.push(`Fahrer-Stages aktualisiert: ${updatedDriverStages}`);
 
   return {
     parts: addedParts,

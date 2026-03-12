@@ -1123,6 +1123,38 @@ body.main-cockpit {
   background: rgba(8, 12, 24, 0.72);
 }
 
+.sync-page .sync-ocr-review {
+  margin-top: 0.85rem;
+  border: 1px solid rgba(121, 233, 255, 0.2);
+  border-radius: 0.8rem;
+  padding: 0.85rem;
+  background: linear-gradient(160deg, rgba(8, 16, 30, 0.92), rgba(12, 10, 22, 0.85));
+}
+
+.sync-page .sync-ocr-review h3 {
+  margin: 0 0 0.35rem;
+  color: #79e9ff;
+}
+
+.sync-page .sync-ocr-review p {
+  margin: 0 0 0.5rem;
+  color: #b8c6df;
+  font-size: 0.92rem;
+}
+
+.sync-page #ocrReviewText {
+  margin: 0;
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre-wrap;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.6rem;
+  background: rgba(4, 8, 16, 0.74);
+  color: #d7e6ff;
+  padding: 0.6rem;
+  font-size: 0.88rem;
+}
+
 .optimizer-page #optimizer,
 .optimizer-page #syncSection,
 .optimizer-page #communitySection {
