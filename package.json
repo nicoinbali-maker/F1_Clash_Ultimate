@@ -2,16 +2,20 @@
   "name": "f1-clash-companion-ultimate",
   "version": "1.0.0",
   "private": true,
-  "description": "APK wrapper for the F1 Clash Companion web app",
+  "description": "Mobile wrapper for the F1 Clash Companion web app",
   "scripts": {
     "build:web": "node scripts/build-web.mjs",
     "cap:copy": "npm run build:web && npx cap copy",
-    "cap:sync": "npm run build:web && npx cap sync android",
-    "android:debug": "npm run build:web && npx cap sync android && cd android && gradlew.bat assembleDebug"
+    "cap:sync": "npm run build:web && npx cap sync",
+    "cap:sync:android": "npm run build:web && npx cap sync android",
+    "cap:sync:ios": "npm run build:web && npx cap sync ios",
+    "android:debug": "npm run build:web && npx cap sync android && cd android && gradlew.bat assembleDebug",
+    "ios:open": "npm run build:web && npx cap sync ios && npx cap open ios"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.0",
     "@capacitor/core": "^6.2.0",
+    "@capacitor/ios": "^6.2.1",
     "chart.js": "^4.5.1",
     "tesseract.js": "^7.0.0"
   },
