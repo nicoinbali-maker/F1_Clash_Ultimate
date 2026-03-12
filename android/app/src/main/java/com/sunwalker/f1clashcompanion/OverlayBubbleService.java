@@ -15,6 +15,7 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.WindowManager.BadTokenException;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -44,8 +45,12 @@ public class OverlayBubbleService extends Service {
             stopSelf();
             return;
         }
-        startInForeground();
-        showOverlayBubble();
+        try {
+            startInForeground();
+            showOverlayBubble();
+        } catch (RuntimeException e) {
+            stopSelf();
+        }
     }
 
     @Override
@@ -196,8 +201,12 @@ public class OverlayBubbleService extends Service {
                     case MotionEvent.ACTION_MOVE:
                         bubbleParams.x = initialX + (int) (event.getRawX() - initialTouchX);
                         bubbleParams.y = initialY + (int) (event.getRawY() - initialTouchY);
-                        windowManager.updateViewLayout(bubble, bubbleParams);
-                        return true;
+                        try {
+                            windowManager.updateViewLayout(bubble, bubbleParams);
+                            return true;
+                        } catch (IllegalArgumentException | BadTokenException e) {
+                            return false;
+                        }
                     case MotionEvent.ACTION_UP:
                         saveOverlayPosition(bubbleParams.x, bubbleParams.y);
                         return false;
@@ -210,7 +219,7 @@ public class OverlayBubbleService extends Service {
         bubbleView = bubble;
         try {
             windowManager.addView(bubbleView, bubbleParams);
-        } catch (SecurityException | IllegalArgumentException e) {
+        } catch (SecurityException | IllegalArgumentException | BadTokenException e) {
             bubbleView = null;
             stopSelf();
         }

@@ -80,10 +80,14 @@ public class MainActivity extends BridgeActivity {
 
         Intent serviceIntent = new Intent(this, OverlayBubbleService.class);
         serviceIntent.setAction(OverlayBubbleService.ACTION_ENABLE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntent);
-        } else {
-            startService(serviceIntent);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent);
+            } else {
+                startService(serviceIntent);
+            }
+        } catch (RuntimeException ignored) {
+            // Avoid process crash if OEM/OS blocks foreground service start in this state.
         }
     }
 }
