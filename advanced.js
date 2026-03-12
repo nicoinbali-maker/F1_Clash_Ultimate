@@ -477,6 +477,7 @@
       const pitPenalty = playerSim.pitLaps.includes(idx + 1) ? 8 : 0;
       return clampLocal(100 - (playerSim.wearCurve[idx] || 0) * 0.45 - pos * 2 - pitPenalty, 5, 100);
     });
+    const mobile = Math.max(window.innerWidth || 0, document.documentElement?.clientWidth || 0, 360) <= 760;
 
     if (raceChart) raceChart.destroy();
     raceChart = new Chart(byId('raceChart'), {
@@ -493,11 +494,21 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { color: '#fff', font: { size: scaledChartFont(11, 12), weight: '600' }, padding: 12, boxWidth: 18 } } },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: '#f0faff',
+              font: { size: scaledChartFont(mobile ? 10 : 11, 9), weight: '600' },
+              padding: mobile ? 8 : 14,
+              boxWidth: mobile ? 12 : 18
+            }
+          }
+        },
         scales: {
-          x: { ticks: { color: '#aafff2', font: { size: scaledChartFont(10, 11), weight: '600' }, autoSkip: true, maxTicksLimit: 12, maxRotation: 0 }, grid: { color: 'rgba(255,255,255,.08)' } },
-          yLap: { type: 'linear', position: 'left', ticks: { color: '#aafff2', font: { size: scaledChartFont(10, 11), weight: '600' } }, title: { display: true, text: 'Lap Time (s)', color: '#aafff2', font: { size: scaledChartFont(11, 12), weight: '700' } } },
-          yWear: { type: 'linear', position: 'right', min: 0, max: 100, ticks: { color: '#00ffcc', font: { size: scaledChartFont(10, 11), weight: '600' }, maxTicksLimit: 6 }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Wear %', color: '#00ffcc', font: { size: scaledChartFont(11, 12), weight: '700' } } },
+          x: { ticks: { color: '#c8e6f7', font: { size: scaledChartFont(mobile ? 9 : 10, 8), weight: '600' }, autoSkip: true, maxTicksLimit: mobile ? 8 : 12, maxRotation: 0 }, grid: { color: 'rgba(121,233,255,0.07)' } },
+          yLap: { type: 'linear', position: 'left', ticks: { color: '#c8e6f7', font: { size: scaledChartFont(mobile ? 9 : 10, 8), weight: '600' }, maxTicksLimit: mobile ? 6 : 9 }, title: { display: true, text: 'Lap Time (s)', color: '#79e9ff', font: { size: scaledChartFont(mobile ? 10 : 11, 9), weight: '700' } } },
+          yWear: { type: 'linear', position: 'right', min: 0, max: 100, ticks: { color: '#5effd2', font: { size: scaledChartFont(mobile ? 9 : 10, 8), weight: '600' }, maxTicksLimit: mobile ? 5 : 6 }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Wear %', color: '#5effd2', font: { size: scaledChartFont(mobile ? 10 : 11, 9), weight: '700' } } },
           yPoints: { type: 'linear', position: 'right', min: 0, max: 100, ticks: { display: false }, grid: { drawOnChartArea: false }, title: { display: false } }
         }
       }
@@ -530,10 +541,20 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom', labels: { color: '#fff', font: { size: scaledChartFont(11, 12), weight: '600' }, padding: 12, boxWidth: 18 } } },
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                color: '#f0faff',
+                font: { size: scaledChartFont(mobile ? 10 : 11, 9), weight: '600' },
+                padding: mobile ? 8 : 14,
+                boxWidth: mobile ? 12 : 18
+              }
+            }
+          },
           scales: {
-            y: { reverse: true, min: 1, max: opponents.length + 1, ticks: { color: '#aafff2', stepSize: 1, font: { size: scaledChartFont(10, 11), weight: '600' } }, title: { display: true, text: 'Position', color: '#aafff2', font: { size: scaledChartFont(11, 12), weight: '700' } } },
-            x: { ticks: { color: '#aafff2', font: { size: scaledChartFont(10, 11), weight: '600' }, autoSkip: true, maxTicksLimit: 12, maxRotation: 0 } }
+            y: { reverse: true, min: 1, max: opponents.length + 1, ticks: { color: '#c8e6f7', stepSize: 1, font: { size: scaledChartFont(mobile ? 9 : 10, 8), weight: '600' }, maxTicksLimit: mobile ? 6 : 10 }, title: { display: true, text: 'Position', color: '#79e9ff', font: { size: scaledChartFont(mobile ? 10 : 11, 9), weight: '700' } } },
+            x: { ticks: { color: '#c8e6f7', font: { size: scaledChartFont(mobile ? 9 : 10, 8), weight: '600' }, autoSkip: true, maxTicksLimit: mobile ? 8 : 12, maxRotation: 0 }, grid: { color: 'rgba(121,233,255,0.07)' } }
           }
         }
       });

@@ -6,11 +6,28 @@
   <title>F1 Clash Companion - Registrierung</title>
   <meta name="theme-color" content="#00ffcc" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="icon" type="image/png" sizes="192x192" href="assets/f1_neon_nights.png" />
-  <link rel="apple-touch-icon" href="assets/f1_neon_nights.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/ferrari2000_candyred_192.png" />
+  <link rel="apple-touch-icon" href="assets/ferrari2000_candyred_192.png" />
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="neon-body registration-neon">
+  <div id="introSplash" class="intro-splash" aria-hidden="true">
+    <video id="introVideo" class="intro-video" autoplay muted playsinline preload="metadata">
+      <source src="assets/intro.webm" type="video/webm" />
+      <source src="assets/intro.mp4" type="video/mp4" />
+    </video>
+    <div class="intro-overlay"></div>
+    <div class="intro-content">
+      <h2>F1 Clash Companion</h2>
+      <p>Session wird vorbereitet</p>
+      <div class="intro-progress" aria-hidden="true">
+        <span id="introProgressFill" class="intro-progress-fill"></span>
+      </div>
+      <button id="skipIntroButton" type="button">Intro ueberspringen</button>
+    </div>
+  </div>
+
+  <div id="registrationRoot" class="registration-root" hidden>
   <div class="lang-bar neon-card" style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 1.2rem;margin-bottom:0.75rem;">
     <span id="i18nLangLabel" style="color:var(--text-muted);font-size:0.9rem;">Sprache</span>
     <select id="langSelect" style="background:#0d0f1e;color:#f7f8fc;border:1px solid rgba(255,255,255,.18);border-radius:0.5rem;padding:0.3rem 0.7rem;font-size:0.9rem;cursor:pointer;">
@@ -22,54 +39,106 @@
 
   <div class="container">
     <header class="topbar">
-      <h1 id="i18nH1">Spieler Registrierung</h1>
+      <div class="registration-heading">
+        <span id="i18nEyebrow" class="registration-eyebrow">Driver Onboarding</span>
+        <h1 id="i18nH1">Spieler Registrierung</h1>
+        <p id="i18nHeroCopy" class="registration-hero-copy">Lege dein Fahrerprofil an, damit deine Session direkt mit dem passenden Account, der Sprache und deinen lokalen Daten startet.</p>
+        <div class="registration-meta">
+          <span id="i18nChipLocal" class="registration-chip">Lokal gespeichert</span>
+          <span id="i18nChipFast" class="registration-chip">Schneller Einstieg</span>
+          <span id="i18nChipPrivate" class="registration-chip">Nur auf diesem Geraet</span>
+        </div>
+      </div>
       <div class="top-actions">
         <a id="backToAppLink" class="btn-link" href="index.html"><span id="i18nBack">Zurueck zur App</span></a>
       </div>
     </header>
 
-    <section class="card">
-      <h2 id="i18nSectionTitle">Registrierungsdaten</h2>
-      <p class="hint" id="i18nHint">Bitte alle Felder ausfuellen. Die Daten werden lokal in deinem Browser gespeichert.</p>
-
-      <form id="registrationForm" class="form-grid" novalidate>
-        <div class="stat">
-          <label for="firstName" id="i18nLblFirstName">Vorname</label>
-          <input id="firstName" name="firstName" type="text" maxlength="60" required />
+    <div class="registration-layout">
+      <section class="card registration-form-card">
+        <div class="section-head">
+          <div>
+            <h2 id="i18nSectionTitle">Registrierungsdaten</h2>
+            <p class="hint" id="i18nHint">Bitte alle Felder ausfuellen. Die Daten werden lokal in deinem Browser gespeichert.</p>
+          </div>
+          <div class="section-badge" id="i18nSectionBadge">Lokales Profil</div>
         </div>
 
-        <div class="stat">
-          <label for="lastName" id="i18nLblLastName">Nachname</label>
-          <input id="lastName" name="lastName" type="text" maxlength="60" required />
-        </div>
+        <form id="registrationForm" class="form-grid" novalidate>
+          <div class="stat field-card">
+            <label for="firstName" id="i18nLblFirstName">Vorname</label>
+            <input id="firstName" name="firstName" type="text" maxlength="60" required />
+          </div>
 
-        <div class="stat">
-          <label for="playerType" id="i18nLblPlayerType">Spielertyp</label>
-          <select id="playerType" name="playerType" required>
-            <option value="" id="i18nOptPlaceholder">Bitte waehlen</option>
-            <option value="Einzelspieler" id="i18nOptSolo">Einzelspieler</option>
-            <option value="Teamspieler" id="i18nOptTeam">Teamspieler</option>
-          </select>
-        </div>
+          <div class="stat field-card">
+            <label for="lastName" id="i18nLblLastName">Nachname</label>
+            <input id="lastName" name="lastName" type="text" maxlength="60" required />
+          </div>
 
-        <div class="stat">
-          <label for="nationality" id="i18nLblNationality">Nationalitaet</label>
-          <input id="nationality" name="nationality" type="text" maxlength="60" required />
-        </div>
+          <div class="stat field-card">
+            <label for="playerType" id="i18nLblPlayerType">Spielertyp</label>
+            <select id="playerType" name="playerType" required>
+              <option value="" id="i18nOptPlaceholder">Bitte waehlen</option>
+              <option value="Einzelspieler" id="i18nOptSolo">Einzelspieler</option>
+              <option value="Teamspieler" id="i18nOptTeam">Teamspieler</option>
+            </select>
+          </div>
 
-        <div class="stat">
-          <label for="clashId" id="i18nLblClashId">F1 Clash ID</label>
-          <input id="clashId" name="clashId" type="text" maxlength="40" required />
-        </div>
+          <div class="stat field-card">
+            <label for="nationality" id="i18nLblNationality">Nationalitaet</label>
+            <input id="nationality" name="nationality" type="text" maxlength="60" required />
+          </div>
 
-        <div class="row form-actions">
-          <button id="saveRegistrationButton" type="submit">Registrierung speichern</button>
-          <button id="clearRegistrationButton" type="button">Daten loeschen</button>
-        </div>
-      </form>
+          <div id="emailFieldCard" class="stat field-card">
+            <label for="email" id="i18nLblEmail">E-Mail</label>
+            <input id="email" name="email" type="email" maxlength="120" required />
+          </div>
 
-      <div id="registrationResult" class="result"></div>
-    </section>
+          <div id="passwordFieldCard" class="stat field-card">
+            <label for="password" id="i18nLblPassword">Passwort</label>
+            <input id="password" name="password" type="password" minlength="8" maxlength="120" required />
+          </div>
+
+          <div id="passwordConfirmFieldCard" class="stat field-card">
+            <label for="passwordConfirm" id="i18nLblPasswordConfirm">Passwort bestaetigen</label>
+            <input id="passwordConfirm" name="passwordConfirm" type="password" minlength="8" maxlength="120" required />
+          </div>
+
+          <div class="stat field-card field-card-wide">
+            <label for="clashId" id="i18nLblClashId">F1 Clash ID</label>
+            <input id="clashId" name="clashId" type="text" maxlength="40" required />
+          </div>
+
+          <div class="row form-actions">
+            <button id="saveRegistrationButton" type="submit">Registrierung speichern</button>
+            <button id="clearRegistrationButton" type="button">Daten loeschen</button>
+          </div>
+        </form>
+
+        <div id="registrationResult" class="result"></div>
+      </section>
+
+      <aside class="neon-card registration-sidecard">
+        <figure class="registration-visual">
+          <img src="assets/registration-visual.png" alt="F1 Clash Companion Visual" />
+        </figure>
+        <span id="i18nWhyTitle" class="sidecard-kicker">Warum dieses Profil?</span>
+        <h3 id="i18nWhyHeading">Ein sauberer Start fuer jede Session</h3>
+        <p id="i18nWhyCopy" class="sidecard-copy">Dein Profil bleibt lokal auf dem Geraet und spart dir Wiederholungen beim Start, beim Sprachwechsel und beim schnellen Wiedereinstieg.</p>
+        <div class="sidecard-list">
+          <div class="sidecard-item" id="i18nBenefit1">Profil lokal gespeichert</div>
+          <div class="sidecard-item" id="i18nBenefit2">Schneller Zugriff auf deine Session</div>
+          <div class="sidecard-item" id="i18nBenefit3">Keine externe Registrierung notwendig</div>
+        </div>
+        <div class="privacy-note">
+          <span id="i18nPrivacyLabel" class="privacy-label">Datenschutz</span>
+          <p id="i18nPrivacyCopy">Es wird nichts an einen externen Dienst gesendet. Alles bleibt im Browser dieses Geraets.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <footer class="registration-footer">Copyright © Sunwalker NP</footer>
   </div>
 
   <script>
@@ -78,21 +147,42 @@
     const ACTIVE_PROFILE_KEY = 'f1clashActiveClashId';
     const LANG_KEY = 'f1clashLang';
     const NEXT_DEFAULT = 'index.html';
+    const INTRO_SEEN_KEY = 'f1clashIntroSeen';
 
     const T = {
       de: {
         pageTitle: 'F1 Clash Companion \u2013 Registrierung',
         htmlLang: 'de', langLabel: 'Sprache',
         h1: 'Spieler Registrierung', back: 'Zur\u00fcck zur App',
+        eyebrow: 'Driver Onboarding',
+        heroCopy: 'Lege dein Fahrerprofil an, damit deine Session direkt mit dem passenden Account, der Sprache und deinen lokalen Daten startet.',
+        chipLocal: 'Lokal gespeichert', chipFast: 'Schneller Einstieg', chipPrivate: 'Nur auf diesem Geraet',
         sectionTitle: 'Registrierungsdaten',
         hint: 'Bitte alle Felder ausf\u00fcllen. Die Daten werden lokal in deinem Browser gespeichert.',
+        sectionBadge: 'Lokales Profil',
         firstName: 'Vorname', lastName: 'Nachname', playerType: 'Spielertyp',
         placeholder: 'Bitte w\u00e4hlen', solo: 'Einzelspieler', team: 'Teamspieler',
-        nationality: 'Nationalit\u00e4t', clashId: 'F1 Clash ID',
+        nationality: 'Nationalit\u00e4t', email: 'E-Mail', clashId: 'F1 Clash ID',
+        password: 'Passwort', passwordConfirm: 'Passwort bestaetigen',
+        whyTitle: 'Warum dieses Profil?',
+        whyHeading: 'Ein sauberer Start fuer jede Session',
+        whyCopy: 'Dein Profil bleibt lokal auf dem Geraet und spart dir Wiederholungen beim Start, beim Sprachwechsel und beim schnellen Wiedereinstieg.',
+        benefit1: 'Profil lokal gespeichert',
+        benefit2: 'Schneller Zugriff auf deine Session',
+        benefit3: 'Keine externe Registrierung notwendig',
+        privacyLabel: 'Datenschutz',
+        privacyCopy: 'Es wird nichts an einen externen Dienst gesendet. Alles bleibt im Browser dieses Geraets.',
+        firstNamePlaceholder: 'Max',
+        lastNamePlaceholder: 'Mustermann',
+        nationalityPlaceholder: 'Deutschland',
+        emailPlaceholder: 'max@example.com',
+        passwordPlaceholder: 'Mindestens 8 Zeichen',
+        passwordConfirmPlaceholder: 'Passwort wiederholen',
+        clashIdPlaceholder: 'z. B. CLASH-12345',
         save: 'Registrierung speichern', clear: 'Daten l\u00f6schen',
         errFirstName: 'Vorname fehlt.', errLastName: 'Nachname fehlt.',
         errPlayerType: 'Bitte Spielertyp w\u00e4hlen.',
-        errNationality: 'Nationalit\u00e4t fehlt.', errClashId: 'F1 Clash ID fehlt.',
+        errNationality: 'Nationalit\u00e4t fehlt.', errEmail: 'E-Mail fehlt oder ist ungueltig.', errPassword: 'Passwort fehlt.', errPasswordShort: 'Passwort muss mindestens 8 Zeichen haben.', errPasswordMismatch: 'Passwoerter stimmen nicht ueberein.', errClashId: 'F1 Clash ID fehlt.',
         noData: 'Noch keine Registrierungsdaten gespeichert.',
         invalid: 'Gespeicherte Daten sind ung\u00fcltig.',
         loaded: 'Gespeicherte Registrierung geladen.',
@@ -103,15 +193,35 @@
         pageTitle: 'F1 Clash Companion \u2013 Registrazione',
         htmlLang: 'it', langLabel: 'Lingua',
         h1: 'Registrazione Giocatore', back: "Torna all'App",
+        eyebrow: 'Driver Onboarding',
+        heroCopy: 'Crea il tuo profilo pilota per iniziare subito la sessione con account, lingua e dati locali gia pronti.',
+        chipLocal: 'Salvato in locale', chipFast: 'Accesso rapido', chipPrivate: 'Solo su questo dispositivo',
         sectionTitle: 'Dati di Registrazione',
         hint: 'Compila tutti i campi. I dati vengono salvati localmente nel browser.',
+        sectionBadge: 'Profilo locale',
         firstName: 'Nome', lastName: 'Cognome', playerType: 'Tipo Giocatore',
         placeholder: 'Seleziona', solo: 'Giocatore Singolo', team: 'Giocatore di Squadra',
-        nationality: 'Nazionalit\u00e0', clashId: 'F1 Clash ID',
+        nationality: 'Nazionalit\u00e0', email: 'E-mail', clashId: 'F1 Clash ID',
+        password: 'Password', passwordConfirm: 'Conferma password',
+        whyTitle: 'Perche questo profilo?',
+        whyHeading: 'Un avvio pulito per ogni sessione',
+        whyCopy: 'Il tuo profilo resta sul dispositivo e ti evita di reinserire dati quando riapri l\'app o cambi lingua.',
+        benefit1: 'Profilo salvato in locale',
+        benefit2: 'Accesso rapido alla tua sessione',
+        benefit3: 'Nessuna registrazione esterna necessaria',
+        privacyLabel: 'Privacy',
+        privacyCopy: 'Nessun dato viene inviato a servizi esterni. Tutto resta nel browser di questo dispositivo.',
+        firstNamePlaceholder: 'Mario',
+        lastNamePlaceholder: 'Rossi',
+        nationalityPlaceholder: 'Italia',
+        emailPlaceholder: 'mario@example.com',
+        passwordPlaceholder: 'Almeno 8 caratteri',
+        passwordConfirmPlaceholder: 'Ripeti la password',
+        clashIdPlaceholder: 'es. CLASH-12345',
         save: 'Salva Registrazione', clear: 'Cancella Dati',
         errFirstName: 'Nome mancante.', errLastName: 'Cognome mancante.',
         errPlayerType: 'Seleziona il tipo di giocatore.',
-        errNationality: 'Nazionalit\u00e0 mancante.', errClashId: 'F1 Clash ID mancante.',
+        errNationality: 'Nazionalit\u00e0 mancante.', errEmail: 'E-mail mancante o non valida.', errPassword: 'Password mancante.', errPasswordShort: 'La password deve contenere almeno 8 caratteri.', errPasswordMismatch: 'Le password non coincidono.', errClashId: 'F1 Clash ID mancante.',
         noData: 'Nessun dato di registrazione salvato.',
         invalid: 'I dati salvati non sono validi.',
         loaded: 'Registrazione caricata.',
@@ -122,15 +232,35 @@
         pageTitle: 'F1 Clash Companion \u2013 Registration',
         htmlLang: 'en', langLabel: 'Language',
         h1: 'Player Registration', back: 'Back to App',
+        eyebrow: 'Driver Onboarding',
+        heroCopy: 'Create your driver profile so every session starts with the right account, language, and local data already in place.',
+        chipLocal: 'Stored locally', chipFast: 'Fast setup', chipPrivate: 'This device only',
         sectionTitle: 'Registration Data',
         hint: 'Please fill in all fields. Data is stored locally in your browser.',
+        sectionBadge: 'Local profile',
         firstName: 'First Name', lastName: 'Last Name', playerType: 'Player Type',
         placeholder: 'Please select', solo: 'Solo Player', team: 'Team Player',
-        nationality: 'Nationality', clashId: 'F1 Clash ID',
+        nationality: 'Nationality', email: 'Email', clashId: 'F1 Clash ID',
+        password: 'Password', passwordConfirm: 'Confirm Password',
+        whyTitle: 'Why this profile?',
+        whyHeading: 'A clean start for every session',
+        whyCopy: 'Your profile stays on this device and removes repetitive setup whenever you relaunch the app or switch languages.',
+        benefit1: 'Profile stored locally',
+        benefit2: 'Fast access to your session',
+        benefit3: 'No external sign-up required',
+        privacyLabel: 'Privacy',
+        privacyCopy: 'Nothing is sent to any external service. Everything stays inside this device browser.',
+        firstNamePlaceholder: 'Alex',
+        lastNamePlaceholder: 'Turner',
+        nationalityPlaceholder: 'United Kingdom',
+        emailPlaceholder: 'alex@example.com',
+        passwordPlaceholder: 'At least 8 characters',
+        passwordConfirmPlaceholder: 'Repeat password',
+        clashIdPlaceholder: 'e.g. CLASH-12345',
         save: 'Save Registration', clear: 'Delete Data',
         errFirstName: 'First name missing.', errLastName: 'Last name missing.',
         errPlayerType: 'Please select a player type.',
-        errNationality: 'Nationality missing.', errClashId: 'F1 Clash ID missing.',
+        errNationality: 'Nationality missing.', errEmail: 'Email missing or invalid.', errPassword: 'Password missing.', errPasswordShort: 'Password must be at least 8 characters.', errPasswordMismatch: 'Passwords do not match.', errClashId: 'F1 Clash ID missing.',
         noData: 'No registration data saved yet.',
         invalid: 'Saved registration data is invalid.',
         loaded: 'Saved registration loaded.',
@@ -141,8 +271,31 @@
 
     function byId(id) { return document.getElementById(id); }
 
+    function readStore(key) {
+      try {
+        const localValue = localStorage.getItem(key);
+        if (localValue !== null) return localValue;
+      } catch {}
+      try {
+        return sessionStorage.getItem(key);
+      } catch {}
+      return null;
+    }
+
+    function writeStore(key, value) {
+      let wrote = false;
+      try { localStorage.setItem(key, value); wrote = true; } catch {}
+      try { sessionStorage.setItem(key, value); wrote = true; } catch {}
+      return wrote;
+    }
+
+    function removeStore(key) {
+      try { localStorage.removeItem(key); } catch {}
+      try { sessionStorage.removeItem(key); } catch {}
+    }
+
     function getLang() {
-      const stored = localStorage.getItem(LANG_KEY);
+      const stored = readStore(LANG_KEY);
       if (stored && T[stored]) return stored;
       const browser = (navigator.language || '').split('-')[0].toLowerCase();
       if (T[browser]) return browser;
@@ -154,10 +307,16 @@
       document.documentElement.lang = t.htmlLang;
       document.title = t.pageTitle;
       byId('i18nLangLabel').textContent = t.langLabel;
+      byId('i18nEyebrow').textContent = t.eyebrow;
       byId('i18nH1').textContent = t.h1;
+      byId('i18nHeroCopy').textContent = t.heroCopy;
+      byId('i18nChipLocal').textContent = t.chipLocal;
+      byId('i18nChipFast').textContent = t.chipFast;
+      byId('i18nChipPrivate').textContent = t.chipPrivate;
       byId('i18nBack').textContent = t.back;
       byId('i18nSectionTitle').textContent = t.sectionTitle;
       byId('i18nHint').textContent = t.hint;
+      byId('i18nSectionBadge').textContent = t.sectionBadge;
       byId('i18nLblFirstName').textContent = t.firstName;
       byId('i18nLblLastName').textContent = t.lastName;
       byId('i18nLblPlayerType').textContent = t.playerType;
@@ -165,7 +324,25 @@
       byId('i18nOptSolo').textContent = t.solo;
       byId('i18nOptTeam').textContent = t.team;
       byId('i18nLblNationality').textContent = t.nationality;
+      byId('i18nLblEmail').textContent = t.email;
+      byId('i18nLblPassword').textContent = t.password;
+      byId('i18nLblPasswordConfirm').textContent = t.passwordConfirm;
       byId('i18nLblClashId').textContent = t.clashId;
+      byId('i18nWhyTitle').textContent = t.whyTitle;
+      byId('i18nWhyHeading').textContent = t.whyHeading;
+      byId('i18nWhyCopy').textContent = t.whyCopy;
+      byId('i18nBenefit1').textContent = t.benefit1;
+      byId('i18nBenefit2').textContent = t.benefit2;
+      byId('i18nBenefit3').textContent = t.benefit3;
+      byId('i18nPrivacyLabel').textContent = t.privacyLabel;
+      byId('i18nPrivacyCopy').textContent = t.privacyCopy;
+      byId('firstName').placeholder = t.firstNamePlaceholder;
+      byId('lastName').placeholder = t.lastNamePlaceholder;
+      byId('nationality').placeholder = t.nationalityPlaceholder;
+      byId('email').placeholder = t.emailPlaceholder;
+      byId('password').placeholder = t.passwordPlaceholder;
+      byId('passwordConfirm').placeholder = t.passwordConfirmPlaceholder;
+      byId('clashId').placeholder = t.clashIdPlaceholder;
       byId('saveRegistrationButton').textContent = t.save;
       byId('clearRegistrationButton').textContent = t.clear;
       byId('langSelect').value = lang;
@@ -199,8 +376,15 @@
         lastName: normalize(byId('lastName').value),
         playerType: normalize(byId('playerType').value),
         nationality: normalize(byId('nationality').value),
+        email: normalize(byId('email').value),
+        password: String(byId('password').value || ''),
+        passwordConfirm: String(byId('passwordConfirm').value || ''),
         clashId: normalize(byId('clashId').value)
       };
+    }
+
+    function isValidEmail(value) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
     }
 
     function validate(data) {
@@ -209,8 +393,71 @@
       if (!data.lastName) return t.errLastName;
       if (!data.playerType) return t.errPlayerType;
       if (!data.nationality) return t.errNationality;
+      if (!data.email || !isValidEmail(data.email)) return t.errEmail;
+      if (!data.password) return t.errPassword;
+      if (String(data.password).length < 8) return t.errPasswordShort;
+      if (data.password !== data.passwordConfirm) return t.errPasswordMismatch;
       if (!data.clashId) return t.errClashId;
       return null;
+    }
+
+    function validatePasswordLive() {
+      const t = T[getLang()] || T.de;
+      const passwordInput = byId('password');
+      const passwordConfirmInput = byId('passwordConfirm');
+      const passwordCard = byId('passwordFieldCard');
+      const passwordConfirmCard = byId('passwordConfirmFieldCard');
+      if (!passwordInput || !passwordConfirmInput || !passwordCard || !passwordConfirmCard) return true;
+
+      const pwd = String(passwordInput.value || '');
+      const confirm = String(passwordConfirmInput.value || '');
+      const lengthOk = pwd.length >= 8;
+      const matchOk = !confirm || pwd === confirm;
+
+      passwordCard.dataset.invalid = lengthOk ? 'false' : 'true';
+      passwordCard.dataset.valid = lengthOk ? 'true' : 'false';
+      passwordInput.setAttribute('aria-invalid', lengthOk ? 'false' : 'true');
+
+      passwordConfirmCard.dataset.invalid = matchOk ? 'false' : 'true';
+      passwordConfirmCard.dataset.valid = matchOk && confirm ? 'true' : 'false';
+      passwordConfirmInput.setAttribute('aria-invalid', matchOk ? 'false' : 'true');
+
+      if (!lengthOk && pwd) {
+        setResult(t.errPasswordShort, 'error');
+      } else if (!matchOk) {
+        setResult(t.errPasswordMismatch, 'error');
+      } else {
+        const out = byId('registrationResult');
+        if (out && out.dataset.kind === 'error') {
+          out.textContent = '';
+          out.dataset.kind = 'info';
+        }
+      }
+
+      return lengthOk && matchOk;
+    }
+
+    function validateEmailLive() {
+      const t = T[getLang()] || T.de;
+      const emailInput = byId('email');
+      const emailCard = byId('emailFieldCard');
+      if (!emailInput || !emailCard) return true;
+      const value = normalize(emailInput.value);
+      const valid = !!value && isValidEmail(value);
+      emailCard.dataset.invalid = valid ? 'false' : 'true';
+      emailCard.dataset.valid = valid ? 'true' : 'false';
+      emailInput.setAttribute('aria-invalid', valid ? 'false' : 'true');
+      if (!valid && value) {
+        setResult(t.errEmail, 'error');
+      }
+      if (valid) {
+        const out = byId('registrationResult');
+        if (out && out.dataset.kind === 'error') {
+          out.textContent = '';
+          out.dataset.kind = 'info';
+        }
+      }
+      return valid;
     }
 
     function fillForm(data) {
@@ -218,12 +465,17 @@
       byId('lastName').value = data.lastName || '';
       byId('playerType').value = data.playerType || '';
       byId('nationality').value = data.nationality || '';
+      byId('email').value = data.email || '';
+      byId('password').value = '';
+      byId('passwordConfirm').value = '';
       byId('clashId').value = data.clashId || '';
+      validateEmailLive();
+      validatePasswordLive();
     }
 
     function loadRegistration() {
       const t = T[getLang()] || T.de;
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = readStore(STORAGE_KEY);
       if (!raw) { setResult(t.noData, 'error'); return; }
       try {
         const data = JSON.parse(raw);
@@ -240,24 +492,38 @@
       const data = getFormData();
       const error = validate(data);
       if (error) { setResult(error, 'error'); return; }
-      const payload = { ...data, lang: getLang(), updatedAt: new Date().toISOString() };
-      const listRaw = localStorage.getItem(PROFILE_LIST_KEY);
+      const payload = {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        playerType: data.playerType,
+        nationality: data.nationality,
+        email: data.email,
+        clashId: data.clashId,
+        passwordSet: true,
+        lang: getLang(),
+        updatedAt: new Date().toISOString()
+      };
+      const listRaw = readStore(PROFILE_LIST_KEY);
       let list = [];
       try { list = JSON.parse(listRaw) || []; } catch { list = []; }
       if (!Array.isArray(list)) list = [];
       const idx = list.findIndex((e) => e && e.clashId === payload.clashId);
       if (idx >= 0) list[idx] = { ...list[idx], ...payload };
       else list.push(payload);
-      localStorage.setItem(PROFILE_LIST_KEY, JSON.stringify(list));
-      localStorage.setItem(ACTIVE_PROFILE_KEY, payload.clashId);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      const okList = writeStore(PROFILE_LIST_KEY, JSON.stringify(list));
+      const okActive = writeStore(ACTIVE_PROFILE_KEY, payload.clashId);
+      const okRegistration = writeStore(STORAGE_KEY, JSON.stringify(payload));
+      if (!okList && !okActive && !okRegistration) {
+        setResult('Speichern im Browser ist blockiert. Bitte Browser-Storage erlauben.', 'error');
+        return;
+      }
       setResult(t.saved);
       setTimeout(() => { window.location.href = getNextTarget(); }, 350);
     }
 
     function clearRegistration() {
       const t = T[getLang()] || T.de;
-      localStorage.removeItem(STORAGE_KEY);
+      removeStore(STORAGE_KEY);
       fillForm({});
       setResult(t.cleared);
     }
@@ -266,17 +532,112 @@
     applyLang(_initLang);
     applyNextLink();
     loadRegistration();
+    initIntro();
 
     byId('langSelect').addEventListener('change', function(e) {
       const lang = e.target.value;
-      localStorage.setItem(LANG_KEY, lang);
+      writeStore(LANG_KEY, lang);
       applyLang(lang);
       loadRegistration();
     });
     byId('registrationForm').addEventListener('submit', saveRegistration);
     byId('clearRegistrationButton').addEventListener('click', clearRegistration);
+    const emailInput = byId('email');
+    const passwordInput = byId('password');
+    const passwordConfirmInput = byId('passwordConfirm');
+    if (emailInput) {
+      emailInput.addEventListener('input', validateEmailLive);
+      emailInput.addEventListener('blur', validateEmailLive);
+    }
+    if (passwordInput) {
+      passwordInput.addEventListener('input', validatePasswordLive);
+      passwordInput.addEventListener('blur', validatePasswordLive);
+    }
+    if (passwordConfirmInput) {
+      passwordConfirmInput.addEventListener('input', validatePasswordLive);
+      passwordConfirmInput.addEventListener('blur', validatePasswordLive);
+    }
+    function showRegistration() {
+      const splash = byId('introSplash');
+      const root = byId('registrationRoot');
+      if (root) {
+        root.hidden = false;
+        requestAnimationFrame(() => root.classList.add('is-visible'));
+      }
+      if (splash) {
+        splash.classList.add('is-leaving');
+        setTimeout(() => splash.setAttribute('hidden', 'hidden'), 380);
+      }
+    }
+
+    function initIntro() {
+      const splash = byId('introSplash');
+      const video = byId('introVideo');
+      const skip = byId('skipIntroButton');
+      const progressFill = byId('introProgressFill');
+      if (!splash || !video) { showRegistration(); return; }
+
+      const seen = sessionStorage.getItem(INTRO_SEEN_KEY) === '1';
+      if (seen) {
+        showRegistration();
+        return;
+      }
+
+      let closed = false;
+      let timeoutId = null;
+      let skipDelayId = null;
+      const closeIntro = () => {
+        if (closed) return;
+        closed = true;
+        if (timeoutId) clearTimeout(timeoutId);
+        if (skipDelayId) clearTimeout(skipDelayId);
+        sessionStorage.setItem(INTRO_SEEN_KEY, '1');
+        showRegistration();
+      };
+
+      const syncProgress = (ms) => {
+        if (!progressFill) return;
+        progressFill.style.transition = 'none';
+        progressFill.style.width = '0%';
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            progressFill.style.transition = 'width ' + ms + 'ms linear';
+            progressFill.style.width = '100%';
+          });
+        });
+      };
+
+      if (skip) {
+        skip.classList.add('skip-hidden');
+        skipDelayId = setTimeout(() => {
+          if (!closed) skip.classList.remove('skip-hidden');
+        }, 1000);
+      }
+
+      if (skip) skip.addEventListener('click', closeIntro);
+      video.addEventListener('ended', closeIntro, { once: true });
+      video.addEventListener('error', closeIntro, { once: true });
+
+      const tryPlay = video.play();
+      if (tryPlay && typeof tryPlay.catch === 'function') {
+        tryPlay.catch(() => closeIntro());
+      }
+
+      video.addEventListener('loadedmetadata', () => {
+        const seconds = Number(video.duration);
+        if (!Number.isFinite(seconds) || seconds <= 0) return;
+        const maxMs = 20000;
+        const minMs = 2500;
+        const ms = Math.max(minMs, Math.min(maxMs, Math.round(seconds * 1000 + 250)));
+        if (timeoutId) clearTimeout(timeoutId);
+        timeoutId = setTimeout(closeIntro, ms);
+        syncProgress(ms);
+      }, { once: true });
+
+      timeoutId = setTimeout(closeIntro, 9000);
+      syncProgress(9000);
+    }
   </script>
-  <footer style="text-align:center;padding:1rem;color:#9aa2c0;font-size:0.85rem;">Copyright © Sunwalker NP</footer>
 </body>
 </html>
 

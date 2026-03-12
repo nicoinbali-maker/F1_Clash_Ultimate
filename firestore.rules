@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // One document per (uid + profileId) pair, e.g. playerProfiles/{uid}_{profileId}
+    match /playerProfiles/{docId} {
+      allow create: if request.auth != null
+        && request.resource.data.ownerUid is string
+        && request.resource.data.ownerUid == request.auth.uid;
+
+      allow read, update, delete: if request.auth != null
+        && resource.data.ownerUid is string
+        && resource.data.ownerUid == request.auth.uid
+        && (
+          request.method == 'update'
+            ? request.resource.data.ownerUid == request.auth.uid
+            : true
+        );
+    }
+  }
+}

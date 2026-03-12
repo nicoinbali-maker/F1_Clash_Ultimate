@@ -6,19 +6,29 @@
   <title>F1 Clash Companion 2026 – Ultimate</title>
   <meta name="theme-color" content="#0a0d17" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="icon" type="image/png" sizes="192x192" href="assets/f1_neon_nights.png" />
-  <link rel="apple-touch-icon" href="assets/f1_neon_nights.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/ferrari2000_candyred_192.png" />
+  <link rel="apple-touch-icon" href="assets/ferrari2000_candyred_192.png" />
   <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+  <script src="vendor/chart.umd.min.js"></script>
   <script src="i18n.js"></script>
   <script defer src="script.js"></script>
   <script defer src="advanced.js"></script>
 </head>
-<body class="neon-body">
-  <script>if (!localStorage.getItem('f1clashRegistration')) { window.location.replace('registration.html?next=index.html'); }</script>
+<body class="neon-body main-cockpit">
+  <script>
+    (function() {
+      let hasRegistration = false;
+      try { hasRegistration = !!localStorage.getItem('f1clashRegistration'); } catch {}
+      if (!hasRegistration) {
+        try { hasRegistration = !!sessionStorage.getItem('f1clashRegistration'); } catch {}
+      }
+      if (!hasRegistration) {
+        window.location.replace('registration.html?next=index.html');
+      }
+    })();
+  </script>
   <div class="app-shell">
-    <div class="lang-bar neon-card" style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 1.2rem;">
+    <div class="lang-bar neon-card app-lang-bar" style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 1.2rem;">
       <span data-i18n="lang_label" style="color:var(--text-muted,#9aa2c0);font-size:0.9rem;">Sprache</span>
       <select id="appLangSelect" style="background:#0d0f1e;color:#f7f8fc;border:1px solid rgba(255,255,255,.18);border-radius:0.5rem;padding:0.3rem 0.7rem;font-size:0.9rem;cursor:pointer;">
         <option value="de">🇩🇪 Deutsch</option>
@@ -26,9 +36,9 @@
         <option value="en">🇬🇧 English</option>
       </select>
     </div>
-    <header class="topbar neon-card">
+    <header class="topbar neon-card main-topbar">
       <div class="brand">
-        <img src="assets/f1_neon_nights.png" alt="F1 Neon Nights" class="brand-icon" />
+        <img src="assets/ferrari2000_candyred_192.png" alt="F1 Neon Nights" class="brand-icon" />
         <div>
           <h1>F1 Clash Companion</h1>
           <p data-i18n="brand_subtitle">Ultimate Toolkit für saisonale Optimierung & Hall of Fame</p>
@@ -50,10 +60,11 @@
       </div>
     </header>
 
-    <nav class="subnav neon-card">
+    <nav class="subnav neon-card main-subnav">
       <a href="#dashboard" data-i18n="nav_dashboard">Dashboard</a>
-      <a href="#garage" data-i18n="nav_garage">Garage</a>
+      <a href="garage.html" data-i18n="nav_garage">Garage</a>
       <a href="optimizer.html" data-i18n="nav_optimizer">Optimizer</a>
+      <a href="sync.html" data-i18n="nav_sync">Account-Sync</a>
       <a href="#race" data-i18n="nav_race">Simulator</a>
       <a href="#team" data-i18n="nav_clan">Clan</a>
       <a href="#leaderboard" data-i18n="nav_leaderboard">Leaderboard</a>
@@ -61,6 +72,36 @@
       <a href="#personal" data-i18n="nav_personal">Persönlich</a>
       <a href="#registration" data-i18n="nav_registration">Registrierung</a>
     </nav>
+
+    <section class="main-hero neon-card" aria-labelledby="mainHeroTitle">
+      <div class="main-hero-copy">
+        <span class="main-hero-kicker">Command Deck</span>
+        <h2 id="mainHeroTitle">F1 Clash Companion</h2>
+        <p data-i18n="brand_subtitle">Ultimate Toolkit für saisonale Optimierung & Hall of Fame</p>
+        <div class="main-hero-stats">
+          <div class="hero-stat">
+            <span data-i18n="app_start_label">App-Start</span>
+            <strong>2025</strong>
+          </div>
+          <div class="hero-stat">
+            <span data-i18n="current_season_label">Aktuelle Saison</span>
+            <strong>2026 Ready</strong>
+          </div>
+          <div class="hero-stat">
+            <span data-i18n="sync_label">Sync mit F1 Clash Update</span>
+            <strong>Live Toolkit</strong>
+          </div>
+        </div>
+        <div class="main-hero-actions">
+          <a href="#dashboard" class="pill ghost-link" data-i18n="nav_dashboard">Dashboard</a>
+          <a href="optimizer.html" class="pill ghost-link" data-i18n="nav_optimizer">Optimizer</a>
+          <a href="#hallOfFame" class="pill ghost-link" data-i18n="nav_hof">Hall of Fame</a>
+        </div>
+      </div>
+      <figure class="main-hero-visual">
+        <img src="assets/registration-visual.png" alt="F1 Clash Visual" />
+      </figure>
+    </section>
 
     <main>
       <section id="dashboard" class="panel neon-card">
@@ -161,54 +202,6 @@
           <span data-i18n="sync_mode_lbl">Modus:</span> <strong id="f1SyncModeLabel">Live</strong>
         </div>
         <div id="f1SyncResult" class="result"></div>
-      </section>
-
-      <section id="garage" class="panel neon-card">
-        <header>
-          <h2 data-i18n="garage_h2">Drag-and-Drop Garage & Inventar-Scanner</h2>
-          <p data-i18n="garage_p">Inventarscanner + OCR + Setup-Zuweisung pro Spielerprofil (Einzel/Team).</p>
-        </header>
-        <div class="row">
-          <label for="inventorySearch" data-i18n="inventory_search_lbl">Inventar suchen</label>
-          <input id="inventorySearch" type="search" data-i18n-ph="inventory_search_ph" placeholder="Part-Name oder ID" />
-        </div>
-        <div id="garageGrid" class="builder-grid six">
-          <div class="drop-slot" data-category="engine" id="slot_engine">Engine: Drop Part here</div>
-          <div class="drop-slot" data-category="front_wing" id="slot_front_wing">Front Wing: Drop Part here</div>
-          <div class="drop-slot" data-category="rear_wing" id="slot_rear_wing">Rear Wing: Drop Part here</div>
-          <div class="drop-slot" data-category="gearbox" id="slot_gearbox">Gearbox: Drop Part here</div>
-          <div class="drop-slot" data-category="suspension" id="slot_suspension">Suspension: Drop Part here</div>
-          <div class="drop-slot" data-category="brakes" id="slot_brakes">Brakes: Drop Part here</div>
-        </div>
-        <h3 data-i18n="parts_inventory_h3">Teile-Garage (draggable)</h3>
-        <div id="partsInventory" class="inventory-grid"></div>
-        <h3 data-i18n="drivers_h3">Fahrer-Manager</h3>
-        <p data-i18n="drivers_p">Fahrerstufen als Dropdown von S1 bis S12, inkl. Untersektionen Legendäre Fahrer und Spezial Edition.</p>
-        <div class="driver-sections">
-          <div>
-            <h4 data-i18n="drivers_standard_h4">Standard Fahrer</h4>
-            <div id="driversStandardList" class="inventory-grid"></div>
-          </div>
-          <div>
-            <h4 data-i18n="drivers_legendary_h4">Legendäre Fahrer</h4>
-            <div id="driversLegendaryList" class="inventory-grid"></div>
-          </div>
-          <div>
-            <h4 data-i18n="drivers_special_h4">Spezial Edition</h4>
-            <div id="driversSpecialList" class="inventory-grid"></div>
-          </div>
-        </div>
-        <div class="row">
-          <button id="manualScoreButton" class="pill" data-i18n="score_btn">Setup bewerten</button>
-          <button id="saveSetupButton" class="pill" data-i18n="save_setup_btn">Saison Setup speichern</button>
-        </div>
-        <div id="builderResult" class="result"></div>
-        <div class="ocr-panel">
-          <h3 data-i18n="ocr_h3">Inventar-Scanner (OCR)</h3>
-          <input id="ocrFile" type="file" accept="image/*" aria-label="Inventar Bild" />
-          <button id="ocrButton" class="pill" data-i18n="ocr_btn">OCR starten</button>
-          <div id="ocrResult" class="result"></div>
-        </div>
       </section>
 
       <section id="optimizer" class="panel neon-card">

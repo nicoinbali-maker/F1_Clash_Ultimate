@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>F1 Clash Companion - Garage</title>
+  <meta name="theme-color" content="#0a0d17" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/ferrari2000_candyred_192.png" />
+  <link rel="apple-touch-icon" href="assets/ferrari2000_candyred_192.png" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="vendor/tesseract.min.js"></script>
+  <script src="i18n.js"></script>
+  <script defer src="script.js"></script>
+</head>
+<body class="neon-body main-cockpit">
+  <script>
+    (function() {
+      let hasRegistration = false;
+      try { hasRegistration = !!localStorage.getItem('f1clashRegistration'); } catch {}
+      if (!hasRegistration) {
+        try { hasRegistration = !!sessionStorage.getItem('f1clashRegistration'); } catch {}
+      }
+      if (!hasRegistration) {
+        window.location.replace('registration.html?next=garage.html');
+      }
+    })();
+  </script>
+
+  <div class="app-shell">
+    <div class="lang-bar neon-card app-lang-bar" style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 1.2rem;">
+      <span data-i18n="lang_label" style="color:var(--text-muted,#9aa2c0);font-size:0.9rem;">Sprache</span>
+      <select id="appLangSelect" style="background:#0d0f1e;color:#f7f8fc;border:1px solid rgba(255,255,255,.18);border-radius:0.5rem;padding:0.3rem 0.7rem;font-size:0.9rem;cursor:pointer;">
+        <option value="de">🇩🇪 Deutsch</option>
+        <option value="it">🇮🇹 Italiano</option>
+        <option value="en">🇬🇧 English</option>
+      </select>
+    </div>
+
+    <header class="topbar neon-card main-topbar">
+      <div class="brand">
+        <img src="assets/ferrari2000_candyred_192.png" alt="F1 Neon Nights" class="brand-icon" />
+        <div>
+          <h1 data-i18n="nav_garage">Garage</h1>
+          <p data-i18n="garage_p">Inventarscanner + OCR + Setup-Zuweisung pro Spielerprofil (Einzel/Team).</p>
+        </div>
+      </div>
+      <div class="row">
+        <a class="pill ghost-link" href="index.html" onclick="if (history.length > 1) { history.back(); return false; }" data-i18n="nav_dashboard">Dashboard</a>
+        <a class="pill ghost-link" href="optimizer.html" data-i18n="nav_optimizer">Optimizer</a>
+      </div>
+    </header>
+
+    <nav class="subnav neon-card main-subnav garage-quicknav" aria-label="Garage Schnellnavigation">
+      <a href="#garageInventory" data-i18n="parts_inventory_h3">Teile-Garage (draggable)</a>
+      <a href="#garageDrivers" data-i18n="drivers_h3">Fahrer-Manager</a>
+      <a href="#garageOcr" data-i18n="ocr_h3">Inventar-Scanner (OCR)</a>
+    </nav>
+
+    <main>
+      <section id="garage" class="panel neon-card">
+        <header>
+          <h2 data-i18n="garage_h2">Drag-and-Drop Garage & Inventar-Scanner</h2>
+          <p data-i18n="garage_p">Inventarscanner + OCR + Setup-Zuweisung pro Spielerprofil (Einzel/Team).</p>
+        </header>
+        <div class="row">
+          <label for="inventorySearch" data-i18n="inventory_search_lbl">Inventar suchen</label>
+          <input id="inventorySearch" type="search" data-i18n-ph="inventory_search_ph" placeholder="Part-Name oder ID" />
+        </div>
+        <div id="garageGrid" class="builder-grid six">
+          <div class="drop-slot" data-category="engine" id="slot_engine">Engine: Drop Part here</div>
+          <div class="drop-slot" data-category="front_wing" id="slot_front_wing">Front Wing: Drop Part here</div>
+          <div class="drop-slot" data-category="rear_wing" id="slot_rear_wing">Rear Wing: Drop Part here</div>
+          <div class="drop-slot" data-category="gearbox" id="slot_gearbox">Gearbox: Drop Part here</div>
+          <div class="drop-slot" data-category="suspension" id="slot_suspension">Suspension: Drop Part here</div>
+          <div class="drop-slot" data-category="brakes" id="slot_brakes">Brakes: Drop Part here</div>
+        </div>
+        <h3 id="garageInventory" data-i18n="parts_inventory_h3">Teile-Garage (draggable)</h3>
+        <div id="partsInventory" class="inventory-grid"></div>
+        <h3 id="garageDrivers" data-i18n="drivers_h3">Fahrer-Manager</h3>
+        <p data-i18n="drivers_p">Fahrerstufen als Dropdown von S1 bis S12, inkl. Untersektionen Legendäre Fahrer und Spezial Edition.</p>
+        <div class="driver-sections">
+          <div>
+            <h4 data-i18n="drivers_standard_h4">Standard Fahrer</h4>
+            <div id="driversStandardList" class="inventory-grid"></div>
+          </div>
+          <div>
+            <h4 data-i18n="drivers_legendary_h4">Legendäre Fahrer</h4>
+            <div id="driversLegendaryList" class="inventory-grid"></div>
+          </div>
+          <div>
+            <h4 data-i18n="drivers_special_h4">Spezial Edition</h4>
+            <div id="driversSpecialList" class="inventory-grid"></div>
+          </div>
+        </div>
+        <div class="row">
+          <button id="manualScoreButton" class="pill" data-i18n="score_btn">Setup bewerten</button>
+          <button id="saveSetupButton" class="pill" data-i18n="save_setup_btn">Saison Setup speichern</button>
+        </div>
+        <div id="builderResult" class="result"></div>
+        <div id="garageOcr" class="ocr-panel">
+          <h3 data-i18n="ocr_h3">Inventar-Scanner (OCR)</h3>
+          <input id="ocrFile" type="file" accept="image/*" aria-label="Inventar Bild" />
+          <button id="ocrButton" class="pill" data-i18n="ocr_btn">OCR starten</button>
+          <div id="ocrResult" class="result"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer neon-card">
+      <p data-i18n="copyright">Copyright © Sunwalker NP</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -8,6 +8,10 @@ const SPECIAL_DRIVER_NAMES = new Set(['Mick Schumacher', 'Palou', 'Antonelli', '
 const COMMUNITY_KNOWLEDGE_KEY = 'f1clashCommunityKnowledge';
 const F1_SYNC_CONSENT_PREFIX = 'f1clashSyncConsent_';
 const F1_SYNC_API_CONFIG_PREFIX = 'f1clashSyncApiConfig_';
+const FIREBASE_CONFIG_KEY = 'f1clashFirebaseConfig';
+const FIREBASE_AUTH_KEY = 'f1clashFirebaseAuth';
+const FIREBASE_AUTO_SYNC_KEY = 'f1clashFirebaseAutoSync';
+const MAX_FULL_OPTIMIZER_COMBOS = 120000;
 
 const tracksDb = [
   { name: 'Bahrain', laps: 8, pitLoss: 20, wear: 1.00, baseLap: 92.1, tempo: 84, kurven: 58, antrieb: 80, quali: 56, drs: 62, meta: 'Power + Traktion' },
@@ -98,6 +102,10 @@ const strategyChartPopupData = {};
 let communityKnowledge = null;
 let lastDriverImpactTrack = null;
 let lastDriverImpactContext = null;
+const chartTouchState = {};
+let activePopupChartId = null;
+let firebaseAutoSyncTimer = null;
+let firebaseAutoSyncMuted = false;
 
 function byId(...ids) {
   for (const id of ids) {
@@ -135,6 +143,29 @@ function setResult(id, text) {
   if (out) out.textContent = text;
 }
 
+function hasUi(...ids) {
+  return ids.some((id) => !!byId(id));
+}
+
+function isOptimizerPageContext() {
+  const bodyClass = document.body?.classList;
+  if (bodyClass?.contains('optimizer-page')) return true;
+  const path = String(window.location?.pathname || '').toLowerCase();
+  return path.endsWith('/optimizer.html') || path.endsWith('optimizer.html');
+}
+
+function shouldAutoRunHeavyTasks() {
+  return !Boolean(window.Capacitor?.isNativePlatform?.());
+}
+
+function deferUiTask(task, delay = 60) {
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(() => task(), { timeout: 500 });
+    return;
+  }
+  window.setTimeout(task, delay);
+}
+
 function getActiveProfileIdLocal() {
   const profile = loadRegistrationProfile();
   if (profile?.clashId) return profile.clashId;
@@ -151,6 +182,7 @@ function loadSyncConsent() {
 
 function saveSyncConsent(consent) {
   writeJsonSafe(syncConsentStorageKey(), consent);
+  queueFirebaseAutoSync('consent');
   return consent;
 }
 
@@ -275,6 +307,365 @@ function saveApiConfigFromUi() {
     client: cfg.clientId || '-',
     token: maskedToken
   }));
+}
+
+function loadFirebaseAuthState() {
+  return readJsonSafe(FIREBASE_AUTH_KEY, null);
+}
+
+function saveFirebaseAuthState(state) {
+  writeJsonSafe(FIREBASE_AUTH_KEY, state);
+  return state;
+}
+
+function clearFirebaseAuthState() {
+  localStorage.removeItem(FIREBASE_AUTH_KEY);
+}
+
+function loadFirebaseAutoSyncEnabled() {
+  const raw = localStorage.getItem(FIREBASE_AUTO_SYNC_KEY);
+  return raw !== '0';
+}
+
+function saveFirebaseAutoSyncEnabled(enabled) {
+  localStorage.setItem(FIREBASE_AUTO_SYNC_KEY, enabled ? '1' : '0');
+}
+
+function firebaseAuthApiUrl(config, action) {
+  const key = encodeURIComponent(config.apiKey);
+  return `https://identitytoolkit.googleapis.com/v1/accounts:${action}?key=${key}`;
+}
+
+function renderFirebaseAuthState() {
+  const statusNode = byId('firebaseAuthStatus');
+  const autoSyncNode = byId('firebaseAutoSync');
+  const auth = loadFirebaseAuthState();
+  if (statusNode) {
+    statusNode.textContent = auth?.email ? `${auth.email} (${auth.localId || '-'})` : 'nicht angemeldet';
+  }
+  if (autoSyncNode) {
+    autoSyncNode.checked = loadFirebaseAutoSyncEnabled();
+  }
+}
+
+function collectFirebaseAuthCredentials() {
+  return {
+    email: String(byId('firebaseAuthEmail')?.value || '').trim(),
+    password: String(byId('firebaseAuthPassword')?.value || '')
+  };
+}
+
+function applyFirebaseAuthResponse(data, emailFallback = '') {
+  const expiresSec = Number(data?.expiresIn || 3600);
+  const state = {
+    localId: String(data?.localId || ''),
+    email: String(data?.email || emailFallback || ''),
+    idToken: String(data?.idToken || ''),
+    refreshToken: String(data?.refreshToken || ''),
+    expiresAt: Date.now() + Math.max(60, expiresSec) * 1000,
+    updatedAt: new Date().toISOString()
+  };
+  if (!state.idToken || !state.refreshToken || !state.localId) {
+    throw new Error('Firebase Auth Antwort ist unvollständig.');
+  }
+  saveFirebaseAuthState(state);
+  renderFirebaseAuthState();
+  return state;
+}
+
+async function firebaseSignUpFromUi() {
+  const cfg = saveFirebaseConfig(collectFirebaseConfigFromUi());
+  const creds = collectFirebaseAuthCredentials();
+  if (!cfg.apiKey) throw new Error('Firebase API Key fehlt.');
+  if (!creds.email || !creds.password) throw new Error('E-Mail und Passwort sind erforderlich.');
+
+  const response = await fetch(firebaseAuthApiUrl(cfg, 'signUp'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: creds.email, password: creds.password, returnSecureToken: true })
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(`Firebase SignUp fehlgeschlagen: ${data?.error?.message || response.statusText}`);
+  }
+  applyFirebaseAuthResponse(data, creds.email);
+  setSyncResult(`Firebase Account erstellt: ${creds.email}`);
+}
+
+async function firebaseLoginFromUi() {
+  const cfg = saveFirebaseConfig(collectFirebaseConfigFromUi());
+  const creds = collectFirebaseAuthCredentials();
+  if (!cfg.apiKey) throw new Error('Firebase API Key fehlt.');
+  if (!creds.email || !creds.password) throw new Error('E-Mail und Passwort sind erforderlich.');
+
+  const response = await fetch(firebaseAuthApiUrl(cfg, 'signInWithPassword'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: creds.email, password: creds.password, returnSecureToken: true })
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(`Firebase Login fehlgeschlagen: ${data?.error?.message || response.statusText}`);
+  }
+  applyFirebaseAuthResponse(data, creds.email);
+  setSyncResult(`Firebase Login erfolgreich: ${creds.email}`);
+}
+
+function firebaseLogout() {
+  clearFirebaseAuthState();
+  renderFirebaseAuthState();
+  setSyncResult('Firebase Logout erfolgreich.');
+}
+
+async function ensureFirebaseIdToken(config) {
+  const auth = loadFirebaseAuthState();
+  if (!auth?.refreshToken) {
+    throw new Error('Firebase Auth erforderlich: Bitte zuerst einloggen.');
+  }
+
+  if (auth.idToken && Number(auth.expiresAt || 0) - Date.now() > 60000) {
+    return auth;
+  }
+
+  const response = await fetch(`https://securetoken.googleapis.com/v1/token?key=${encodeURIComponent(config.apiKey)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `grant_type=refresh_token&refresh_token=${encodeURIComponent(auth.refreshToken)}`
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(`Firebase Token-Refresh fehlgeschlagen: ${data?.error?.message || response.statusText}`);
+  }
+
+  const refreshed = {
+    ...auth,
+    idToken: String(data.id_token || auth.idToken || ''),
+    refreshToken: String(data.refresh_token || auth.refreshToken || ''),
+    localId: String(data.user_id || auth.localId || ''),
+    expiresAt: Date.now() + Math.max(60, Number(data.expires_in || 3600)) * 1000,
+    updatedAt: new Date().toISOString()
+  };
+  saveFirebaseAuthState(refreshed);
+  renderFirebaseAuthState();
+  return refreshed;
+}
+
+function queueFirebaseAutoSync(reason = 'change') {
+  if (firebaseAutoSyncMuted || !loadFirebaseAutoSyncEnabled()) return;
+  if (firebaseAutoSyncTimer) clearTimeout(firebaseAutoSyncTimer);
+  firebaseAutoSyncTimer = window.setTimeout(() => {
+    savePlayerToFirebase({ silent: true, reason }).catch(() => {});
+  }, 1200);
+}
+
+function loadFirebaseConfig() {
+  return readJsonSafe(FIREBASE_CONFIG_KEY, {
+    projectId: '',
+    apiKey: ''
+  });
+}
+
+function saveFirebaseConfig(config) {
+  const normalized = {
+    projectId: String(config?.projectId || '').trim(),
+    apiKey: String(config?.apiKey || '').trim(),
+    updatedAt: new Date().toISOString()
+  };
+  writeJsonSafe(FIREBASE_CONFIG_KEY, normalized);
+  return normalized;
+}
+
+function collectFirebaseConfigFromUi() {
+  return {
+    projectId: byId('firebaseProjectId')?.value || '',
+    apiKey: byId('firebaseApiKey')?.value || ''
+  };
+}
+
+function renderFirebaseConfigState() {
+  const cfg = loadFirebaseConfig();
+  const projectNode = byId('firebaseProjectId');
+  const keyNode = byId('firebaseApiKey');
+  if (projectNode && !projectNode.value) projectNode.value = cfg.projectId || '';
+  if (keyNode && !keyNode.value) keyNode.value = cfg.apiKey || '';
+}
+
+function saveFirebaseConfigFromUi() {
+  const cfg = saveFirebaseConfig(collectFirebaseConfigFromUi());
+  const keyInfo = cfg.apiKey ? `${cfg.apiKey.slice(0, 4)}...` : '-';
+  setSyncResult(`Firebase-Konfig gespeichert. Project: ${cfg.projectId || '-'} | Key: ${keyInfo}`);
+}
+
+function currentManualSetupMap() {
+  const raw = localStorage.getItem(manualKey());
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function collectPlayerCloudPayload() {
+  return {
+    version: 1,
+    savedAt: new Date().toISOString(),
+    season: currentSeason,
+    profile: loadRegistrationProfile(),
+    activeClashId: getActiveProfileIdLocal(),
+    mode: loadRegistrationProfile()?.playerType || null,
+    ownedParts,
+    partMeta: loadPartMetaMap(),
+    driverStages: loadDriverStageMap(),
+    manualSetupByTrack: currentManualSetupMap(),
+    communityKnowledge: loadCommunityKnowledge(),
+    progress: {
+      ownedPartsCount: Array.isArray(ownedParts) ? ownedParts.length : 0,
+      totalPartsCount: partCatalog.length,
+      totalDriversCount: driversDb.length
+    }
+  };
+}
+
+function applyPlayerCloudPayload(payload) {
+  if (!payload || typeof payload !== 'object') return;
+
+  firebaseAutoSyncMuted = true;
+  try {
+
+  if (payload.profile && typeof payload.profile === 'object') {
+    localStorage.setItem('f1clashRegistration', JSON.stringify(payload.profile));
+    if (payload.profile.clashId) {
+      localStorage.setItem('f1clashActiveClashId', String(payload.profile.clashId));
+    }
+  } else if (payload.activeClashId) {
+    localStorage.setItem('f1clashActiveClashId', String(payload.activeClashId));
+  }
+
+  if (Array.isArray(payload.ownedParts) && payload.ownedParts.length) {
+    const allowed = new Set(partCatalog.map((part) => part.name));
+    ownedParts = payload.ownedParts.filter((name) => allowed.has(name));
+    if (!ownedParts.length) {
+      ownedParts = partCatalog.map((part) => part.name);
+    }
+    saveOwnedParts();
+  }
+
+  if (payload.partMeta && typeof payload.partMeta === 'object') {
+    savePartMetaMap(payload.partMeta);
+  }
+
+  if (payload.driverStages && typeof payload.driverStages === 'object') {
+    saveDriverStageMap(payload.driverStages);
+  }
+
+  if (payload.manualSetupByTrack && typeof payload.manualSetupByTrack === 'object') {
+    localStorage.setItem(manualKey(), JSON.stringify(payload.manualSetupByTrack));
+  }
+
+  if (payload.communityKnowledge && typeof payload.communityKnowledge === 'object') {
+    saveCommunityKnowledge(payload.communityKnowledge);
+  }
+
+  if (hasUi('partsInventory')) buildInventory();
+  if (hasUi('driversStandardList')) buildDriverInventory();
+  updateKpis();
+
+    if (isOptimizerPageContext()) {
+      optimizeSelectedTrack();
+      runStrategyCalculation();
+    }
+  } finally {
+    firebaseAutoSyncMuted = false;
+  }
+}
+
+function firebaseDocId(authState) {
+  const uid = String(authState?.localId || 'guest').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_').slice(0, 80) || 'guest';
+  const id = String(getActiveProfileIdLocal() || 'guest').trim().toLowerCase();
+  const profile = id.replace(/[^a-z0-9_-]/g, '_').slice(0, 80) || 'guest';
+  return `${uid}_${profile}`;
+}
+
+function firebaseDocUrl(config, docId) {
+  const projectId = encodeURIComponent(config.projectId);
+  const key = encodeURIComponent(config.apiKey);
+  return `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/playerProfiles/${docId}?key=${key}`;
+}
+
+async function savePlayerToFirebase(options = {}) {
+  const cfg = saveFirebaseConfig(collectFirebaseConfigFromUi());
+  if (!cfg.projectId || !cfg.apiKey) {
+    if (!options.silent) setSyncResult('Firebase-Konfig unvollstaendig: Project ID und API Key fehlen.');
+    return;
+  }
+
+  const auth = await ensureFirebaseIdToken(cfg);
+  const docId = firebaseDocId(auth);
+
+  const payload = collectPlayerCloudPayload();
+  const body = {
+    fields: {
+      ownerUid: { stringValue: String(auth.localId) },
+      ownerEmail: { stringValue: String(auth.email || '') },
+      profileId: { stringValue: String(getActiveProfileIdLocal()) },
+      payload: { stringValue: JSON.stringify(payload) },
+      updatedAt: { integerValue: String(Date.now()) }
+    }
+  };
+
+  const response = await fetch(firebaseDocUrl(cfg, docId), {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${auth.idToken}`
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => response.statusText);
+    throw new Error(`Firebase Save fehlgeschlagen (${response.status}): ${detail}`);
+  }
+
+  if (!options.silent) {
+    setSyncResult(`Firebase Save erfolgreich. Profil ${getActiveProfileIdLocal()} gespeichert.`);
+  }
+}
+
+async function loadPlayerFromFirebase() {
+  const cfg = saveFirebaseConfig(collectFirebaseConfigFromUi());
+  if (!cfg.projectId || !cfg.apiKey) {
+    setSyncResult('Firebase-Konfig unvollstaendig: Project ID und API Key fehlen.');
+    return;
+  }
+
+  const auth = await ensureFirebaseIdToken(cfg);
+  const docId = firebaseDocId(auth);
+
+  const response = await fetch(firebaseDocUrl(cfg, docId), {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${auth.idToken}`
+    }
+  });
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => response.statusText);
+    throw new Error(`Firebase Load fehlgeschlagen (${response.status}): ${detail}`);
+  }
+
+  const doc = await response.json();
+  const payloadString = doc?.fields?.payload?.stringValue;
+  if (!payloadString) {
+    throw new Error('Firebase-Dokument enthaelt kein gueltiges payload-Feld.');
+  }
+
+  const payload = JSON.parse(payloadString);
+  applyPlayerCloudPayload(payload);
+  setSyncResult(`Firebase Load erfolgreich. Profil ${getActiveProfileIdLocal()} geladen.`);
 }
 
 function isMockMode() {
@@ -449,11 +840,32 @@ function initSyncConsentPanel() {
   if (!hasPanel) return;
   renderSyncConsentState();
   renderSyncModeLabel();
+  renderFirebaseConfigState();
+  renderFirebaseAuthState();
   addListener('f1SyncGrantButton', 'click', saveSyncConsentFromUi);
   addListener('f1SyncRevokeButton', 'click', revokeSyncConsentFromUi);
   addListener('f1SyncFetchButton', 'click', runSyncFetchFlow);
   addListener('f1SyncTestButton', 'click', testApiConnection);
   addListener('f1ApiSaveButton', 'click', saveApiConfigFromUi);
+  addListener('firebaseConfigSaveButton', 'click', saveFirebaseConfigFromUi);
+  addListener('firebaseRegisterButton', 'click', () => {
+    firebaseSignUpFromUi().catch((error) => setSyncResult(error.message || String(error)));
+  });
+  addListener('firebaseLoginButton', 'click', () => {
+    firebaseLoginFromUi().catch((error) => setSyncResult(error.message || String(error)));
+  });
+  addListener('firebaseLogoutButton', 'click', firebaseLogout);
+  addListener('firebaseAutoSync', 'change', (event) => {
+    const enabled = Boolean(event?.target?.checked);
+    saveFirebaseAutoSyncEnabled(enabled);
+    if (enabled) queueFirebaseAutoSync('toggle-on');
+  });
+  addListener('firebaseSaveButton', 'click', () => {
+    savePlayerToFirebase().catch((error) => setSyncResult(error.message || String(error)));
+  });
+  addListener('firebaseLoadButton', 'click', () => {
+    loadPlayerFromFirebase().catch((error) => setSyncResult(error.message || String(error)));
+  });
   addListener('f1SyncPreviewMock', 'click', previewMockSnapshot);
   addListener('f1SyncMockMode', 'change', renderSyncModeLabel);
   addListener('f1SyncMethod', 'change', () => {
@@ -516,6 +928,7 @@ function saveCommunityKnowledge(data) {
   const normalized = normalizeCommunityKnowledge(data);
   writeJsonSafe(COMMUNITY_KNOWLEDGE_KEY, normalized);
   communityKnowledge = normalized;
+  queueFirebaseAutoSync('community');
   return normalized;
 }
 
@@ -683,12 +1096,21 @@ function resetCommunityKnowledge() {
 }
 
 function initCommunityKnowledgePanel() {
-  communityKnowledge = loadCommunityKnowledge();
-  const tracksCount = Object.keys(communityKnowledge.tracks || {}).length;
-  updateCommunityKnowledgeResult(tr('community_active', {
-    tracks: tracksCount,
-    sources: communityKnowledge.sources.length
-  }));
+  const renderStatus = () => {
+    communityKnowledge = loadCommunityKnowledge();
+    const tracksCount = Object.keys(communityKnowledge.tracks || {}).length;
+    updateCommunityKnowledgeResult(tr('community_active', {
+      tracks: tracksCount,
+      sources: communityKnowledge.sources.length
+    }));
+  };
+
+  if (Boolean(window.Capacitor?.isNativePlatform?.())) {
+    updateCommunityKnowledgeResult('Community-Wissen wird geladen...');
+    deferUiTask(renderStatus, 260);
+  } else {
+    renderStatus();
+  }
 
   addListener('communityImportButton', 'click', importCommunityKnowledgeFromTextarea);
   addListener('communityImportFileButton', 'click', importCommunityKnowledgeFromFile);
@@ -710,6 +1132,7 @@ function loadPartMetaMap() {
 
 function savePartMetaMap(meta) {
   writeJsonSafe(partMetaStorageKey(), meta);
+  queueFirebaseAutoSync('part-meta');
 }
 
 function loadDriverStageMap() {
@@ -718,6 +1141,7 @@ function loadDriverStageMap() {
 
 function saveDriverStageMap(meta) {
   writeJsonSafe(driverStageStorageKey(), meta);
+  queueFirebaseAutoSync('driver-stage');
 }
 
 function partQualityByLevel(level) {
@@ -904,7 +1328,10 @@ function loadOwnedParts() {
   }
 }
 
-function saveOwnedParts() { localStorage.setItem('ownedParts', JSON.stringify(ownedParts)); }
+function saveOwnedParts() {
+  localStorage.setItem('ownedParts', JSON.stringify(ownedParts));
+  queueFirebaseAutoSync('owned-parts');
+}
 
 function fillTrackSelects() {
   ['trackSelect', 'builderTrackSelect', 'strategyTrackSelect'].forEach((id) => {
@@ -960,14 +1387,21 @@ function scoreStats(values, weights) {
 
 function chartFontScale() {
   const viewportWidth = Math.max(window.innerWidth || 0, document.documentElement?.clientWidth || 0, 360);
-  if (viewportWidth <= 640) return 0.72;
-  if (viewportWidth <= 900) return 0.9;
+  if (viewportWidth <= 480) return 0.78;
+  if (viewportWidth <= 640) return 0.86;
+  if (viewportWidth <= 900) return 0.96;
   if (viewportWidth <= 1280) return 1.1;
   return 1.3;
 }
 
-function scaledChartFont(size, minSize = size) {
-  return Math.max(minSize, Math.round(size * chartFontScale()));
+function isMobileChartViewport() {
+  const viewportWidth = Math.max(window.innerWidth || 0, document.documentElement?.clientWidth || 0, 360);
+  return viewportWidth <= 760;
+}
+
+function scaledChartFont(size, minSize = null) {
+  const fallbackMin = size <= 11 ? 9 : 10;
+  return Math.max(minSize ?? fallbackMin, Math.round(size * chartFontScale()));
 }
 
 function formatChartPopupValue(value) {
@@ -988,6 +1422,77 @@ function getChartInstanceById(chartId) {
   if (chartId === 'driverImpactChart') return driverImpactChart;
   if (chartId === 'positionChart') return typeof window.positionChart !== 'undefined' ? window.positionChart : null;
   return null;
+}
+
+function getChartDatasetCount(chartId) {
+  const chart = getChartInstanceById(chartId);
+  return chart?.data?.datasets?.length || 0;
+}
+
+function renderChartPopupSubtitle(baseSubtitle = '') {
+  const subtitleNode = byId('chartPopupSubtitle');
+  if (!subtitleNode) return;
+  if (!activePopupChartId) {
+    subtitleNode.textContent = baseSubtitle || '';
+    return;
+  }
+  const datasetCount = getChartDatasetCount(activePopupChartId);
+  if (datasetCount <= 1) {
+    subtitleNode.textContent = baseSubtitle || '';
+    return;
+  }
+  const state = chartTouchState[activePopupChartId] || {};
+  const seriesText = Number.isInteger(state.activeIndex)
+    ? `Serie ${state.activeIndex + 1}/${datasetCount}`
+    : 'Alle Serien sichtbar';
+  const hint = 'Swipe links/rechts = Serie wechseln';
+  subtitleNode.textContent = [baseSubtitle, `${seriesText} • ${hint}`].filter(Boolean).join(' | ');
+}
+
+function applyChartDatasetFocus(chartId, nextIndex = null) {
+  const chart = getChartInstanceById(chartId);
+  if (!chart || !Array.isArray(chart.data?.datasets)) return;
+  const datasetCount = chart.data.datasets.length;
+  if (datasetCount <= 1) return;
+  const state = chartTouchState[chartId] || (chartTouchState[chartId] = {});
+
+  if (nextIndex === null || nextIndex === undefined) {
+    delete state.activeIndex;
+    chart.data.datasets.forEach((dataset) => {
+      dataset.hidden = false;
+    });
+  } else {
+    const normalizedIndex = ((nextIndex % datasetCount) + datasetCount) % datasetCount;
+    state.activeIndex = normalizedIndex;
+    chart.data.datasets.forEach((dataset, idx) => {
+      dataset.hidden = idx !== normalizedIndex;
+    });
+  }
+
+  chart.update();
+  if (activePopupChartId === chartId) {
+    renderChartPopupSubtitle(strategyChartPopupData[chartId]?.subtitle || '');
+  }
+}
+
+function stepChartDatasetFocus(chartId, direction) {
+  const datasetCount = getChartDatasetCount(chartId);
+  if (datasetCount <= 1) return;
+  const state = chartTouchState[chartId] || {};
+  const currentIndex = Number.isInteger(state.activeIndex) ? state.activeIndex : -1;
+  const nextIndex = currentIndex < 0
+    ? (direction >= 0 ? 0 : datasetCount - 1)
+    : (currentIndex + direction + datasetCount) % datasetCount;
+  applyChartDatasetFocus(chartId, nextIndex);
+}
+
+function toggleChartPopupFullscreen(forceValue = null) {
+  const popup = byId('chartPopup');
+  const fullscreenButton = byId('chartPopupFullscreen');
+  if (!popup) return;
+  const shouldEnable = forceValue === null ? !popup.classList.contains('is-fullscreen') : !!forceValue;
+  popup.classList.toggle('is-fullscreen', shouldEnable);
+  if (fullscreenButton) fullscreenButton.textContent = shouldEnable ? 'Fenster' : 'Fullscreen';
 }
 
 function buildPopupConfigFromChart(chartId) {
@@ -1025,7 +1530,9 @@ function buildPopupConfigFromChart(chartId) {
 function closeChartPopup() {
   const popup = byId('chartPopup');
   if (!popup) return;
+  toggleChartPopupFullscreen(false);
   popup.hidden = true;
+  activePopupChartId = null;
 }
 
 function openStrategyChartPopup(chartId) {
@@ -1050,19 +1557,76 @@ function openStrategyChartPopup(chartId) {
   }
 
   titleNode.textContent = config.title || tr('chart_popup_title_default');
+  activePopupChartId = chartId;
   subtitleNode.textContent = config.subtitle || '';
   headNode.innerHTML = `<tr>${(config.columns || []).map((label) => `<th>${label}</th>`).join('')}</tr>`;
   bodyNode.innerHTML = (config.rows || [])
     .map((row) => `<tr>${row.map((cell) => `<td>${formatChartPopupValue(cell)}</td>`).join('')}</tr>`)
     .join('');
   popup.hidden = false;
+  renderChartPopupSubtitle(config.subtitle || '');
 }
 
 function bindStrategyChartPopup(chartId) {
   const node = byId(chartId);
   if (!node || node.dataset.popupBound === 'true') return;
   node.dataset.popupBound = 'true';
-  node.addEventListener('click', () => openStrategyChartPopup(chartId));
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchStartTime = 0;
+  const swipeThreshold = 36;
+
+  node.addEventListener('touchstart', (event) => {
+    if (!event.touches || event.touches.length !== 1) return;
+    touchStartX = event.touches[0].clientX;
+    touchStartY = event.touches[0].clientY;
+    touchStartTime = Date.now();
+  }, { passive: true });
+
+  node.addEventListener('touchend', (event) => {
+    if (!event.changedTouches || event.changedTouches.length !== 1) return;
+    const dx = event.changedTouches[0].clientX - touchStartX;
+    const dy = event.changedTouches[0].clientY - touchStartY;
+    const elapsed = Date.now() - touchStartTime;
+    const isHorizontalSwipe = Math.abs(dx) >= swipeThreshold && Math.abs(dx) > Math.abs(dy) && elapsed <= 900;
+    if (!isHorizontalSwipe) return;
+    node.dataset.ignorePopupClick = 'true';
+    stepChartDatasetFocus(chartId, dx < 0 ? 1 : -1);
+  }, { passive: true });
+
+  node.addEventListener('dblclick', () => applyChartDatasetFocus(chartId, null));
+
+  node.addEventListener('click', () => {
+    if (node.dataset.ignorePopupClick === 'true') {
+      node.dataset.ignorePopupClick = 'false';
+      return;
+    }
+    openStrategyChartPopup(chartId);
+  });
+}
+
+function applyRaceChartChoice(choice) {
+  const allowed = new Set(['strategy', 'race', 'position', 'driverImpact']);
+  const selected = allowed.has(choice) ? choice : 'race';
+
+  document.querySelectorAll('[data-choice-chart]').forEach((node) => {
+    const chartKey = node.getAttribute('data-choice-chart');
+    node.hidden = chartKey !== selected;
+  });
+
+  document.querySelectorAll('[data-choice-result]').forEach((node) => {
+    const resultKey = node.getAttribute('data-choice-result');
+    node.hidden = resultKey !== selected;
+  });
+
+  const impactRow = byId('driverImpactMode')?.closest('.row');
+  if (impactRow) impactRow.hidden = selected !== 'driverImpact';
+
+  document.querySelectorAll('.chart-choice-tab[data-choice-tab]').forEach((node) => {
+    const isActive = node.getAttribute('data-choice-tab') === selected;
+    node.classList.toggle('is-active', isActive);
+    node.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
 }
 
 function buildStrategyPlanLabel(plan) {
@@ -1072,13 +1636,46 @@ function buildStrategyPlanLabel(plan) {
 window.setStrategyChartPopupData = setStrategyChartPopupData;
 
 function chartOptions(yLabel = tr('chart_y_value')) {
+  const mobile = isMobileChartViewport();
   return {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { position: 'bottom', labels: { color: '#ffffff', font: { size: scaledChartFont(12, 12), weight: '600' }, padding: 14, boxWidth: 18 } } },
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          color: '#f0faff',
+          font: { size: scaledChartFont(mobile ? 11 : 12, mobile ? 9 : 10), weight: '600' },
+          padding: mobile ? 10 : 16,
+          boxWidth: mobile ? 12 : 18
+        }
+      }
+    },
     scales: {
-      x: { ticks: { color: '#aafff2', font: { size: scaledChartFont(11, 12), weight: '600' }, autoSkip: true, maxTicksLimit: 10, maxRotation: 0 }, grid: { color: 'rgba(255,255,255,.08)' } },
-      y: { ticks: { color: '#aafff2', font: { size: scaledChartFont(11, 12), weight: '600' } }, grid: { color: 'rgba(255,255,255,.08)' }, title: { display: true, text: yLabel, color: '#aafff2', font: { size: scaledChartFont(12, 13), weight: '700' } } }
+      x: {
+        ticks: {
+          color: '#c8e6f7',
+          font: { size: scaledChartFont(mobile ? 10 : 11, 9), weight: '600' },
+          autoSkip: true,
+          maxTicksLimit: mobile ? 6 : 10,
+          maxRotation: 0
+        },
+        grid: { color: 'rgba(121,233,255,0.07)' }
+      },
+      y: {
+        ticks: {
+          color: '#c8e6f7',
+          font: { size: scaledChartFont(mobile ? 10 : 11, 9), weight: '600' },
+          maxTicksLimit: mobile ? 6 : 9
+        },
+        grid: { color: 'rgba(121,233,255,0.07)' },
+        title: {
+          display: true,
+          text: yLabel,
+          color: '#79e9ff',
+          font: { size: scaledChartFont(mobile ? 11 : 12, 9), weight: '700' }
+        }
+      }
     }
   };
 }
@@ -1123,6 +1720,7 @@ function renderTrackRadar() {
   const trackSelect = byId('trackSelect');
   const ctx = byId('trackRadarChart');
   if (!trackSelect || !ctx) return;
+  const mobile = isMobileChartViewport();
   const track = getTrack(trackSelect.value);
   updateCircuitBg(track.name);
   if (radarChart) radarChart.destroy();
@@ -1136,8 +1734,34 @@ function renderTrackRadar() {
       responsive: true,
       maintainAspectRatio: true,
       aspectRatio: 1,
-      plugins: { legend: { labels: { color: '#fff', font: { size: scaledChartFont(16, 14), weight: '700' }, padding: 18 } } },
-      scales: { r: { suggestedMin: 0, suggestedMax: 100, pointLabels: { color: '#aafff2', font: { size: scaledChartFont(16, 15), weight: '700' } }, grid: { color: 'rgba(255,255,255,.2)' }, angleLines: { color: 'rgba(255,255,255,.2)' }, ticks: { color: '#aafff2', backdropColor: 'transparent', font: { size: scaledChartFont(13, 12), weight: '600' } } } }
+      plugins: {
+        legend: {
+          labels: {
+            color: '#fff',
+            font: { size: scaledChartFont(mobile ? 12 : 16, mobile ? 10 : 12), weight: '700' },
+            padding: mobile ? 10 : 18
+          }
+        }
+      },
+      scales: {
+        r: {
+          suggestedMin: 0,
+          suggestedMax: 100,
+          pointLabels: {
+            color: '#f0faff',
+            font: { size: scaledChartFont(mobile ? 12 : 16, mobile ? 9 : 11), weight: '700' }
+          },
+          grid: { color: 'rgba(121,233,255,0.18)' },
+          angleLines: { color: 'rgba(121,233,255,0.18)' },
+          ticks: {
+            color: '#c8e6f7',
+            backdropColor: 'rgba(7,14,28,0.65)',
+            backdropPadding: 3,
+            font: { size: scaledChartFont(mobile ? 10 : 13, 9), weight: '600' },
+            maxTicksLimit: mobile ? 5 : 7
+          }
+        }
+      }
     }
   });
   setResult('trackAnalysisResult', `${track.name}: ${track.meta}`);
@@ -1324,6 +1948,17 @@ function optimizeTrack(trackName, useReducedPool) {
     return { comboCount: 0, best: null, top: [], ms: 0 };
   }
 
+  const estimatedComboCount = engines.length * fw.length * rw.length * gb.length * sus.length * brk.length;
+  const shouldAutoReduce = !useReducedPool && estimatedComboCount > MAX_FULL_OPTIMIZER_COMBOS;
+  if (shouldAutoReduce) {
+    const reduced = optimizeTrack(trackName, true);
+    return {
+      ...reduced,
+      reducedApplied: true,
+      estimatedComboCount
+    };
+  }
+
   if (useReducedPool) {
     const topN = 6;
     const rank = (p) => scoreStats(p, weights);
@@ -1372,7 +2007,7 @@ function optimizeTrack(trackName, useReducedPool) {
     }
   }
 
-  return { comboCount, best, top, ms: performance.now() - t0 };
+  return { comboCount, best, top, ms: performance.now() - t0, reducedApplied: false, estimatedComboCount };
 }
 
 function optimizeSelectedTrack() {
@@ -1387,7 +2022,11 @@ function optimizeSelectedTrack() {
   }
   const names = res.best.parts.map((p) => p.name).join(' + ');
   const topTxt = res.top.map((r, i) => `${i + 1}) ${r.parts.map((p) => p.name).join('+')} (${r.score.toFixed(2)})`).join(' | ');
-  setResult('optimizerResult', `${track}: Bestes Setup ${names} | Score ${res.best.score.toFixed(2)} | Community-Bonus ${Number(res.best.communityBonus || 0).toFixed(2)} | Kombis ${res.comboCount} | Laufzeit ${res.ms.toFixed(1)}ms | Top5: ${topTxt}`);
+  const comboInfo = res.reducedApplied
+    ? `${res.comboCount}/${res.estimatedComboCount}`
+    : `${res.comboCount}`;
+  const reducedHint = res.reducedApplied ? ' | Schnellmodus aktiv' : '';
+  setResult('optimizerResult', `${track}: Bestes Setup ${names} | Score ${res.best.score.toFixed(2)} | Community-Bonus ${Number(res.best.communityBonus || 0).toFixed(2)} | Kombis ${comboInfo} | Laufzeit ${res.ms.toFixed(1)}ms${reducedHint} | Top5: ${topTxt}`);
   updateKpis(res.comboCount);
 }
 
@@ -1420,6 +2059,7 @@ function saveManualMap(track, setup) {
   }
   map[track] = setup;
   localStorage.setItem(manualKey(), JSON.stringify(map));
+  queueFirebaseAutoSync('manual-setup');
 }
 
 function applyAutoSetupToBuilder() {
@@ -1771,6 +2411,8 @@ async function runOcr() {
   out.textContent = tr('ocr_running');
   try {
     const { data } = await Tesseract.recognize(file, 'eng', {
+      workerPath: 'vendor/worker.min.js',
+      langPath: 'assets/tessdata',
       logger: (m) => { if (m.status === 'recognizing text') out.textContent = tr('ocr_running_pct', { percent: Math.round(m.progress * 100) }); }
     });
     const text = (data.text || '').toLowerCase();
@@ -1796,44 +2438,101 @@ async function detectSeason() {
 }
 
 function registerServiceWorker() {
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  if (!('serviceWorker' in navigator)) return;
+
+  const isNative = Boolean(window.Capacitor?.isNativePlatform?.());
+  if (isNative) {
+    navigator.serviceWorker.getRegistrations()
+      .then((regs) => Promise.all(regs.map((reg) => reg.unregister())))
+      .catch(() => {});
+
+    if (typeof caches !== 'undefined' && typeof caches.keys === 'function') {
+      caches.keys()
+        .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+        .catch(() => {});
+    }
+    return;
+  }
+
+  navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 
 function rerenderLocalizedRuntime() {
   renderSyncConsentState();
   renderSyncModeLabel();
-  renderTrackRadar();
-  optimizeSelectedTrack();
-  optimizeAllTracks();
-  runRaceSimulation();
+  if (hasUi('trackRadarChart') && shouldAutoRunHeavyTasks()) renderTrackRadar();
+  if (hasUi('optimizerResult') && isOptimizerPageContext() && shouldAutoRunHeavyTasks()) optimizeSelectedTrack();
+  if (hasUi('strategyChart', 'raceChart', 'positionChart', 'driverImpactChart') && shouldAutoRunHeavyTasks()) {
+    deferUiTask(() => runRaceSimulation(), 90);
+  }
+  if (hasUi('seasonBestChart') && isOptimizerPageContext() && shouldAutoRunHeavyTasks()) {
+    deferUiTask(() => optimizeAllTracks(), 160);
+  }
   if (lastDriverImpactTrack && lastDriverImpactContext) {
     renderDriverImpact(lastDriverImpactTrack, lastDriverImpactContext);
   }
 }
 
 async function init() {
+  // Global Chart.js dark-theme defaults — override grey #666 default
+  if (typeof Chart !== 'undefined') {
+    const mobileChart = Math.max(window.innerWidth || 0, document.documentElement?.clientWidth || 0, 360) <= 760;
+    Chart.defaults.color = '#c8e6f7';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.09)';
+    Chart.defaults.font.family = "'Space Grotesk','Orbitron',system-ui,sans-serif";
+    Chart.defaults.font.size = mobileChart ? 11 : 12;
+    Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(7,14,28,0.92)';
+    Chart.defaults.plugins.tooltip.titleColor = '#79e9ff';
+    Chart.defaults.plugins.tooltip.bodyColor = '#c8e6f7';
+    Chart.defaults.plugins.tooltip.borderColor = 'rgba(121,233,255,0.22)';
+    Chart.defaults.plugins.tooltip.borderWidth = 1;
+  }
+
   document.addEventListener('app:language-changed', rerenderLocalizedRuntime);
   registerServiceWorker();
   await detectSeason();
 
-  fillTrackSelects();
-  fillDriverSelects();
-  renderStatInputs('setupAInputs', 'a');
-  renderStatInputs('setupBInputs', 'b');
-  renderStatInputs('teamScoreInputs', 'team');
-  renderStatInputs('calcInputs', 'calc');
+  const hasOptimizerUi = hasUi('trackSelect', 'strategyTrackSelect', 'trackRadarChart', 'strategyChart');
+  const isOptimizerPage = isOptimizerPageContext();
+  const hasGarageUi = hasUi('partsInventory', 'driversStandardList', 'garageInventory', 'ocrFile');
+  const hasDashboardUi = hasUi('partsTableBody', 'partsCount', 'comboCount');
+  const hasSyncUi = hasUi('f1SyncMethod', 'f1SyncResult', 'communityKnowledgeInput');
+  const hasDriverCompareUi = hasUi('driverASelect', 'driverBSelect');
+  const hasCalcUi = hasUi('setupAInputs', 'setupBInputs', 'teamScoreInputs', 'calcInputs');
 
-  buildInventory();
-  buildDriverInventory();
-  setupDropSlots();
-  renderManualSlots();
-  renderTrackRadar();
-  runStrategyCalculation();
-  runRaceSimulation();
-  optimizeAllTracks();
-  initCommunityKnowledgePanel();
-  initSyncConsentPanel();
-  updateKpis();
+  if (hasOptimizerUi || hasCalcUi) fillTrackSelects();
+  if (hasDriverCompareUi) fillDriverSelects();
+  if (byId('setupAInputs')) renderStatInputs('setupAInputs', 'a');
+  if (byId('setupBInputs')) renderStatInputs('setupBInputs', 'b');
+  if (byId('teamScoreInputs')) renderStatInputs('teamScoreInputs', 'team');
+  if (byId('calcInputs')) renderStatInputs('calcInputs', 'calc');
+
+  if (hasGarageUi) {
+    deferUiTask(() => {
+      buildInventory();
+      buildDriverInventory();
+      setupDropSlots();
+      renderManualSlots();
+      updateKpis();
+    }, 40);
+  } else if (hasDashboardUi) {
+    deferUiTask(() => updateKpis(), 40);
+  }
+
+  if (hasOptimizerUi && isOptimizerPage) {
+    if (shouldAutoRunHeavyTasks()) {
+      deferUiTask(() => renderTrackRadar(), 40);
+      deferUiTask(() => runRaceSimulation(), 120);
+    }
+    if (hasUi('seasonBestChart') && shouldAutoRunHeavyTasks()) {
+      deferUiTask(() => optimizeAllTracks(), 260);
+    }
+  }
+
+  if (hasSyncUi) {
+    initCommunityKnowledgePanel();
+    initSyncConsentPanel();
+  }
 
   addListener('trackAnalysisButton', 'click', renderTrackRadar);
   addListener('allChartsButton', 'click', renderAllTrackCharts);
@@ -1852,6 +2551,17 @@ async function init() {
 
   addListener('strategyButton', 'click', runStrategyCalculation);
   addListener('raceSimButton', 'click', runRaceSimulation);
+  addListener('raceChartChoice', 'change', (event) => {
+    const target = event?.target;
+    applyRaceChartChoice(target instanceof HTMLSelectElement ? target.value : 'race');
+  });
+
+  document.querySelectorAll('.chart-choice-tab[data-choice-tab]').forEach((node) => {
+    node.addEventListener('click', () => {
+      const choice = node.getAttribute('data-choice-tab') || 'race';
+      applyRaceChartChoice(choice);
+    });
+  });
 
   addListener('compareButton', 'click', compareSetups);
   addListener('teamScoreButton', 'click', simulateTeamScore);
@@ -1872,6 +2582,8 @@ async function init() {
 
   const popup = byId('chartPopup');
   const popupClose = byId('chartPopupClose');
+  const popupFullscreen = byId('chartPopupFullscreen');
+  const popupSeriesReset = byId('chartSeriesReset');
   if (popup) popup.addEventListener('click', (event) => {
     const target = event.target;
     if (target instanceof HTMLElement && target.dataset.popupClose === 'true') closeChartPopup();
@@ -1883,11 +2595,36 @@ async function init() {
       closeChartPopup();
     });
   }
+  if (popupFullscreen) {
+    popupFullscreen.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleChartPopupFullscreen();
+    });
+  }
+  if (popupSeriesReset) {
+    popupSeriesReset.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (activePopupChartId) applyChartDatasetFocus(activePopupChartId, null);
+    });
+  }
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') closeChartPopup();
   });
 
-  optimizeSelectedTrack();
+  const raceChartChoice = byId('raceChartChoice');
+  const initialTab = document.querySelector('.chart-choice-tab.is-active[data-choice-tab]')
+    || document.querySelector('.chart-choice-tab[data-choice-tab="race"]')
+    || document.querySelector('.chart-choice-tab[data-choice-tab]');
+  const initialChoice = raceChartChoice instanceof HTMLSelectElement
+    ? raceChartChoice.value
+    : (initialTab?.getAttribute('data-choice-tab') || 'race');
+  applyRaceChartChoice(initialChoice);
+
+  if (isOptimizerPage && shouldAutoRunHeavyTasks()) {
+    deferUiTask(() => optimizeSelectedTrack(), 120);
+  }
 }
 
 init();
