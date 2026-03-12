@@ -15,52 +15,51 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        maybePromptOverlayPermission();
-        maybePromptOverlayReEnable();
-        ensureOverlayServiceRunning();
+        checkAndSetupOverlay();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        maybePromptOverlayReEnable();
-        ensureOverlayServiceRunning();
+        checkAndSetupOverlay();
     }
 
-    private void maybePromptOverlayPermission() {
+    private void checkAndSetupOverlay() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             return;
         }
 
-        if (Settings.canDrawOverlays(this)) {
-            return;
+        if (!Settings.canDrawOverlays(this)) {
+            promptOverlayPermission();
+        } else {
+            maybePromptOverlayReEnable();
+            ensureOverlayServiceRunning();
         }
+    }
 
+    private void promptOverlayPermission() {
         new AlertDialog.Builder(this)
-            .setTitle("Overlay-Berechtigung")
-            .setMessage("Fuer den Capture-Button ueber F1 Clash braucht die App die Overlay-Berechtigung. Bitte jetzt aktivieren.")
+            .setTitle(R.string.overlay_permission_title)
+            .setMessage(R.string.overlay_permission_message)
             .setCancelable(false)
-            .setPositiveButton("Jetzt aktivieren", (dialog, which) -> openOverlaySettings())
-            .setNegativeButton("Spaeter", null)
+            .setPositiveButton(R.string.overlay_permission_positive, (dialog, which) -> openOverlaySettings())
+            .setNegativeButton(R.string.overlay_permission_negative, null)
             .show();
     }
 
     private void maybePromptOverlayReEnable() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
-        if (!Settings.canDrawOverlays(this)) return;
-
         SharedPreferences prefs = getSharedPreferences(OverlayBubbleService.PREFS_NAME, MODE_PRIVATE);
         if (OverlayBubbleService.isOverlayEnabled(prefs)) return;
 
         new AlertDialog.Builder(this)
-            .setTitle("Overlay deaktiviert")
-            .setMessage("Der schwebende F1-Button ist deaktiviert. Jetzt wieder aktivieren?")
+            .setTitle(R.string.overlay_disabled_title)
+            .setMessage(R.string.overlay_disabled_message)
             .setCancelable(true)
-            .setPositiveButton("Aktivieren", (dialog, which) -> {
+            .setPositiveButton(R.string.overlay_disabled_positive, (dialog, which) -> {
                 OverlayBubbleService.setOverlayEnabled(prefs, true);
                 ensureOverlayServiceRunning();
             })
-            .setNegativeButton("Spaeter", null)
+            .setNegativeButton(R.string.overlay_permission_negative, null)
             .show();
     }
 
@@ -74,8 +73,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void ensureOverlayServiceRunning() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
-        if (!Settings.canDrawOverlays(this)) return;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) return;
 
         SharedPreferences prefs = getSharedPreferences(OverlayBubbleService.PREFS_NAME, MODE_PRIVATE);
         if (!OverlayBubbleService.isOverlayEnabled(prefs)) return;
@@ -83,8 +81,7 @@ public class MainActivity extends BridgeActivity {
         Intent serviceIntent = new Intent(this, OverlayBubbleService.class);
         serviceIntent.setAction(OverlayBubbleService.ACTION_ENABLE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Context context = getApplicationContext();
-            context.startForegroundService(serviceIntent);
+            startForegroundService(serviceIntent);
         } else {
             startService(serviceIntent);
         }

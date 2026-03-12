@@ -17,19 +17,21 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 public class OverlayBubbleService extends Service {
     private static final String CHANNEL_ID = "f1_overlay_channel";
     private static final int NOTIFICATION_ID = 10177;
 
-    static final String PREFS_NAME = "f1_overlay_prefs";
-    static final String KEY_ENABLED = "overlay_enabled";
-    static final String KEY_POS_X = "overlay_x";
-    static final String KEY_POS_Y = "overlay_y";
+    public static final String PREFS_NAME = "f1_overlay_prefs";
+    public static final String KEY_ENABLED = "overlay_enabled";
+    private static final String KEY_POS_X = "overlay_x";
+    private static final String KEY_POS_Y = "overlay_y";
 
-    static final String ACTION_ENABLE = "com.sunwalker.f1clashcompanion.action.OVERLAY_ENABLE";
-    static final String ACTION_DISABLE = "com.sunwalker.f1clashcompanion.action.OVERLAY_DISABLE";
+    public static final String ACTION_ENABLE = "com.sunwalker.f1clashcompanion.action.OVERLAY_ENABLE";
+    public static final String ACTION_DISABLE = "com.sunwalker.f1clashcompanion.action.OVERLAY_DISABLE";
 
     private WindowManager windowManager;
     private View bubbleView;
@@ -38,11 +40,7 @@ public class OverlayBubbleService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            stopSelf();
-            return;
-        }
-        if (!isOverlayEnabled()) {
+        if (!canShowOverlay()) {
             stopSelf();
             return;
         }
@@ -58,16 +56,12 @@ public class OverlayBubbleService extends Service {
             stopSelf();
             return START_NOT_STICKY;
         }
+        
         if (ACTION_ENABLE.equals(action)) {
             setOverlayEnabled(true);
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            stopSelf();
-            return START_NOT_STICKY;
-        }
-
-        if (!isOverlayEnabled()) {
+        if (!canShowOverlay()) {
             stopSelf();
             return START_NOT_STICKY;
         }
@@ -78,12 +72,20 @@ public class OverlayBubbleService extends Service {
         return START_STICKY;
     }
 
+    private boolean canShowOverlay() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            return false;
+        }
+        return isOverlayEnabled();
+    }
+
     @Override
     public void onDestroy() {
         removeOverlayBubble();
         super.onDestroy();
     }
 
+    @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -94,10 +96,10 @@ public class OverlayBubbleService extends Service {
         if (manager != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                 CHANNEL_ID,
-                "F1 Clash Overlay",
+                getString(R.string.notification_channel_name),
                 NotificationManager.IMPORTANCE_LOW
             );
-            channel.setDescription("Steuert den schwebenden F1 Capture-Button");
+            channel.setDescription(getString(R.string.notification_channel_description));
             manager.createNotificationChannel(channel);
         }
 
@@ -120,12 +122,12 @@ public class OverlayBubbleService extends Service {
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("F1 Clash Companion Overlay aktiv")
-            .setContentText("Tippe den schwebenden F1-Button, um die App zu oeffnen.")
+            .setContentTitle(getString(R.string.notification_title))
+            .setContentText(getString(R.string.notification_text))
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setContentIntent(pendingIntent)
-            .addAction(0, "Overlay ausblenden", disablePendingIntent)
+            .addAction(0, getString(R.string.notification_action_hide), disablePendingIntent)
             .build();
 
         startForeground(NOTIFICATION_ID, notification);
@@ -224,19 +226,20 @@ public class OverlayBubbleService extends Service {
         bubbleView = null;
     }
 
+    @NonNull
     private SharedPreferences prefs() {
         return getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
     }
 
     private boolean isOverlayEnabled() {
-        return prefs().getBoolean(KEY_ENABLED, true);
+        return isOverlayEnabled(prefs());
     }
 
-    static boolean isOverlayEnabled(SharedPreferences prefs) {
+    public static boolean isOverlayEnabled(@NonNull SharedPreferences prefs) {
         return prefs.getBoolean(KEY_ENABLED, true);
     }
 
-    static void setOverlayEnabled(SharedPreferences prefs, boolean enabled) {
+    public static void setOverlayEnabled(@NonNull SharedPreferences prefs, boolean enabled) {
         prefs.edit().putBoolean(KEY_ENABLED, enabled).apply();
     }
 

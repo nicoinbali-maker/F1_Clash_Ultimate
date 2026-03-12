@@ -4,4 +4,19 @@
     <string name="title_activity_main">F1 Clash Companion</string>
     <string name="package_name">com.sunwalker.f1clashcompanion</string>
     <string name="custom_url_scheme">com.sunwalker.f1clashcompanion</string>
+
+    <string name="overlay_permission_title">Overlay-Berechtigung</string>
+    <string name="overlay_permission_message">Fuer den Capture-Button ueber F1 Clash braucht die App die Overlay-Berechtigung. Bitte jetzt aktivieren.</string>
+    <string name="overlay_permission_positive">Jetzt aktivieren</string>
+    <string name="overlay_permission_negative">Spaeter</string>
+
+    <string name="overlay_disabled_title">Overlay deaktiviert</string>
+    <string name="overlay_disabled_message">Der schwebende F1-Button ist deaktiviert. Jetzt wieder aktivieren?</string>
+    <string name="overlay_disabled_positive">Aktivieren</string>
+
+    <string name="notification_channel_name">F1 Clash Overlay</string>
+    <string name="notification_channel_description">Steuert den schwebenden F1 Capture-Button</string>
+    <string name="notification_title">F1 Clash Companion Overlay aktiv</string>
+    <string name="notification_text">Tippe den schwebenden F1-Button, um die App zu oeffnen.</string>
+    <string name="notification_action_hide">Overlay ausblenden</string>
 </resources>
