@@ -6,6 +6,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.IBinder;
@@ -21,6 +22,14 @@ public class OverlayBubbleService extends Service {
     private static final String CHANNEL_ID = "f1_overlay_channel";
     private static final int NOTIFICATION_ID = 10177;
 
+    static final String PREFS_NAME = "f1_overlay_prefs";
+    static final String KEY_ENABLED = "overlay_enabled";
+    static final String KEY_POS_X = "overlay_x";
+    static final String KEY_POS_Y = "overlay_y";
+
+    static final String ACTION_ENABLE = "com.sunwalker.f1clashcompanion.action.OVERLAY_ENABLE";
+    static final String ACTION_DISABLE = "com.sunwalker.f1clashcompanion.action.OVERLAY_DISABLE";
+
     private WindowManager windowManager;
     private View bubbleView;
     private WindowManager.LayoutParams bubbleParams;
@@ -28,12 +37,31 @@ public class OverlayBubbleService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        if (!isOverlayEnabled()) {
+            stopSelf();
+            return;
+        }
         startInForeground();
         showOverlayBubble();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        String action = intent != null ? intent.getAction() : null;
+        if (ACTION_DISABLE.equals(action)) {
+            setOverlayEnabled(false);
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+        if (ACTION_ENABLE.equals(action)) {
+            setOverlayEnabled(true);
+        }
+
+        if (!isOverlayEnabled()) {
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+
         if (bubbleView == null) {
             showOverlayBubble();
         }
@@ -73,6 +101,13 @@ public class OverlayBubbleService extends Service {
             pendingIntent = PendingIntent.getActivity(this, 1001, launchIntent, flags);
         }
 
+        Intent disableIntent = new Intent(this, OverlayBubbleService.class);
+        disableIntent.setAction(ACTION_DISABLE);
+        int actionFlags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+            ? PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            : PendingIntent.FLAG_UPDATE_CURRENT;
+        PendingIntent disablePendingIntent = PendingIntent.getService(this, 1002, disableIntent, actionFlags);
+
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle("F1 Clash Companion Overlay aktiv")
@@ -80,6 +115,7 @@ public class OverlayBubbleService extends Service {
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setContentIntent(pendingIntent)
+            .addAction(0, "Overlay ausblenden", disablePendingIntent)
             .build();
 
         startForeground(NOTIFICATION_ID, notification);
@@ -103,8 +139,8 @@ public class OverlayBubbleService extends Service {
             PixelFormat.TRANSLUCENT
         );
         bubbleParams.gravity = Gravity.TOP | Gravity.START;
-        bubbleParams.x = 24;
-        bubbleParams.y = 260;
+        bubbleParams.x = loadOverlayX();
+        bubbleParams.y = loadOverlayY();
 
         TextView bubble = new TextView(this);
         bubble.setText("F1");
@@ -123,6 +159,7 @@ public class OverlayBubbleService extends Service {
         });
 
         bubble.setOnLongClickListener(v -> {
+            setOverlayEnabled(false);
             stopSelf();
             return true;
         });
@@ -149,6 +186,9 @@ public class OverlayBubbleService extends Service {
                         bubbleParams.y = initialY + (int) (event.getRawY() - initialTouchY);
                         windowManager.updateViewLayout(bubble, bubbleParams);
                         return true;
+                    case MotionEvent.ACTION_UP:
+                        saveOverlayPosition(bubbleParams.x, bubbleParams.y);
+                        return false;
                     default:
                         return false;
                 }
@@ -167,5 +207,37 @@ public class OverlayBubbleService extends Service {
             }
         }
         bubbleView = null;
+    }
+
+    private SharedPreferences prefs() {
+        return getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+    }
+
+    private boolean isOverlayEnabled() {
+        return prefs().getBoolean(KEY_ENABLED, true);
+    }
+
+    static boolean isOverlayEnabled(SharedPreferences prefs) {
+        return prefs.getBoolean(KEY_ENABLED, true);
+    }
+
+    static void setOverlayEnabled(SharedPreferences prefs, boolean enabled) {
+        prefs.edit().putBoolean(KEY_ENABLED, enabled).apply();
+    }
+
+    private void setOverlayEnabled(boolean enabled) {
+        setOverlayEnabled(prefs(), enabled);
+    }
+
+    private int loadOverlayX() {
+        return prefs().getInt(KEY_POS_X, 24);
+    }
+
+    private int loadOverlayY() {
+        return prefs().getInt(KEY_POS_Y, 260);
+    }
+
+    private void saveOverlayPosition(int x, int y) {
+        prefs().edit().putInt(KEY_POS_X, x).putInt(KEY_POS_Y, y).apply();
     }
 }
