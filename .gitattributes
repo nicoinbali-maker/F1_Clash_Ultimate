@@ -1,0 +1,9 @@
+* text=auto
+
+# Keep Apple project files on LF across platforms
+*.pbxproj text eol=lf
+*.plist text eol=lf
+*.storyboard text eol=lf
+*.xcworkspacedata text eol=lf
+*.swift text eol=lf
+Podfile text eol=lf
