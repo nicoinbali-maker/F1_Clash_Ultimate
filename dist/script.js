@@ -2415,20 +2415,107 @@ async function runOcr() {
       langPath: 'assets/tessdata',
       logger: (m) => { if (m.status === 'recognizing text') out.textContent = tr('ocr_running_pct', { percent: Math.round(m.progress * 100) }); }
     });
-    const text = (data.text || '').toLowerCase();
-    const detected = partCatalog.filter((p) => text.includes(p.name.toLowerCase())).map((p) => p.name);
-    if (detected.length) {
-      detected.forEach((name) => { if (!ownedParts.includes(name)) ownedParts.push(name); });
-      saveOwnedParts();
-      buildInventory();
-      updateKpis();
-      out.textContent = tr('ocr_detected', { parts: detected.join(', ') });
+    const snapshot = parseOcrSnapshot(data.text || '');
+    const applied = applyOcrSnapshot(snapshot);
+    if (applied.total > 0) {
+      out.textContent = tr('ocr_snapshot_detected', {
+        parts: String(applied.parts),
+        drivers: String(applied.drivers),
+        tracks: String(applied.tracks),
+        details: applied.detailText
+      });
     } else {
       out.textContent = tr('ocr_none');
     }
   } catch (err) {
     out.textContent = tr('ocr_error', { message: err.message });
   }
+}
+
+function normalizeOcrToken(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function parseOcrSnapshot(rawText) {
+  const textLower = String(rawText || '').toLowerCase();
+  const textToken = normalizeOcrToken(rawText || '');
+
+  const detectByName = (list, nameKey = 'name') => list.filter((entry) => {
+    const name = String(entry?.[nameKey] || '');
+    if (!name) return false;
+    const lowerName = name.toLowerCase();
+    const tokenName = normalizeOcrToken(name);
+    return textLower.includes(lowerName) || (tokenName && textToken.includes(tokenName));
+  }).map((entry) => String(entry[nameKey]));
+
+  const parts = detectByName(partCatalog);
+  const drivers = detectByName(driversDb);
+  const tracks = detectByName(tracksDb);
+
+  return {
+    parts: Array.from(new Set(parts)),
+    drivers: Array.from(new Set(drivers)),
+    tracks: Array.from(new Set(tracks))
+  };
+}
+
+function applyOcrSnapshot(snapshot) {
+  const safeSnapshot = snapshot || { parts: [], drivers: [], tracks: [] };
+  let addedParts = 0;
+  let addedDrivers = 0;
+
+  safeSnapshot.parts.forEach((name) => {
+    if (!ownedParts.includes(name)) {
+      ownedParts.push(name);
+      addedParts += 1;
+    }
+  });
+  if (addedParts > 0) saveOwnedParts();
+
+  const stageMap = loadDriverStageMap();
+  safeSnapshot.drivers.forEach((name) => {
+    if (!stageMap[name]) {
+      stageMap[name] = {
+        stage: 'S1',
+        source: 'ocr',
+        updatedAt: new Date().toISOString()
+      };
+      addedDrivers += 1;
+    }
+  });
+  if (addedDrivers > 0) saveDriverStageMap(stageMap);
+
+  const firstTrack = safeSnapshot.tracks[0] || '';
+  if (firstTrack) {
+    const mainTrackSelect = byId('trackSelect');
+    const strategyTrackSelect = byId('strategyTrackSelect');
+    const builderTrackSelect = byId('builderTrackSelect');
+    if (mainTrackSelect) mainTrackSelect.value = firstTrack;
+    if (strategyTrackSelect) strategyTrackSelect.value = firstTrack;
+    if (builderTrackSelect) builderTrackSelect.value = firstTrack;
+  }
+
+  if (hasUi('partsInventory', 'garageInventory')) buildInventory();
+  if (hasUi('driversStandardList', 'driversLegendaryList', 'driversSpecialList')) buildDriverInventory();
+  updateKpis();
+
+  if (firstTrack && hasUi('trackRadarChart') && shouldAutoRunHeavyTasks()) {
+    renderTrackRadar();
+    runStrategyCalculation();
+  }
+
+  const detail = [];
+  if (safeSnapshot.parts.length) detail.push(`Parts: ${safeSnapshot.parts.slice(0, 8).join(', ')}`);
+  if (safeSnapshot.drivers.length) detail.push(`Fahrer: ${safeSnapshot.drivers.slice(0, 6).join(', ')}`);
+  if (safeSnapshot.tracks.length) detail.push(`Strecken: ${safeSnapshot.tracks.slice(0, 4).join(', ')}`);
+
+  return {
+    parts: addedParts,
+    drivers: addedDrivers,
+    tracks: safeSnapshot.tracks.length,
+    total: addedParts + addedDrivers + safeSnapshot.tracks.length,
+    detailText: detail.join(' | ') || '-'
+  };
 }
 
 async function detectSeason() {
@@ -2569,6 +2656,7 @@ async function init() {
   addListener('bestPairButton', 'click', findBestDriverPair);
   addListener('calcButton', 'click', evaluateCurrentSetup);
   addListener('ocrButton', 'click', runOcr);
+  addListener('ocrFile', 'change', runOcr);
   addListener('driverImpactMode', 'change', () => {
     if (lastDriverImpactTrack && lastDriverImpactContext) {
       renderDriverImpact(lastDriverImpactTrack, lastDriverImpactContext);

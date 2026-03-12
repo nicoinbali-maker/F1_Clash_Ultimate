@@ -100,7 +100,8 @@
         <div id="builderResult" class="result"></div>
         <div id="garageOcr" class="ocr-panel">
           <h3 data-i18n="ocr_h3">Inventar-Scanner (OCR)</h3>
-          <input id="ocrFile" type="file" accept="image/*" aria-label="Inventar Bild" />
+          <input id="ocrFile" type="file" accept="image/*" capture="environment" aria-label="Inventar Bild" />
+          <p class="hint" data-i18n="ocr_quick_hint">Screenshot aus F1 Clash wählen: OCR startet nach der Auswahl automatisch und übernimmt Parts, Fahrer und Strecken.</p>
           <button id="ocrButton" class="pill" data-i18n="ocr_btn">OCR starten</button>
           <div id="ocrResult" class="result"></div>
         </div>
