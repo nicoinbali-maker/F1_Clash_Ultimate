@@ -126,6 +126,39 @@ function addListener(id, eventName, handler) {
   if (el) el.addEventListener(eventName, handler);
 }
 
+function applyActiveSubnavByPath() {
+  const currentPage = String(window.location?.pathname || '')
+    .split('/')
+    .pop()
+    .toLowerCase() || 'index.html';
+  const navLinks = Array.from(document.querySelectorAll('.subnav a[href]'));
+  if (!navLinks.length) return;
+
+  navLinks.forEach((link) => {
+    link.classList.remove('is-active');
+    link.removeAttribute('aria-current');
+  });
+
+  let activeCount = 0;
+  navLinks.forEach((link) => {
+    const rawHref = String(link.getAttribute('href') || '');
+    if (!rawHref || rawHref.startsWith('#')) return;
+    const targetPage = rawHref.split('?')[0].split('/').pop().toLowerCase();
+    if (targetPage === currentPage) {
+      link.classList.add('is-active');
+      link.setAttribute('aria-current', 'page');
+      activeCount += 1;
+    }
+  });
+
+  if (activeCount > 0) return;
+  const fallback = navLinks.find((link) => String(link.getAttribute('href') || '').toLowerCase().includes('index.html'));
+  if (fallback) {
+    fallback.classList.add('is-active');
+    fallback.setAttribute('aria-current', 'page');
+  }
+}
+
 function loadRegistrationProfile() {
   const raw = localStorage.getItem('f1clashRegistration');
   if (!raw) return null;
@@ -2576,6 +2609,7 @@ async function init() {
   }
 
   document.addEventListener('app:language-changed', rerenderLocalizedRuntime);
+  applyActiveSubnavByPath();
   registerServiceWorker();
   await detectSeason();
 

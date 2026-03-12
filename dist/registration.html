@@ -116,6 +116,35 @@
         </form>
 
         <div id="registrationResult" class="result"></div>
+
+        <div class="section-head" style="margin-top:1.1rem;">
+          <div>
+            <h3 id="i18nLoginTitle">Bereits registriert? Login</h3>
+            <p class="hint" id="i18nLoginHint">Mit E-Mail und Passwort anmelden.</p>
+          </div>
+          <div class="section-badge" id="i18nLoginBadge">Schnellzugang</div>
+        </div>
+
+        <div id="firebaseModeHint" style="display:none; font-size:0.82rem; color:#79e9ff; margin:0.5rem 0 0.3rem; padding:0.35rem 0.75rem; background:rgba(121,233,255,0.07); border:1px solid rgba(121,233,255,0.2); border-radius:0.5rem;">
+          ☁️ Firebase-Modus aktiv — Login synchronisiert dein Profil geräteübergreifend
+        </div>
+        <div id="firebaseConfigHint" style="display:none; font-size:0.82rem; color:#ff9a3d; margin:0.5rem 0 0.3rem; padding:0.35rem 0.75rem; background:rgba(255,154,61,0.07); border:1px solid rgba(255,154,61,0.2); border-radius:0.5rem;">
+          ⚠️ Kein Firebase konfiguriert — Profil wird nur lokal gespeichert. <a href="sync.html" style="color:#ff9a3d; text-decoration:underline;">Firebase in Sync einrichten →</a>
+        </div>
+        <div class="form-grid" aria-label="Login">
+          <div class="stat field-card">
+            <label for="loginEmail" id="i18nLblLoginEmail">Login E-Mail</label>
+            <input id="loginEmail" name="loginEmail" type="email" maxlength="120" />
+          </div>
+          <div class="stat field-card">
+            <label for="loginPassword" id="i18nLblLoginPassword">Login Passwort</label>
+            <input id="loginPassword" name="loginPassword" type="password" maxlength="120" />
+          </div>
+          <div class="row form-actions">
+            <button id="loginRegistrationButton" type="button">Jetzt einloggen</button>
+          </div>
+          <div id="loginResult" class="login-result" role="status" aria-live="polite"></div>
+        </div>
       </section>
 
       <aside class="neon-card registration-sidecard">
@@ -180,6 +209,12 @@
         passwordConfirmPlaceholder: 'Passwort wiederholen',
         clashIdPlaceholder: 'z. B. CLASH-12345',
         save: 'Registrierung speichern', clear: 'Daten l\u00f6schen',
+        loginSectionTitle: 'Bereits registriert? Login',
+        loginHint: 'Mit E-Mail und Passwort anmelden.',
+        loginBadge: 'Schnellzugang',
+        loginEmail: 'Login E-Mail',
+        loginPassword: 'Login Passwort',
+        loginBtn: 'Jetzt einloggen',
         errFirstName: 'Vorname fehlt.', errLastName: 'Nachname fehlt.',
         errPlayerType: 'Bitte Spielertyp w\u00e4hlen.',
         errNationality: 'Nationalit\u00e4t fehlt.', errEmail: 'E-Mail fehlt oder ist ungueltig.', errPassword: 'Passwort fehlt.', errPasswordShort: 'Passwort muss mindestens 8 Zeichen haben.', errPasswordMismatch: 'Passwoerter stimmen nicht ueberein.', errClashId: 'F1 Clash ID fehlt.',
@@ -187,7 +222,12 @@
         invalid: 'Gespeicherte Daten sind ung\u00fcltig.',
         loaded: 'Gespeicherte Registrierung geladen.',
         saved: 'Registrierung gespeichert. Weiterleitung\u2026',
-        cleared: 'Registrierungsdaten gel\u00f6scht.'
+        cleared: 'Registrierungsdaten gel\u00f6scht.',
+        loginSuccess: 'Login erfolgreich. Weiterleitung\u2026',
+        loginInvalid: 'Login fehlgeschlagen. E-Mail oder Passwort falsch.',
+        loginNoProfiles: 'Keine gespeicherten Profile gefunden.',
+        loginLegacyProfile: 'Dieses Profil wurde ohne Passwort angelegt. Bitte erneut registrieren.',
+        loginPasswordMissing: 'Bitte Passwort eingeben.'
       },
       it: {
         pageTitle: 'F1 Clash Companion \u2013 Registrazione',
@@ -219,6 +259,12 @@
         passwordConfirmPlaceholder: 'Ripeti la password',
         clashIdPlaceholder: 'es. CLASH-12345',
         save: 'Salva Registrazione', clear: 'Cancella Dati',
+        loginSectionTitle: 'Hai gia un account? Login',
+        loginHint: 'Accedi con e-mail e password.',
+        loginBadge: 'Accesso rapido',
+        loginEmail: 'E-mail di login',
+        loginPassword: 'Password di login',
+        loginBtn: 'Accedi ora',
         errFirstName: 'Nome mancante.', errLastName: 'Cognome mancante.',
         errPlayerType: 'Seleziona il tipo di giocatore.',
         errNationality: 'Nazionalit\u00e0 mancante.', errEmail: 'E-mail mancante o non valida.', errPassword: 'Password mancante.', errPasswordShort: 'La password deve contenere almeno 8 caratteri.', errPasswordMismatch: 'Le password non coincidono.', errClashId: 'F1 Clash ID mancante.',
@@ -226,7 +272,12 @@
         invalid: 'I dati salvati non sono validi.',
         loaded: 'Registrazione caricata.',
         saved: "Registrazione salvata. Reindirizzamento all'app\u2026",
-        cleared: 'Dati cancellati.'
+        cleared: 'Dati cancellati.',
+        loginSuccess: 'Accesso riuscito. Reindirizzamento\u2026',
+        loginInvalid: 'Accesso fallito. E-mail o password non corretti.',
+        loginNoProfiles: 'Nessun profilo salvato trovato.',
+        loginLegacyProfile: 'Questo profilo e stato creato senza password. Registrati di nuovo.',
+        loginPasswordMissing: 'Inserisci la password.'
       },
       en: {
         pageTitle: 'F1 Clash Companion \u2013 Registration',
@@ -258,6 +309,12 @@
         passwordConfirmPlaceholder: 'Repeat password',
         clashIdPlaceholder: 'e.g. CLASH-12345',
         save: 'Save Registration', clear: 'Delete Data',
+        loginSectionTitle: 'Already registered? Login',
+        loginHint: 'Sign in with email and password.',
+        loginBadge: 'Quick access',
+        loginEmail: 'Login email',
+        loginPassword: 'Login password',
+        loginBtn: 'Log in now',
         errFirstName: 'First name missing.', errLastName: 'Last name missing.',
         errPlayerType: 'Please select a player type.',
         errNationality: 'Nationality missing.', errEmail: 'Email missing or invalid.', errPassword: 'Password missing.', errPasswordShort: 'Password must be at least 8 characters.', errPasswordMismatch: 'Passwords do not match.', errClashId: 'F1 Clash ID missing.',
@@ -265,7 +322,12 @@
         invalid: 'Saved registration data is invalid.',
         loaded: 'Saved registration loaded.',
         saved: 'Registration saved. Redirecting\u2026',
-        cleared: 'Registration data deleted.'
+        cleared: 'Registration data deleted.',
+        loginSuccess: 'Login successful. Redirecting\u2026',
+        loginInvalid: 'Login failed. Email or password is wrong.',
+        loginNoProfiles: 'No saved profiles found.',
+        loginLegacyProfile: 'This profile was created without a password. Please register again.',
+        loginPasswordMissing: 'Please enter a password.'
       }
     };
 
@@ -328,6 +390,11 @@
       byId('i18nLblPassword').textContent = t.password;
       byId('i18nLblPasswordConfirm').textContent = t.passwordConfirm;
       byId('i18nLblClashId').textContent = t.clashId;
+      byId('i18nLoginTitle').textContent = t.loginSectionTitle;
+      byId('i18nLoginHint').textContent = t.loginHint;
+      byId('i18nLoginBadge').textContent = t.loginBadge;
+      byId('i18nLblLoginEmail').textContent = t.loginEmail;
+      byId('i18nLblLoginPassword').textContent = t.loginPassword;
       byId('i18nWhyTitle').textContent = t.whyTitle;
       byId('i18nWhyHeading').textContent = t.whyHeading;
       byId('i18nWhyCopy').textContent = t.whyCopy;
@@ -342,9 +409,12 @@
       byId('email').placeholder = t.emailPlaceholder;
       byId('password').placeholder = t.passwordPlaceholder;
       byId('passwordConfirm').placeholder = t.passwordConfirmPlaceholder;
+      byId('loginEmail').placeholder = t.emailPlaceholder;
+      byId('loginPassword').placeholder = t.passwordPlaceholder;
       byId('clashId').placeholder = t.clashIdPlaceholder;
       byId('saveRegistrationButton').textContent = t.save;
       byId('clearRegistrationButton').textContent = t.clear;
+      byId('loginRegistrationButton').textContent = t.loginBtn;
       byId('langSelect').value = lang;
     }
 
@@ -368,6 +438,13 @@
       out.dataset.kind = kind;
     }
 
+    function setLoginResult(text, kind = 'info') {
+      const out = byId('loginResult');
+      if (!out) return;
+      out.textContent = text;
+      out.dataset.kind = kind;
+    }
+
     function normalize(value) { return String(value || '').trim(); }
 
     function getFormData() {
@@ -385,6 +462,96 @@
 
     function isValidEmail(value) {
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    }
+
+    function normalizeEmail(value) {
+      return normalize(value).toLowerCase();
+    }
+
+    async function hashPassword(value) {
+      const raw = String(value || '');
+      if (!raw) return '';
+      if (window.crypto?.subtle && typeof TextEncoder !== 'undefined') {
+        const bytes = new TextEncoder().encode(raw);
+        const digest = await window.crypto.subtle.digest('SHA-256', bytes);
+        return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+      }
+      return raw;
+    }
+
+    function loadFbConfig() {
+      try {
+        const raw = localStorage.getItem('f1clashFirebaseConfig') || sessionStorage.getItem('f1clashFirebaseConfig');
+        if (!raw) return null;
+        const cfg = JSON.parse(raw);
+        return (cfg && cfg.apiKey && cfg.projectId) ? cfg : null;
+      } catch { return null; }
+    }
+
+    async function fbPost(url, body) {
+      const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d?.error?.message || r.statusText);
+      return d;
+    }
+
+    async function fbSignUp(cfg, email, password) {
+      return fbPost(
+        `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${encodeURIComponent(cfg.apiKey)}`,
+        { email, password, returnSecureToken: true }
+      );
+    }
+
+    async function fbSignIn(cfg, email, password) {
+      return fbPost(
+        `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${encodeURIComponent(cfg.apiKey)}`,
+        { email, password, returnSecureToken: true }
+      );
+    }
+
+    async function fbDbWrite(cfg, idToken, localId, data) {
+      const url = `https://${cfg.projectId}-default-rtdb.firebaseio.com/profiles/${encodeURIComponent(localId)}.json?auth=${encodeURIComponent(idToken)}`;
+      const r = await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+      if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(d?.error?.message || r.statusText); }
+    }
+
+    async function fbDbRead(cfg, idToken, localId) {
+      try {
+        const url = `https://${cfg.projectId}-default-rtdb.firebaseio.com/profiles/${encodeURIComponent(localId)}.json?auth=${encodeURIComponent(idToken)}`;
+        const r = await fetch(url);
+        if (!r.ok) return null;
+        const d = await r.json();
+        return (d && typeof d === 'object' && d.clashId) ? d : null;
+      } catch { return null; }
+    }
+
+    function saveFbAuth(fbData, emailFallback) {
+      const state = {
+        localId: fbData.localId,
+        email: fbData.email || emailFallback,
+        idToken: fbData.idToken,
+        refreshToken: fbData.refreshToken,
+        expiresAt: Date.now() + Math.max(60, Number(fbData.expiresIn || 3600)) * 1000
+      };
+      try { localStorage.setItem('f1clashFirebaseAuth', JSON.stringify(state)); } catch {}
+      try { sessionStorage.setItem('f1clashFirebaseAuth', JSON.stringify(state)); } catch {}
+      return state;
+    }
+
+    function initFbMode() {
+      const hintActive = byId('firebaseModeHint');
+      const hintConfig = byId('firebaseConfigHint');
+      const cfg = loadFbConfig();
+      if (hintActive) hintActive.style.display = cfg ? 'block' : 'none';
+      if (hintConfig) hintConfig.style.display = cfg ? 'none' : 'block';
+    }
+
+    function readProfileList() {
+      const listRaw = readStore(PROFILE_LIST_KEY);
+      let list = [];
+      try { list = JSON.parse(listRaw) || []; } catch { list = []; }
+      if (!Array.isArray(list)) return [];
+      return list.filter((entry) => entry && typeof entry === 'object');
     }
 
     function validate(data) {
@@ -469,6 +636,7 @@
       byId('password').value = '';
       byId('passwordConfirm').value = '';
       byId('clashId').value = data.clashId || '';
+      if (data.email) byId('loginEmail').value = data.email;
       validateEmailLive();
       validatePasswordLive();
     }
@@ -486,30 +654,56 @@
       }
     }
 
-    function saveRegistration(event) {
+    async function saveRegistration(event) {
       event.preventDefault();
       const t = T[getLang()] || T.de;
       const data = getFormData();
       const error = validate(data);
       if (error) { setResult(error, 'error'); return; }
+      const fbCfg = loadFbConfig();
+      if (fbCfg) {
+        setResult('Firebase Account wird erstellt\u2026');
+        try {
+          const fbData = await fbSignUp(fbCfg, data.email, data.password);
+          const auth = saveFbAuth(fbData, data.email);
+          const payload = {
+            firstName: data.firstName, lastName: data.lastName,
+            playerType: data.playerType, nationality: data.nationality,
+            email: data.email, clashId: data.clashId,
+            firebaseUid: auth.localId, passwordSet: true,
+            lang: getLang(), updatedAt: new Date().toISOString()
+          };
+          try { await fbDbWrite(fbCfg, auth.idToken, auth.localId, payload); } catch (e) { console.warn('Firebase DB write failed:', e); }
+          const list = readProfileList();
+          const idx = list.findIndex((e) => e && e.clashId === payload.clashId);
+          if (idx >= 0) list[idx] = { ...list[idx], ...payload }; else list.push(payload);
+          writeStore(PROFILE_LIST_KEY, JSON.stringify(list));
+          writeStore(ACTIVE_PROFILE_KEY, payload.clashId);
+          writeStore(STORAGE_KEY, JSON.stringify(payload));
+          setResult('Firebase Account erstellt & Profil gespeichert. Weiterleitung\u2026');
+          setTimeout(() => { window.location.href = getNextTarget(); }, 350);
+        } catch (fbErr) {
+          const msg = String(fbErr.message || '');
+          if (msg.includes('EMAIL_EXISTS')) {
+            setResult('Diese E-Mail ist bereits registriert. Bitte unten einloggen.', 'error');
+          } else {
+            setResult('Firebase Fehler: ' + msg, 'error');
+          }
+        }
+        return;
+      }
+      // Lokaler Fallback (kein Firebase konfiguriert)
+      const passwordHash = await hashPassword(data.password);
       const payload = {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        playerType: data.playerType,
-        nationality: data.nationality,
-        email: data.email,
-        clashId: data.clashId,
-        passwordSet: true,
-        lang: getLang(),
-        updatedAt: new Date().toISOString()
+        firstName: data.firstName, lastName: data.lastName,
+        playerType: data.playerType, nationality: data.nationality,
+        email: data.email, clashId: data.clashId,
+        passwordHash, passwordSet: true,
+        lang: getLang(), updatedAt: new Date().toISOString()
       };
-      const listRaw = readStore(PROFILE_LIST_KEY);
-      let list = [];
-      try { list = JSON.parse(listRaw) || []; } catch { list = []; }
-      if (!Array.isArray(list)) list = [];
+      const list = readProfileList();
       const idx = list.findIndex((e) => e && e.clashId === payload.clashId);
-      if (idx >= 0) list[idx] = { ...list[idx], ...payload };
-      else list.push(payload);
+      if (idx >= 0) list[idx] = { ...list[idx], ...payload }; else list.push(payload);
       const okList = writeStore(PROFILE_LIST_KEY, JSON.stringify(list));
       const okActive = writeStore(ACTIVE_PROFILE_KEY, payload.clashId);
       const okRegistration = writeStore(STORAGE_KEY, JSON.stringify(payload));
@@ -519,6 +713,76 @@
       }
       setResult(t.saved);
       setTimeout(() => { window.location.href = getNextTarget(); }, 350);
+    }
+
+    async function loginWithEmailPassword() {
+      const t = T[getLang()] || T.de;
+      const email = normalize(byId('loginEmail').value);
+      const password = String(byId('loginPassword').value || '');
+      if (!email || !isValidEmail(email)) { setLoginResult(t.errEmail, 'error'); return; }
+      if (!password) { setLoginResult(t.loginPasswordMissing, 'error'); return; }
+
+      const fbCfg = loadFbConfig();
+      if (fbCfg) {
+        setLoginResult('Firebase Login\u2026');
+        try {
+          const fbData = await fbSignIn(fbCfg, email, password);
+          const auth = saveFbAuth(fbData, email);
+          const profile = await fbDbRead(fbCfg, auth.idToken, auth.localId);
+          if (profile) {
+            const list = readProfileList();
+            const idx = list.findIndex((e) => e && e.clashId === profile.clashId);
+            if (idx >= 0) list[idx] = { ...list[idx], ...profile }; else list.push(profile);
+            writeStore(PROFILE_LIST_KEY, JSON.stringify(list));
+            writeStore(ACTIVE_PROFILE_KEY, profile.clashId);
+            writeStore(STORAGE_KEY, JSON.stringify(profile));
+            setLoginResult('Firebase Login erfolgreich. Profil geladen. Weiterleitung\u2026');
+          } else {
+            const minimal = { email: auth.email, firebaseUid: auth.localId, clashId: auth.localId, updatedAt: new Date().toISOString() };
+            writeStore(STORAGE_KEY, JSON.stringify(minimal));
+            setLoginResult('Firebase Login erfolgreich. Weiterleitung\u2026');
+          }
+          setTimeout(() => { window.location.href = getNextTarget(); }, 250);
+          return;
+        } catch (fbErr) {
+          const msg = String(fbErr.message || '');
+          const isCredErr = msg.includes('INVALID_PASSWORD') || msg.includes('INVALID_LOGIN_CREDENTIALS') || msg.includes('EMAIL_NOT_FOUND') || msg.includes('INVALID_EMAIL') || msg.includes('USER_DISABLED');
+          if (isCredErr) { setLoginResult('Firebase Login fehlgeschlagen: ' + msg, 'error'); return; }
+          setLoginResult('Firebase nicht erreichbar, lokaler Login\u2026');
+        }
+      }
+
+      // Lokaler Fallback
+      const list = readProfileList();
+      if (!list.length) { setLoginResult(t.loginNoProfiles, 'error'); return; }
+
+      const candidate = list.find((entry) => normalizeEmail(entry.email) === normalizeEmail(email));
+      if (!candidate) { setLoginResult(t.loginInvalid, 'error'); return; }
+      if (!candidate.passwordHash) { setLoginResult(t.loginLegacyProfile, 'error'); return; }
+
+      const passwordHash = await hashPassword(password);
+      if (String(candidate.passwordHash) !== String(passwordHash)) {
+        setLoginResult(t.loginInvalid, 'error');
+        return;
+      }
+
+      const payload = {
+        ...candidate,
+        email: normalize(candidate.email),
+        lang: getLang(),
+        updatedAt: new Date().toISOString(),
+        passwordSet: true
+      };
+
+      const okActive = payload.clashId ? writeStore(ACTIVE_PROFILE_KEY, payload.clashId) : true;
+      const okRegistration = writeStore(STORAGE_KEY, JSON.stringify(payload));
+      if (!okActive && !okRegistration) {
+        setLoginResult('Speichern im Browser ist blockiert. Bitte Browser-Storage erlauben.', 'error');
+        return;
+      }
+
+      setLoginResult(t.loginSuccess);
+      setTimeout(() => { window.location.href = getNextTarget(); }, 250);
     }
 
     function clearRegistration() {
@@ -532,6 +796,7 @@
     applyLang(_initLang);
     applyNextLink();
     loadRegistration();
+    initFbMode();
     initIntro();
 
     byId('langSelect').addEventListener('change', function(e) {
@@ -542,9 +807,12 @@
     });
     byId('registrationForm').addEventListener('submit', saveRegistration);
     byId('clearRegistrationButton').addEventListener('click', clearRegistration);
+    byId('loginRegistrationButton').addEventListener('click', () => { loginWithEmailPassword(); });
     const emailInput = byId('email');
     const passwordInput = byId('password');
     const passwordConfirmInput = byId('passwordConfirm');
+    const loginEmailInput = byId('loginEmail');
+    const loginPasswordInput = byId('loginPassword');
     if (emailInput) {
       emailInput.addEventListener('input', validateEmailLive);
       emailInput.addEventListener('blur', validateEmailLive);
@@ -556,6 +824,22 @@
     if (passwordConfirmInput) {
       passwordConfirmInput.addEventListener('input', validatePasswordLive);
       passwordConfirmInput.addEventListener('blur', validatePasswordLive);
+    }
+    if (loginEmailInput) {
+      loginEmailInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          loginWithEmailPassword();
+        }
+      });
+    }
+    if (loginPasswordInput) {
+      loginPasswordInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          loginWithEmailPassword();
+        }
+      });
     }
     function showRegistration() {
       const splash = byId('introSplash');

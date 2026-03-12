@@ -1,9 +1,14 @@
-const CACHE_NAME = 'f1-clash-ultimate-v32';
+const CACHE_NAME = 'f1-clash-ultimate-v34';
 const ASSETS = [
   '/',
   '/i18n.js',
   '/index.html',
+  '/garage.html',
   '/optimizer.html',
+  '/sync.html',
+  '/team.html',
+  '/leaderboard.html',
+  '/personal.html',
   '/style.css',
   '/script.js',
   '/advanced.js',
@@ -11,7 +16,7 @@ const ASSETS = [
   '/registration.html',
   '/hall-of-fame.html',
   '/hallOfFame.js',
-  '/assets/f1_neon_nights.png'
+  '/assets/ferrari2000_candyred_192.png'
 ];
 
 self.addEventListener('install', event => {

@@ -21,6 +21,7 @@
       if (!hasRegistration) {
         try { hasRegistration = !!sessionStorage.getItem('f1clashRegistration'); } catch {}
       }
+      if (!hasRegistration) { try { const _fb = JSON.parse(localStorage.getItem('f1clashFirebaseAuth') || 'null'); hasRegistration = !!(_fb?.localId && _fb?.refreshToken); } catch {} }
       if (!hasRegistration) {
         window.location.replace('registration.html?next=garage.html');
       }
@@ -51,10 +52,17 @@
       </div>
     </header>
 
-    <nav class="subnav neon-card main-subnav garage-quicknav" aria-label="Garage Schnellnavigation">
-      <a href="#garageInventory" data-i18n="parts_inventory_h3">Teile-Garage (draggable)</a>
-      <a href="#garageDrivers" data-i18n="drivers_h3">Fahrer-Manager</a>
-      <a href="#garageOcr" data-i18n="ocr_h3">Inventar-Scanner (OCR)</a>
+    <nav class="subnav neon-card main-subnav garage-quicknav" aria-label="App Navigation">
+      <a href="index.html" data-i18n="nav_dashboard">Dashboard</a>
+      <a href="garage.html" class="is-active" aria-current="page" data-i18n="nav_garage">Garage</a>
+      <a href="optimizer.html" data-i18n="nav_optimizer">Optimizer</a>
+      <a href="sync.html" data-i18n="nav_sync">Account-Sync</a>
+      <a href="optimizer.html" data-i18n="nav_race">Simulator</a>
+      <a href="team.html" data-i18n="nav_clan">Clan</a>
+      <a href="leaderboard.html" data-i18n="nav_leaderboard">Leaderboard</a>
+      <a href="hall-of-fame.html" data-i18n="nav_hof">Hall of Fame</a>
+      <a href="personal.html" data-i18n="nav_personal">Persönlich</a>
+      <a href="registration.html?next=garage.html" data-i18n="nav_registration">Registrierung</a>
     </nav>
 
     <main>

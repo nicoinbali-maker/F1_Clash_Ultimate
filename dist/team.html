@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>F1 Clash Companion - Team</title>
+  <meta name="theme-color" content="#0a0d17" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/ferrari2000_candyred_192.png" />
+  <link rel="apple-touch-icon" href="assets/ferrari2000_candyred_192.png" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="i18n.js"></script>
+  <script defer src="script.js"></script>
+</head>
+<body class="neon-body main-cockpit">
+  <script>
+    (function () {
+      let ok = false;
+      try { ok = !!localStorage.getItem('f1clashRegistration'); } catch {}
+      if (!ok) { try { ok = !!sessionStorage.getItem('f1clashRegistration'); } catch {} }
+      if (!ok) { try { const _fb = JSON.parse(localStorage.getItem('f1clashFirebaseAuth') || 'null'); ok = !!(_fb?.localId && _fb?.refreshToken); } catch {} }
+      if (!ok) { window.location.replace('registration.html?next=team.html'); }
+    })();
+  </script>
+
+  <div class="app-shell">
+    <div class="lang-bar neon-card app-lang-bar" style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 1.2rem;">
+      <span data-i18n="lang_label" style="color:var(--text-muted,#9aa2c0);font-size:0.9rem;">Sprache</span>
+      <select id="appLangSelect" style="background:#0d0f1e;color:#f7f8fc;border:1px solid rgba(255,255,255,.18);border-radius:0.5rem;padding:0.3rem 0.7rem;font-size:0.9rem;cursor:pointer;">
+        <option value="de">🇩🇪 Deutsch</option>
+        <option value="it">🇮🇹 Italiano</option>
+        <option value="en">🇬🇧 English</option>
+      </select>
+    </div>
+
+    <header class="topbar neon-card main-topbar">
+      <div class="brand">
+        <img src="assets/ferrari2000_candyred_192.png" alt="F1 Neon Nights" class="brand-icon" />
+        <div>
+          <h1 data-i18n="team_h2">Team- / Clan-Dashboard</h1>
+          <p data-i18n="team_p">Cloud-Sync, Team-Setups und Score-Prognosen für mehrere Spieler.</p>
+        </div>
+      </div>
+      <div class="row">
+        <a class="pill ghost-link" href="index.html" data-i18n="nav_dashboard">Dashboard</a>
+        <a class="pill ghost-link" href="leaderboard.html" data-i18n="nav_leaderboard">Leaderboard</a>
+      </div>
+    </header>
+
+    <nav class="subnav neon-card main-subnav" aria-label="App Navigation">
+      <a href="index.html" data-i18n="nav_dashboard">Dashboard</a>
+      <a href="garage.html" data-i18n="nav_garage">Garage</a>
+      <a href="optimizer.html" data-i18n="nav_optimizer">Optimizer</a>
+      <a href="sync.html" data-i18n="nav_sync">Account-Sync</a>
+      <a href="optimizer.html" data-i18n="nav_race">Simulator</a>
+      <a href="team.html" class="is-active" aria-current="page" data-i18n="nav_clan">Clan</a>
+      <a href="leaderboard.html" data-i18n="nav_leaderboard">Leaderboard</a>
+      <a href="hall-of-fame.html" data-i18n="nav_hof">Hall of Fame</a>
+      <a href="personal.html" data-i18n="nav_personal">Persönlich</a>
+      <a href="registration.html?next=team.html" data-i18n="nav_registration">Registrierung</a>
+    </nav>
+
+    <main>
+      <section id="team" class="panel neon-card">
+        <header>
+          <h2 data-i18n="team_h2">Team- / Clan-Dashboard</h2>
+          <p data-i18n="team_p">Cloud-Sync, Team-Setups und Score-Prognosen für mehrere Spieler.</p>
+        </header>
+        <div class="row">
+          <label for="teamNameInput" data-i18n="team_name_lbl">Teamname</label>
+          <input id="teamNameInput" type="text" data-i18n-ph="team_name_ph" placeholder="Neon Clan" />
+          <label for="teamMemberSelect" data-i18n="team_member_lbl">Mitglied</label>
+          <select id="teamMemberSelect"></select>
+          <button id="teamAddMemberButton" class="pill" data-i18n="add_member_btn">Mitglied hinzufügen</button>
+        </div>
+        <div class="row">
+          <button id="teamSaveButton" class="pill" data-i18n="save_team_btn">Team speichern</button>
+          <button id="teamLoadButton" class="pill" data-i18n="load_team_btn">Team laden</button>
+          <button id="teamExportButton" class="pill" data-i18n="export_team_btn">Team exportieren</button>
+          <button id="teamImportButton" class="pill" data-i18n="import_team_btn">Team importieren</button>
+          <input id="teamImportFile" type="file" accept="application/json" hidden />
+        </div>
+        <div id="teamMembersView" class="result"></div>
+        <div class="row">
+          <button id="cloudSyncButton" class="pill" data-i18n="cloud_sync_btn">Team-Cloud synchronisieren</button>
+          <button id="notifyButton" class="pill" data-i18n="notify_btn">Push für Rennen senden</button>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th data-i18n="table_player">Spieler</th>
+              <th data-i18n="table_role">Rolle</th>
+              <th data-i18n="table_strategy">Strategie</th>
+              <th data-i18n="table_score">Teamscore</th>
+              <th data-i18n="table_setup">Letztes Setup</th>
+            </tr>
+          </thead>
+          <tbody id="teamScoreTable"></tbody>
+        </table>
+        <div id="teamScoreResult" class="result"></div>
+        <div id="teamResult" class="result"></div>
+      </section>
+    </main>
+
+    <footer class="footer neon-card">
+      <p data-i18n="copyright">Copyright © Sunwalker NP</p>
+    </footer>
+  </div>
+</body>
+</html>
