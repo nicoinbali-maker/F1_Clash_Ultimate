@@ -1,6 +1,7 @@
 package com.sunwalker.f1clashcompanion;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -14,6 +15,13 @@ public class MainActivity extends BridgeActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		maybePromptOverlayPermission();
+		ensureOverlayServiceRunning();
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		ensureOverlayServiceRunning();
 	}
 
 	private void maybePromptOverlayPermission() {
@@ -41,5 +49,18 @@ public class MainActivity extends BridgeActivity {
 		);
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		startActivity(intent);
+	}
+
+	private void ensureOverlayServiceRunning() {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
+		if (!Settings.canDrawOverlays(this)) return;
+
+		Intent serviceIntent = new Intent(this, OverlayBubbleService.class);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			Context context = getApplicationContext();
+			context.startForegroundService(serviceIntent);
+		} else {
+			startService(serviceIntent);
+		}
 	}
 }
