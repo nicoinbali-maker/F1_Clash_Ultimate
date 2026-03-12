@@ -1,9 +1,12 @@
-name: Android Build
+name: Android Build & Release
 
 on:
   push:
     branches: [master]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build-android:
@@ -41,9 +44,31 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
 
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
+      - name: Rename APK
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          cp android/app/build/outputs/apk/debug/app-debug.apk \
+             F1ClashCompanion-debug-${SHORT_SHA}.apk
+          echo "APK_NAME=F1ClashCompanion-debug-${SHORT_SHA}.apk" >> $GITHUB_ENV
+
+      - name: Delete existing latest-android tag (if any)
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git tag -d latest-android 2>/dev/null || true
+          git push origin :refs/tags/latest-android 2>/dev/null || true
+
+      - name: Create GitHub Release with APK
+        uses: softprops/action-gh-release@v2
         with:
-          name: F1ClashCompanion-Android-Debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 14
+          tag_name: latest-android
+          name: "F1 Clash Companion – Android (Latest Debug)"
+          body: |
+            Automatisch gebaut aus Branch `master` — Commit `${{ github.sha }}`
+
+            **Installation:**
+            1. APK herunterladen
+            2. Auf dem Android-Gerät: Einstellungen → Unbekannte Quellen erlauben
+            3. APK installieren
+          files: ${{ env.APK_NAME }}
+          prerelease: true
