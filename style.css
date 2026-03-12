@@ -445,6 +445,61 @@ textarea {
   font-size: 0.95rem;
 }
 
+.leaderboard-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.9rem;
+  transition: background 0.15s;
+}
+
+.leaderboard-entry:hover {
+  background: rgba(121, 233, 255, 0.05);
+}
+
+.leaderboard-entry.is-own {
+  background: rgba(121, 233, 255, 0.1);
+  border-left: 3px solid var(--accent-cyan, #79e9ff);
+  padding-left: 0.6rem;
+}
+
+.lb-rank {
+  min-width: 2.2rem;
+  font-weight: 700;
+  color: var(--accent-cyan, #79e9ff);
+  font-size: 0.85rem;
+}
+
+.lb-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lb-score {
+  min-width: 5rem;
+  text-align: right;
+  font-weight: 600;
+  color: #c8e6f7;
+}
+
+.lb-parts {
+  min-width: 4.5rem;
+  text-align: right;
+  font-size: 0.82rem;
+  color: var(--text-muted, #9aa2c0);
+}
+
+.lb-date {
+  min-width: 5rem;
+  text-align: right;
+  font-size: 0.78rem;
+  color: var(--text-muted, #9aa2c0);
+}
+
 .notifications {
   margin-top: 1rem;
 }

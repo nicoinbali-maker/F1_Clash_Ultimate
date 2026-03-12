@@ -127,6 +127,14 @@ function addListener(id, eventName, handler) {
   if (el) el.addEventListener(eventName, handler);
 }
 
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function applyActiveSubnavByPath() {
   const currentPage = String(window.location?.pathname || '')
     .split('/')
@@ -2487,6 +2495,213 @@ async function runOcr() {
   }
 }
 
+// ===== LEADERBOARD =====
+
+function leaderboardListUrl(config) {
+  const projectId = encodeURIComponent(config.projectId);
+  const key = encodeURIComponent(config.apiKey);
+  return `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/playerProfiles?key=${key}&pageSize=50`;
+}
+
+function computeLeaderboardScore(payload) {
+  let score = 0;
+  const meta = payload?.partMeta || {};
+  Object.values(meta).forEach((m) => {
+    if (m && typeof m === 'object') {
+      score += Math.max(1, Number(m.level || 1));
+      score += Number(m.mod || 0) * 2;
+    }
+  });
+  const stages = payload?.driverStages || {};
+  Object.values(stages).forEach((s) => {
+    const raw = String(s?.stage || 'S1').replace(/^S/i, '');
+    score += Math.max(0, Number(raw) || 0);
+  });
+  return score;
+}
+
+async function fetchLeaderboardDocs() {
+  const cfg = loadFirebaseConfig();
+  if (!cfg.projectId || !cfg.apiKey) {
+    throw new Error('Firebase-Konfig fehlt. Bitte zuerst in "Account-Sync" einrichten.');
+  }
+  const auth = loadFirebaseAuthState();
+  const headers = { Accept: 'application/json' };
+  if (auth?.idToken) headers.Authorization = `Bearer ${auth.idToken}`;
+  const url = leaderboardListUrl(cfg);
+  const response = await fetch(url, { headers });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => response.statusText);
+    throw new Error(`HTTP ${response.status}: ${detail}`);
+  }
+  const data = await response.json();
+  return Array.isArray(data.documents) ? data.documents : [];
+}
+
+function parseLeaderboardEntries(docs) {
+  return docs.map((doc) => {
+    const fields = doc.fields || {};
+    const payloadStr = fields.payload?.stringValue || '{}';
+    let payload = {};
+    try { payload = JSON.parse(payloadStr); } catch {}
+    const profile = payload.profile || {};
+    const name = profile.clashId
+      || fields.profileId?.stringValue
+      || fields.ownerEmail?.stringValue
+      || 'Anonym';
+    const score = computeLeaderboardScore(payload);
+    const partsCount = Array.isArray(payload.ownedParts) ? payload.ownedParts.length : 0;
+    const tsRaw = fields.updatedAt?.integerValue;
+    const updatedAt = tsRaw ? new Date(Number(tsRaw)).toLocaleDateString('de-DE') : '-';
+    return { name, score, partsCount, updatedAt, payload };
+  });
+}
+
+async function loadLeaderboard() {
+  const resultEl = byId('leaderboardResult');
+  const listEl = byId('leaderboardList');
+  if (!resultEl || !listEl) return;
+
+  resultEl.textContent = 'Lade Leaderboard…';
+  listEl.innerHTML = '';
+
+  try {
+    const docs = await fetchLeaderboardDocs();
+    const entries = parseLeaderboardEntries(docs);
+    entries.sort((a, b) => b.score - a.score);
+
+    const ownId = String(getActiveProfileIdLocal() || '').toLowerCase();
+
+    entries.slice(0, 20).forEach((entry, i) => {
+      const isOwn = ownId && String(entry.name).toLowerCase().includes(ownId);
+      const li = document.createElement('li');
+      li.className = `leaderboard-entry${isOwn ? ' is-own' : ''}`;
+
+      const rank = document.createElement('span');
+      rank.className = 'lb-rank';
+      rank.textContent = `#${i + 1}`;
+
+      const name = document.createElement('span');
+      name.className = 'lb-name';
+      name.textContent = entry.name;
+
+      const score = document.createElement('span');
+      score.className = 'lb-score';
+      score.textContent = `${entry.score} Pts`;
+
+      const parts = document.createElement('span');
+      parts.className = 'lb-parts';
+      parts.textContent = `${entry.partsCount} Parts`;
+
+      const date = document.createElement('span');
+      date.className = 'lb-date';
+      date.textContent = entry.updatedAt;
+
+      li.append(rank, name, score, parts, date);
+      listEl.appendChild(li);
+    });
+
+    if (!entries.length) {
+      const li = document.createElement('li');
+      li.textContent = 'Noch keine Einträge. Speichere dein Profil via Firebase um sichtbar zu werden.';
+      listEl.appendChild(li);
+    }
+
+    resultEl.textContent = `${entries.length} Spieler gefunden – Top ${Math.min(entries.length, 20)} angezeigt.`;
+  } catch (err) {
+    resultEl.textContent = `Fehler: ${err.message}`;
+  }
+}
+
+async function analyzePerformance() {
+  const resultEl = byId('aiAnalysisResult');
+  const suggestionsEl = byId('aiSuggestions');
+  const competitorEl = byId('competitorPanel');
+  if (!resultEl || !suggestionsEl) return;
+
+  resultEl.textContent = 'KI analysiert…';
+  suggestionsEl.innerHTML = '';
+  if (competitorEl) competitorEl.innerHTML = '';
+
+  try {
+    const docs = await fetchLeaderboardDocs();
+    const entries = parseLeaderboardEntries(docs).filter((e) => e.score > 0);
+    entries.sort((a, b) => b.score - a.score);
+    const top5 = entries.slice(0, 5);
+
+    if (!top5.length) {
+      resultEl.textContent = 'Keine Vergleichsdaten verfügbar.';
+      return;
+    }
+
+    const myMeta = loadPartMetaMap();
+    const myOwned = new Set(ownedParts);
+    const myStages = loadDriverStageMap();
+
+    // Upgrade recommendations: compare my part levels to top players
+    const upgradeTargets = new Map();
+    top5.forEach(({ payload }) => {
+      const meta = payload.partMeta || {};
+      Object.entries(meta).forEach(([name, m]) => {
+        if (!m || typeof m !== 'object') return;
+        const theirLevel = Number(m.level || 1);
+        if (!myOwned.has(name)) return;
+        const myLevel = Number(myMeta[name]?.level || 1);
+        if (theirLevel > myLevel) {
+          const existing = upgradeTargets.get(name);
+          if (!existing || theirLevel > existing.theirLevel) {
+            upgradeTargets.set(name, { theirLevel, myLevel });
+          }
+        }
+      });
+    });
+
+    const sorted = Array.from(upgradeTargets.entries())
+      .sort((a, b) => (b[1].theirLevel - b[1].myLevel) - (a[1].theirLevel - a[1].myLevel))
+      .slice(0, 10);
+
+    if (sorted.length) {
+      const heading = document.createElement('li');
+      heading.style.cssText = 'font-weight:bold;color:var(--accent-cyan,#79e9ff);list-style:none;padding:0.4rem 0;';
+      heading.textContent = '🔧 Part-Upgrade-Empfehlungen (vs. Top-5):';
+      suggestionsEl.appendChild(heading);
+      sorted.forEach(([name, { theirLevel, myLevel }]) => {
+        const li = document.createElement('li');
+        li.textContent = `${name}: Level ${myLevel} → ${theirLevel}`;
+        suggestionsEl.appendChild(li);
+      });
+    } else {
+      const li = document.createElement('li');
+      li.textContent = '✅ Bereits auf Top-Niveau – keine Upgrade-Empfehlungen.';
+      suggestionsEl.appendChild(li);
+    }
+
+    // Show competitor snapshot in competitorPanel
+    if (competitorEl && top5[0]) {
+      const top = top5[0];
+      const h = document.createElement('h4');
+      h.style.cssText = 'color:var(--accent-cyan,#79e9ff);margin:0 0 0.5rem;';
+      h.textContent = `#1 Spieler: ${escapeHtml(top.name)} (${top.score} Pts)`;
+      competitorEl.appendChild(h);
+
+      const theirParts = Array.isArray(top.payload.ownedParts) ? top.payload.ownedParts : [];
+      const onlyTheirParts = theirParts.filter((n) => !myOwned.has(n)).slice(0, 8);
+      if (onlyTheirParts.length) {
+        const p = document.createElement('p');
+        p.style.fontSize = '0.88rem';
+        p.innerHTML = `<strong>Parts die sie haben, du nicht:</strong> ${onlyTheirParts.map(escapeHtml).join(', ')}`;
+        competitorEl.appendChild(p);
+      }
+    }
+
+    resultEl.textContent = `Analyse abgeschlossen. Verglichen mit ${top5.length} Top-Spieler(n).`;
+  } catch (err) {
+    resultEl.textContent = `Fehler bei der Analyse: ${err.message}`;
+  }
+}
+
+// ===== END LEADERBOARD =====
+
 function summarizeOcrSnapshot(snapshot) {
   const safe = snapshot || { parts: [], drivers: [], tracks: [], partMetaByName: {}, driverStageByName: {} };
   const currentPartMeta = loadPartMetaMap();
@@ -2905,6 +3120,10 @@ async function init() {
     initSyncConsentPanel();
   }
 
+  if (hasUi('leaderboardList', 'leaderboardResult')) {
+    deferUiTask(() => loadLeaderboard(), 80);
+  }
+
   addListener('trackAnalysisButton', 'click', renderTrackRadar);
   addListener('allChartsButton', 'click', renderAllTrackCharts);
   addListener('trackSelect', 'change', () => { renderTrackRadar(); optimizeSelectedTrack(); });
@@ -2941,6 +3160,8 @@ async function init() {
   addListener('calcButton', 'click', evaluateCurrentSetup);
   addListener('ocrButton', 'click', runOcr);
   addListener('ocrFile', 'change', runOcr);
+  addListener('refreshLeaderboardButton', 'click', loadLeaderboard);
+  addListener('analyzePerformanceButton', 'click', analyzePerformance);
   addListener('driverImpactMode', 'change', () => {
     if (lastDriverImpactTrack && lastDriverImpactContext) {
       renderDriverImpact(lastDriverImpactTrack, lastDriverImpactContext);
