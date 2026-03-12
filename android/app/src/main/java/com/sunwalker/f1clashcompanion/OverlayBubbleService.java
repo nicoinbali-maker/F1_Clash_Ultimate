@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.IBinder;
+import android.provider.Settings;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -37,6 +38,10 @@ public class OverlayBubbleService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            stopSelf();
+            return;
+        }
         if (!isOverlayEnabled()) {
             stopSelf();
             return;
@@ -55,6 +60,11 @@ public class OverlayBubbleService extends Service {
         }
         if (ACTION_ENABLE.equals(action)) {
             setOverlayEnabled(true);
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            stopSelf();
+            return START_NOT_STICKY;
         }
 
         if (!isOverlayEnabled()) {
@@ -196,7 +206,12 @@ public class OverlayBubbleService extends Service {
         });
 
         bubbleView = bubble;
-        windowManager.addView(bubbleView, bubbleParams);
+        try {
+            windowManager.addView(bubbleView, bubbleParams);
+        } catch (SecurityException | IllegalArgumentException e) {
+            bubbleView = null;
+            stopSelf();
+        }
     }
 
     private void removeOverlayBubble() {
