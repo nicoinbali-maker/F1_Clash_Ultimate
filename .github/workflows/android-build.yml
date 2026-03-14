@@ -50,6 +50,12 @@ jobs:
       - name: Make Gradlew executable
         run: chmod +x android/gradlew
 
+      - name: Run Unit Tests
+        working-directory: android
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx2g -Dfile.encoding=UTF-8"
+        run: ./gradlew testDebugUnitTest --no-daemon --build-cache --warning-mode none
+
       - name: Build Debug APK
         working-directory: android
         env:
