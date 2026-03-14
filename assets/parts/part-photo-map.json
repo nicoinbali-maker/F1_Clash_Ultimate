@@ -1,0 +1,366 @@
+[
+  {
+    "part": "Pivot",
+    "target": "pivot.jpg",
+    "source": "Screenshot_2026-03-13-22-13-22-088_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "The Stabiliser",
+    "target": "the-stabiliser.jpg",
+    "source": "Screenshot_2026-03-13-22-13-26-233_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "The Descent",
+    "target": "the-descent.jpg",
+    "source": "the-descent.jpg",
+    "score": null,
+    "status": "existing-asset"
+  },
+  {
+    "part": "Rumble",
+    "target": "rumble.jpg",
+    "source": "Screenshot_2026-03-13-22-14-04-368_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Flow 1K",
+    "target": "flow-1k.jpg",
+    "source": "Screenshot_2026-03-13-22-14-09-218_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Supernova",
+    "target": "supernova.jpg",
+    "source": "Screenshot_2026-03-13-22-13-32-830_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Boombox",
+    "target": "boombox.jpg",
+    "source": "Screenshot_2026-03-13-22-14-18-354_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Grindlock",
+    "target": "grindlock.jpg",
+    "source": "WhatsApp Image 2026-03-13 at 23.10.22.jpeg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Hustle",
+    "target": "hustle.jpg",
+    "source": "Screenshot_2026-03-13-22-15-50-439_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Slickshift",
+    "target": "slickshift.jpg",
+    "source": "Screenshot_2026-03-13-22-17-33-406_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Beat",
+    "target": "beat.jpg",
+    "source": "Screenshot_2026-03-13-22-17-21-317_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Fury",
+    "target": "fury.jpg",
+    "source": "Screenshot_2026-03-13-22-17-29-080_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "The Dynamo",
+    "target": "the-dynamo.jpg",
+    "source": "Screenshot_2026-03-13-22-17-46-565_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "The Beast",
+    "target": "the-beast.jpg",
+    "source": "Screenshot_2026-03-13-22-18-15-823_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Metronome",
+    "target": "metronome.jpg",
+    "source": "Screenshot_2026-03-13-22-17-56-588_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Jittershift",
+    "target": "jittershift.jpg",
+    "source": "WhatsApp Image 2026-03-13 at 23.25.39.jpeg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Starter",
+    "target": "starter-gearbox.jpg",
+      "source": "Screenshot_2026-03-14-04-21-16-057_com.hutchgames.formularacing.jpg",
+    "score": null,
+    "status": "manually-added"
+  },
+  {
+    "part": "Motion",
+    "target": "motion.jpg",
+    "source": "Screenshot_2026-03-13-22-11-59-688_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Gale Force",
+    "target": "gale-force.jpg",
+    "source": "Screenshot_2026-03-13-22-12-11-067_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "The Spire",
+    "target": "the-spire.jpg",
+    "source": "Screenshot_2026-03-13-22-12-34-890_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Power Lift",
+    "target": "power-lift.jpg",
+    "source": "Screenshot_2026-03-13-22-12-40-947_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Aero Blade",
+    "target": "aero-blade.jpg",
+    "source": "Screenshot_2026-03-13-22-12-57-740_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "X-Hale",
+    "target": "x-hale.jpg",
+    "source": "Screenshot_2026-03-13-22-12-15-417_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "The Valkyrie",
+    "target": "the-valkyrie.jpg",
+    "source": "Screenshot_2026-03-13-22-13-05-559_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Starter",
+    "target": "starter-rear-wing.jpg",
+    "source": "Screenshot_2026-03-14-04-24-02-706_com.hutchgames.formularacing.jpg",
+    "score": null,
+    "status": "manually-added"
+  },
+  {
+    "part": "The Dash",
+    "target": "the-dash.jpg",
+    "source": "Screenshot_2026-03-13-22-14-35-620_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Glide",
+    "target": "glide.jpg",
+    "source": "Screenshot_2026-03-13-22-14-42-692_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Synergy",
+    "target": "synergy.jpg",
+    "source": "Screenshot_2026-03-13-22-14-49-651_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "The Sabre",
+    "target": "the-sabre.jpg",
+    "source": "Screenshot_2026-03-13-22-15-09-257_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Curler",
+    "target": "curler.jpg",
+    "source": "Screenshot_2026-03-13-22-15-23-729_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Vortex",
+    "target": "vortex.jpg",
+    "source": "Screenshot_2026-03-13-22-14-56-456_com.google.android.youtube.jpg",
+    "score": 0.923,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Flex XL",
+    "target": "flex-xl.jpg",
+    "source": "Screenshot_2026-03-13-22-15-35-313_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Edgecutter",
+    "target": "edgecutter.jpg",
+    "source": "WhatsApp Image 2026-03-13 at 23.24.31.jpeg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Starter",
+    "target": "starter-front-wing.jpg",
+    "source": "Starter.Frontwing.jpeg",
+    "score": null,
+    "status": "manually-added"
+  },
+  {
+    "part": "Swish",
+    "target": "swish.jpg",
+    "source": "Screenshot_2026-03-13-22-18-40-791_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Curver 2.5",
+    "target": "curver-2-5.jpg",
+    "source": "Screenshot_2026-03-13-22-18-55-202_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "The Arc",
+    "target": "the-arc.jpg",
+    "source": "Screenshot_2026-03-13-22-19-02-286_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Quantum",
+    "target": "quantum.jpg",
+    "source": "Screenshot_2026-03-13-22-19-07-568_com.google.android.youtube.jpg",
+    "score": 0.8,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Gyro",
+    "target": "gyro.jpg",
+    "source": "Screenshot_2026-03-13-22-19-19-242_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Equinox",
+    "target": "equinox.jpg",
+    "source": "Screenshot_2026-03-13-22-18-28-291_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Joltcoil",
+    "target": "joltcoil.jpg",
+    "source": "WhatsApp Image 2026-03-13 at 23.15.34.jpeg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Nexus",
+    "target": "nexus.jpg",
+    "source": "Screenshot_2026-03-13-22-19-29-480_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Fluxspring",
+    "target": "fluxspring.jpg",
+    "source": "WhatsApp Image 2026-03-13 at 23.11.44.jpeg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Starter",
+    "target": "starter-suspension.jpg",
+    "source": "Screenshot_2026-03-14-04-23-36-828_com.hutchgames.formularacing.jpg",
+    "score": null,
+    "status": "manually-added"
+  },
+  {
+    "part": "Mach I",
+    "target": "mach-i.jpg",
+    "source": "Screenshot_2026-03-13-22-19-43-616_com.google.android.youtube.jpg",
+    "score": 0.92,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Spark-E",
+    "target": "spark-e.jpg",
+    "source": "Screenshot_2026-03-13-22-19-48-679_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "The Reactor",
+    "target": "the-reactor.jpg",
+    "source": "the-reactor.jpg",
+    "score": null,
+    "status": "existing-asset"
+  },
+  {
+    "part": "Mach II",
+    "target": "mach-ii.jpg",
+    "source": "Screenshot_2026-03-13-22-20-23-533_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Behemoth",
+    "target": "behemoth.jpg",
+    "source": "Screenshot_2026-03-13-22-20-33-335_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Mach III",
+    "target": "mach-iii.jpg",
+    "source": "mach-iii.jpg",
+    "score": null,
+    "status": "existing-asset"
+  },
+  {
+    "part": "Chaos Core",
+    "target": "chaos-core.jpg",
+    "source": "Screenshot_2026-03-13-22-17-15-053_com.google.android.youtube.jpg",
+    "score": 0.92,
+    "status": "matched-and-copied"
+  },
+  {
+    "part": "Turbo Jet",
+    "target": "turbo-jet.jpg",
+    "source": "Screenshot_2026-03-13-22-20-44-843_com.google.android.youtube.jpg",
+    "score": 1.0,
+    "status": "matched-and-copied"
+  }
+]

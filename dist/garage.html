@@ -13,9 +13,10 @@
   <script src="i18n.js"></script>
   <script defer src="script.js"></script>
 </head>
-<body class="neon-body main-cockpit">
+<body class="neon-body main-cockpit garage-page">
   <script>
     (function() {
+      const GUEST_MODE_KEY = 'f1clashGuestMode';
       let hasRegistration = false;
       try { hasRegistration = !!localStorage.getItem('f1clashRegistration'); } catch {}
       if (!hasRegistration) {
@@ -23,7 +24,11 @@
       }
       if (!hasRegistration) { try { const _fb = JSON.parse(localStorage.getItem('f1clashFirebaseAuth') || 'null'); hasRegistration = !!(_fb?.localId && _fb?.refreshToken); } catch {} }
       if (!hasRegistration) {
-        window.location.replace('registration.html?next=garage.html');
+        try { localStorage.setItem(GUEST_MODE_KEY, '1'); } catch {}
+        try { sessionStorage.setItem(GUEST_MODE_KEY, '1'); } catch {}
+      } else {
+        try { localStorage.removeItem(GUEST_MODE_KEY); } catch {}
+        try { sessionStorage.removeItem(GUEST_MODE_KEY); } catch {}
       }
     })();
   </script>
@@ -55,9 +60,9 @@
     <nav class="subnav neon-card main-subnav garage-quicknav" aria-label="App Navigation">
       <a href="index.html" data-i18n="nav_dashboard">Dashboard</a>
       <a href="garage.html" class="is-active" aria-current="page" data-i18n="nav_garage">Garage</a>
+      <a href="fahrerlager.html" data-i18n="nav_paddock">Fahrerlager</a>
       <a href="optimizer.html" data-i18n="nav_optimizer">Optimizer</a>
       <a href="sync.html" data-i18n="nav_sync">Account-Sync</a>
-      <a href="optimizer.html" data-i18n="nav_race">Simulator</a>
       <a href="team.html" data-i18n="nav_clan">Clan</a>
       <a href="leaderboard.html" data-i18n="nav_leaderboard">Leaderboard</a>
       <a href="hall-of-fame.html" data-i18n="nav_hof">Hall of Fame</a>
@@ -71,47 +76,32 @@
           <h2 data-i18n="garage_h2">Drag-and-Drop Garage & Inventar-Scanner</h2>
           <p data-i18n="garage_p">Inventarscanner + OCR + Setup-Zuweisung pro Spielerprofil (Einzel/Team).</p>
         </header>
-        <div class="row">
-          <label for="inventorySearch" data-i18n="inventory_search_lbl">Inventar suchen</label>
-          <input id="inventorySearch" type="search" data-i18n-ph="inventory_search_ph" placeholder="Part-Name oder ID" />
-        </div>
-        <div id="garageGrid" class="builder-grid six">
-          <div class="drop-slot" data-category="engine" id="slot_engine">Engine: Drop Part here</div>
-          <div class="drop-slot" data-category="front_wing" id="slot_front_wing">Front Wing: Drop Part here</div>
-          <div class="drop-slot" data-category="rear_wing" id="slot_rear_wing">Rear Wing: Drop Part here</div>
-          <div class="drop-slot" data-category="gearbox" id="slot_gearbox">Gearbox: Drop Part here</div>
-          <div class="drop-slot" data-category="suspension" id="slot_suspension">Suspension: Drop Part here</div>
-          <div class="drop-slot" data-category="brakes" id="slot_brakes">Brakes: Drop Part here</div>
-        </div>
-        <h3 id="garageInventory" data-i18n="parts_inventory_h3">Teile-Garage (draggable)</h3>
-        <div id="partsInventory" class="inventory-grid"></div>
-        <h3 id="garageDrivers" data-i18n="drivers_h3">Fahrer-Manager</h3>
-        <p data-i18n="drivers_p">Fahrerstufen als Dropdown von S1 bis S12, inkl. Untersektionen Legendäre Fahrer und Spezial Edition.</p>
-        <div class="driver-sections">
-          <div>
-            <h4 data-i18n="drivers_standard_h4">Standard Fahrer</h4>
-            <div id="driversStandardList" class="inventory-grid"></div>
+        <div id="garageSection" data-garage-section="garage">
+          <div class="row">
+            <label for="inventorySearch" data-i18n="inventory_search_lbl">Inventar suchen</label>
+            <input id="inventorySearch" type="search" data-i18n-ph="inventory_search_ph" placeholder="Part-Name oder ID" />
           </div>
-          <div>
-            <h4 data-i18n="drivers_legendary_h4">Legendäre Fahrer</h4>
-            <div id="driversLegendaryList" class="inventory-grid"></div>
+          <div id="garageGrid" class="builder-grid six">
+            <div class="drop-slot" data-category="engine" id="slot_engine">Engine: Drop Part here</div>
+            <div class="drop-slot" data-category="front_wing" id="slot_front_wing">Front Wing: Drop Part here</div>
+            <div class="drop-slot" data-category="rear_wing" id="slot_rear_wing">Rear Wing: Drop Part here</div>
+            <div class="drop-slot" data-category="gearbox" id="slot_gearbox">Gearbox: Drop Part here</div>
+            <div class="drop-slot" data-category="suspension" id="slot_suspension">Suspension: Drop Part here</div>
+            <div class="drop-slot" data-category="brakes" id="slot_brakes">Brakes: Drop Part here</div>
           </div>
-          <div>
-            <h4 data-i18n="drivers_special_h4">Spezial Edition</h4>
-            <div id="driversSpecialList" class="inventory-grid"></div>
+          <h3 id="garageInventory" data-i18n="parts_inventory_h3">Teile-Garage (draggable)</h3>
+          <div id="partsCategoryNav" class="row" style="gap:0.4rem;flex-wrap:wrap;margin:0.5rem 0 0.8rem;">
+            <button class="pill" type="button" data-part-cat="all" aria-pressed="true">Alle</button>
+            <button class="pill ghost-link" type="button" data-part-cat="brakes">Bremsen</button>
+            <button class="pill ghost-link" type="button" data-part-cat="gearbox">Getriebe</button>
+            <button class="pill ghost-link" type="button" data-part-cat="rear_wing">Heckflügel</button>
+            <button class="pill ghost-link" type="button" data-part-cat="front_wing">Frontflügel</button>
+            <button class="pill ghost-link" type="button" data-part-cat="suspension">Aufhängung</button>
+            <button class="pill ghost-link" type="button" data-part-cat="engine">Motor</button>
           </div>
-        </div>
-        <div class="row">
-          <button id="manualScoreButton" class="pill" data-i18n="score_btn">Setup bewerten</button>
-          <button id="saveSetupButton" class="pill" data-i18n="save_setup_btn">Saison Setup speichern</button>
-        </div>
-        <div id="builderResult" class="result"></div>
-        <div id="garageOcr" class="ocr-panel">
-          <h3 data-i18n="ocr_h3">Inventar-Scanner (OCR)</h3>
-          <input id="ocrFile" type="file" accept="image/*" capture="environment" aria-label="Inventar Bild" />
-          <p class="hint" data-i18n="ocr_quick_hint">Screenshot aus F1 Clash wählen: OCR startet nach der Auswahl automatisch und übernimmt Parts, Fahrer und Strecken.</p>
-          <button id="ocrButton" class="pill" data-i18n="ocr_btn">OCR starten</button>
-          <div id="ocrResult" class="result"></div>
+          <div id="partsInventory" class="inventory-grid"></div>
+          <div id="builderResult" class="result"></div>
+          <div id="communityBuilderInsight" class="community-insight" aria-live="polite"></div>
         </div>
       </section>
     </main>

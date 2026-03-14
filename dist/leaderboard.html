@@ -12,14 +12,21 @@
   <script src="i18n.js"></script>
   <script defer src="script.js"></script>
 </head>
-<body class="neon-body main-cockpit">
+<body class="neon-body main-cockpit leaderboard-page">
   <script>
     (function () {
+      const GUEST_MODE_KEY = 'f1clashGuestMode';
       let ok = false;
       try { ok = !!localStorage.getItem('f1clashRegistration'); } catch {}
       if (!ok) { try { ok = !!sessionStorage.getItem('f1clashRegistration'); } catch {} }
       if (!ok) { try { const _fb = JSON.parse(localStorage.getItem('f1clashFirebaseAuth') || 'null'); ok = !!(_fb?.localId && _fb?.refreshToken); } catch {} }
-      if (!ok) { window.location.replace('registration.html?next=leaderboard.html'); }
+      if (!ok) {
+        try { localStorage.setItem(GUEST_MODE_KEY, '1'); } catch {}
+        try { sessionStorage.setItem(GUEST_MODE_KEY, '1'); } catch {}
+      } else {
+        try { localStorage.removeItem(GUEST_MODE_KEY); } catch {}
+        try { sessionStorage.removeItem(GUEST_MODE_KEY); } catch {}
+      }
     })();
   </script>
 
@@ -52,7 +59,6 @@
       <a href="garage.html" data-i18n="nav_garage">Garage</a>
       <a href="optimizer.html" data-i18n="nav_optimizer">Optimizer</a>
       <a href="sync.html" data-i18n="nav_sync">Account-Sync</a>
-      <a href="optimizer.html" data-i18n="nav_race">Simulator</a>
       <a href="team.html" data-i18n="nav_clan">Clan</a>
       <a href="leaderboard.html" class="is-active" aria-current="page" data-i18n="nav_leaderboard">Leaderboard</a>
       <a href="hall-of-fame.html" data-i18n="nav_hof">Hall of Fame</a>

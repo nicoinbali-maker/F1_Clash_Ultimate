@@ -3,140 +3,181 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>F1 Clash Companion – Setup-Optimizer</title>
-  <meta name="theme-color" content="#0a0d17" />
+  <title>F1 Clash Companion - Optimizer</title>
+  <meta name="theme-color" content="#111827" />
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" sizes="192x192" href="assets/ferrari2000_candyred_192.png" />
   <link rel="apple-touch-icon" href="assets/ferrari2000_candyred_192.png" />
-  <link rel="stylesheet" href="style.css" />
-  <script src="vendor/chart.umd.min.js"></script>
-  <script src="i18n.js"></script>
-  <script defer src="script.js"></script>
-  <script defer src="advanced.js"></script>
+  <link rel="stylesheet" href="style.css?v=optimizer-rebuild-20260313" />
+  <style>
+    .optimizer-lite-wrap {
+      max-width: 980px;
+      margin: 1.2rem auto;
+      padding: 0 1rem 1.8rem;
+      display: grid;
+      gap: 1rem;
+    }
+    .optimizer-lite-card {
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(20, 24, 44, 0.82), rgba(10, 12, 24, 0.9));
+      padding: 1rem;
+    }
+    .optimizer-lite-row {
+      display: grid;
+      gap: 0.7rem;
+      grid-template-columns: 1fr;
+    }
+    .optimizer-lite-row label {
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      color: #d8e4ff;
+    }
+    .optimizer-lite-row select,
+    .optimizer-lite-row button {
+      min-height: 44px;
+      border-radius: 10px;
+    }
+    .optimizer-lite-btns {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.7rem;
+    }
+    .optimizer-lite-note {
+      color: #9aa3bf;
+      font-size: 0.94rem;
+      margin: 0;
+    }
+    #selectedTrackBadge {
+      margin-top: 0.45rem;
+      font-weight: 700;
+      color: #9ee7ff;
+    }
+    #optimizerResult,
+    #strategyResult,
+    #driverPairResult,
+    #impactResult,
+    #trackProfileResult {
+      line-height: 1.5;
+      min-height: 100px;
+    }
+    #trackProfileCanvas {
+      width: 100%;
+      min-height: 240px;
+      border-radius: 10px;
+      background: rgba(8, 12, 24, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    @media (max-width: 760px) {
+      .optimizer-lite-btns {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+  <script>
+    (function() {
+      if (!('serviceWorker' in navigator)) return;
+      navigator.serviceWorker.getRegistrations()
+        .then(function(regs) { return Promise.all(regs.map(function(reg) { return reg.unregister(); })); })
+        .catch(function() {});
+      if (typeof caches !== 'undefined' && typeof caches.keys === 'function') {
+        caches.keys().then(function(keys) {
+          return Promise.all(keys.map(function(key) { return caches.delete(key); }));
+        }).catch(function() {});
+      }
+    })();
+  </script>
+  <script src="boots-data.js"></script>
+  <script defer src="optimizer-lite.js?v=optimizer-rebuild-20260313"></script>
 </head>
 <body class="neon-body main-cockpit optimizer-page">
   <div class="app-shell">
-    <div class="lang-bar neon-card app-lang-bar" style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 1.2rem;">
-      <span data-i18n="lang_label" style="color:var(--text-muted,#9aa2c0);font-size:0.9rem;">Sprache</span>
-      <select id="appLangSelect" style="background:#0d0f1e;color:#f7f8fc;border:1px solid rgba(255,255,255,.18);border-radius:0.5rem;padding:0.3rem 0.7rem;font-size:0.9rem;cursor:pointer;">
-        <option value="de">🇩🇪 Deutsch</option>
-        <option value="it">🇮🇹 Italiano</option>
-        <option value="en">🇬🇧 English</option>
-      </select>
-    </div>
     <header class="topbar neon-card main-topbar">
       <div class="brand">
-        <img src="assets/ferrari2000_candyred_192.png" alt="F1 Neon Nights" class="brand-icon" />
+        <img src="assets/ferrari2000_candyred_192.png" alt="F1" class="brand-icon" />
         <div>
-          <h1 data-i18n="optPage_h1">Setup-Optimizer & KI-Strategie</h1>
-          <p data-i18n="optPage_sub">Eigenständige Optimizer-Seite für F1 Clash Companion</p>
+          <h1>Optimizer Rebuild</h1>
+          <p>Neu, schlank, stabil: nur Track-Auswahl und Optimizer-Kern.</p>
         </div>
       </div>
       <div class="season-control">
-        <a class="pill ghost-link" href="index.html" onclick="if (history.length > 1) { history.back(); return false; }" data-i18n="back_main_btn">Zurück zur Hauptseite</a>
+        <a class="pill ghost-link" href="index.html">Zurueck</a>
       </div>
     </header>
 
-    <nav class="subnav neon-card main-subnav optimizer-subnav" aria-label="App Navigation">
-      <a href="index.html" data-i18n="nav_dashboard">Dashboard</a>
-      <a href="garage.html" data-i18n="nav_garage">Garage</a>
-      <a href="optimizer.html" class="is-active" aria-current="page" data-i18n="nav_optimizer">Optimizer</a>
-      <a href="sync.html" data-i18n="nav_sync">Account-Sync</a>
-      <a href="optimizer.html" class="is-active" data-i18n="nav_race">Simulator</a>
-      <a href="team.html" data-i18n="nav_clan">Clan</a>
-      <a href="leaderboard.html" data-i18n="nav_leaderboard">Leaderboard</a>
-      <a href="hall-of-fame.html" data-i18n="nav_hof">Hall of Fame</a>
-      <a href="personal.html" data-i18n="nav_personal">Persönlich</a>
-      <a href="registration.html?next=optimizer.html" data-i18n="nav_registration">Registrierung</a>
-    </nav>
+    <main class="optimizer-lite-wrap">
+      <section class="optimizer-lite-card">
+        <div class="optimizer-lite-row">
+          <label for="trackSelect">Strecke</label>
+          <select id="trackSelect" aria-label="Strecke waehlen"></select>
+          <label for="optimizerModeSelect">Optimierungsmodus</label>
+          <select id="optimizerModeSelect" aria-label="Optimierungsmodus waehlen">
+            <option value="inventory_strict">Strikt Inventar (nur Owned)</option>
+            <option value="inventory_meta" selected>Inventar + Meta</option>
+            <option value="meta_sim">Meta-Simulation</option>
+          </select>
+          <label for="boostProfileSelect">Kategorie-Boost Profil</label>
+          <select id="boostProfileSelect" aria-label="Kategorie-Boost Profil waehlen"></select>
+          <label for="driverBoostFocusSelect">Boost-Fokus Fahrer</label>
+          <select id="driverBoostFocusSelect" aria-label="Boost-Fokus Fahrer waehlen">
+            <option value="auto" selected>Auto (nach Strecke)</option>
+            <option value="balanced">Balanced</option>
+            <option value="pace">Pace</option>
+            <option value="qualifying">Qualifying</option>
+            <option value="tyre">Tyre Management</option>
+            <option value="overtaking">Overtaking</option>
+            <option value="consistency">Consistency</option>
+          </select>
+          <label for="driverSelectA">Fahrer 1 (manuell)</label>
+          <select id="driverSelectA" aria-label="Fahrer 1 waehlen"></select>
+          <label for="driverSelectB">Fahrer 2 (manuell)</label>
+          <select id="driverSelectB" aria-label="Fahrer 2 waehlen"></select>
+          <button id="resetDriverPairButton" class="pill" type="button">Fahrerpaarung auf Auto</button>
+          <div id="driverCatalogStatus" class="optimizer-lite-note" aria-live="polite">Fahrerliste wird synchronisiert...</div>
+          <p class="optimizer-lite-note">Wenn beide Fahrer gesetzt sind, nutzt der Optimizer diese Paarung statt der KI-Auswahl.</p>
+          <div id="boostProfileHint" class="optimizer-lite-note" aria-live="polite"></div>
+          <div id="selectedTrackBadge" aria-live="polite">Aktuelle Strecke: -</div>
+          <p class="optimizer-lite-note">Die Auswahl wird dauerhaft gespeichert und beim naechsten Laden direkt wiederhergestellt.</p>
+          <div id="trackBackgroundStatus" class="optimizer-lite-note" aria-live="polite"></div>
+        </div>
+      </section>
 
-    <main>
-      <section id="optimizer" class="panel neon-card">
-        <header>
-          <h2 data-i18n="optimizer_h2">Setup-Optimizer & KI-Strategie</h2>
-        </header>
-        <div class="row">
-          <label for="trackSelect" data-i18n="track_lbl">Strecke</label>
-          <select id="trackSelect"></select>
-          <button id="autoBuildButton" class="pill pill--primary" data-i18n="auto_setup_btn">AutoSetup erstellen</button>
+      <section class="optimizer-lite-card">
+        <div class="optimizer-lite-btns">
+          <button id="optimizeButton" class="pill">Setup optimieren</button>
+          <button id="strategyButton" class="pill">Strategie berechnen</button>
+          <button id="pairingButton" class="pill">Fahrerpaarung (KI)</button>
+          <a href="boosts.html" class="pill ghost-link">Boost Center</a>
+          <button id="trackSelectionPageButton" class="pill" type="button">Track-Auswahl Seite</button>
         </div>
-        <div class="row">
-          <button id="optimizeButton" class="pill pill--primary" data-i18n="best_setup_btn">Bestes Setup für Strecke</button>
-          <button id="optimizeAllButton" class="pill pill--ghost" data-i18n="all_tracks_btn">Alle Strecken simulieren</button>
-        </div>
-        <div class="radar-wrap">
-          <svg id="trackCircuitSvg" class="circuit-bg" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
-          <canvas id="trackRadarChart" height="220"></canvas>
-        </div>
-        <canvas id="seasonBestChart" height="200"></canvas>
+      </section>
+
+      <section class="optimizer-lite-card">
+        <h2>Leistungsdiagramm & Streckenprofil</h2>
+        <canvas id="trackProfileCanvas" width="860" height="280" aria-label="Leistungsdiagramm"></canvas>
+        <div id="trackProfileResult" class="result"></div>
+      </section>
+
+      <section class="optimizer-lite-card">
+        <h2>Setup Empfehlung</h2>
         <div id="optimizerResult" class="result"></div>
-        <div class="row">
-          <label for="strategyTrackSelect" data-i18n="strategy_track_lbl">Strategie-Strecke</label>
-          <select id="strategyTrackSelect"></select>
-          <label for="strategyMode" data-i18n="strategy_mode_lbl">Strategie</label>
-          <select id="strategyMode">
-            <option value="auto" data-i18n="opt_auto">Auto</option>
-            <option value="one_stop" data-i18n="opt_one_stop">1-Stop</option>
-            <option value="two_stop" data-i18n="opt_two_stop">2-Stop</option>
-            <option value="balanced" data-i18n="opt_balanced">Balanced</option>
-            <option value="aggressive" data-i18n="opt_aggressive">Aggressive</option>
-          </select>
-          <button id="strategyButton" class="pill pill--primary" data-i18n="strategy_btn">Strategie kalkulieren</button>
-          <button id="raceSimButton" class="pill pill--primary" data-i18n="race_sim_btn">Rennen simulieren</button>
-        </div>
-        <div class="chart-choice-row" aria-label="Renn-Diagramm Auswahl">
-          <p class="chart-choice-title" data-i18n="chart_choice_lbl">Renn-Diagramm Auswahl</p>
-          <div class="chart-choice-tabs" role="tablist" aria-label="Renn-Diagramm Auswahl">
-            <button type="button" class="pill pill--ghost chart-choice-tab" data-choice-tab="strategy" role="tab" aria-selected="false" data-i18n="chart_choice_strategy">Strategie-Vergleich</button>
-            <button type="button" class="pill pill--ghost chart-choice-tab" data-choice-tab="race" role="tab" aria-selected="true" data-i18n="chart_choice_race">Rundenzeiten</button>
-            <button type="button" class="pill pill--ghost chart-choice-tab" data-choice-tab="position" role="tab" aria-selected="false" data-i18n="chart_choice_position">Positionsverlauf</button>
-            <button type="button" class="pill pill--ghost chart-choice-tab" data-choice-tab="driverImpact" role="tab" aria-selected="false" data-i18n="chart_choice_driver">Driver Impact</button>
-          </div>
-        </div>
-        <canvas id="strategyChart" data-choice-chart="strategy" height="180"></canvas>
-        <canvas id="raceChart" data-choice-chart="race" height="200"></canvas>
-        <canvas id="positionChart" data-choice-chart="position" height="180"></canvas>
-        <div id="strategyResult" data-choice-result="strategy" class="result"></div>
-        <div class="row">
-          <label for="driverImpactMode" data-i18n="driver_impact_lbl">Driver Impact Modus</label>
-          <select id="driverImpactMode">
-            <option value="effective" data-i18n="opt_effective">Top 5 Effektivwert</option>
-            <option value="stage" data-i18n="opt_stage">Top 5 Stage-Einfluss</option>
-            <option value="community" data-i18n="opt_community">Top 5 Community-Boosted</option>
-          </select>
-        </div>
-        <div id="driverImpactResult" data-choice-result="driverImpact" class="result"></div>
-        <canvas id="driverImpactChart" data-choice-chart="driverImpact" height="180"></canvas>
-        <div id="raceResult" data-choice-result="race" class="result"></div>
+      </section>
+
+      <section class="optimizer-lite-card">
+        <h2>Strategie Empfehlung</h2>
+        <div id="strategyResult" class="result"></div>
+      </section>
+
+      <section class="optimizer-lite-card">
+        <h2>Fahrerpaarung</h2>
+        <div id="driverPairResult" class="result"></div>
+      </section>
+
+      <section class="optimizer-lite-card">
+        <h2>Driver Impact</h2>
+        <div id="impactResult" class="result"></div>
       </section>
     </main>
-
-    <div id="chartPopup" class="chart-popup" hidden>
-      <div class="chart-popup-backdrop" data-popup-close="true"></div>
-      <div class="chart-popup-dialog neon-card" role="dialog" aria-modal="true" aria-labelledby="chartPopupTitle">
-        <div class="chart-popup-header">
-          <div>
-            <h3 id="chartPopupTitle">Diagrammwerte</h3>
-            <p id="chartPopupSubtitle" class="chart-popup-subtitle"></p>
-          </div>
-          <div class="chart-popup-actions">
-            <button id="chartSeriesReset" class="pill pill--ghost" type="button">Serie zurücksetzen</button>
-            <button id="chartPopupFullscreen" class="pill pill--ghost" type="button">Fullscreen</button>
-            <button id="chartPopupClose" class="pill pill--ghost" type="button">Schließen</button>
-          </div>
-        </div>
-        <div class="chart-popup-table-wrap">
-          <table class="data-table chart-popup-table">
-            <thead id="chartPopupHead"></thead>
-            <tbody id="chartPopupBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <footer class="footer neon-card">
-      <p>Copyright © Sunwalker NP</p>
-    </footer>
   </div>
 </body>
 </html>

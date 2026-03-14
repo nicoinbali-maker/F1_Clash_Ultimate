@@ -24,6 +24,15 @@ allprojects {
     }
 }
 
+def localAppData = System.getenv('LOCALAPPDATA')
+if (localAppData) {
+    def externalRoot = new File(localAppData, 'F1ClashCompanion_Ultimate/gradle-build')
+    rootProject.buildDir = new File(externalRoot, 'root')
+    subprojects { project ->
+        project.buildDir = new File(externalRoot, project.name)
+    }
+}
+
 task clean(type: Delete) {
     delete rootProject.buildDir
 }

@@ -3,14 +3,24 @@ const statLabels = { tempo: 'Tempo', kurven: 'Kurven', antrieb: 'Antrieb', quali
 const PART_CATEGORIES = ['engine', 'front_wing', 'rear_wing', 'gearbox', 'suspension', 'brakes'];
 const PART_LEVELS = Array.from({ length: 12 }, (_, i) => i + 1);
 const DRIVER_STAGES = Array.from({ length: 12 }, (_, i) => `S${i + 1}`);
-const LEGENDARY_DRIVER_NAMES = new Set(['Verstappen', 'Leclerc', 'Norris', 'Hamilton', 'Alonso']);
-const SPECIAL_DRIVER_NAMES = new Set(['Mick Schumacher', 'Palou', 'Antonelli', 'Bearman', 'Lawson']);
+const LEGENDARY_DRIVER_NAMES = new Set(['Senna', 'Schumacher', 'Prost', 'Lauda', 'Mansell', 'Stewart', 'Fittipaldi', 'G.Hill', 'Brabham', 'D.Hill', 'G.Villeneuve', 'J.Villeneuve', 'Button', 'Coulthard', 'Berger', 'Massa', 'Webber', 'Fisichella', 'Hunt', 'Andretti']);
+const SPECIAL_DRIVER_NAMES = new Set([]);
+const USER_CORE_DRIVER_POOL = new Set([
+  'Hadjar', 'Doohan', 'Bearman', 'Colapinto', 'Bortoleto', 'Antonelli',
+  'Stroll', 'Lawson', 'Ocon', 'Albon', 'Tsunoda', 'Hulkenberg',
+  'Gasly', 'Sainz', 'Piastri', 'Leclerc', 'Norris', 'Alonso', 'Russell', 'Hamilton', 'Verstappen'
+]);
 const COMMUNITY_KNOWLEDGE_KEY = 'f1clashCommunityKnowledge';
 const F1_SYNC_CONSENT_PREFIX = 'f1clashSyncConsent_';
 const F1_SYNC_API_CONFIG_PREFIX = 'f1clashSyncApiConfig_';
 const FIREBASE_CONFIG_KEY = 'f1clashFirebaseConfig';
 const FIREBASE_AUTH_KEY = 'f1clashFirebaseAuth';
 const FIREBASE_AUTO_SYNC_KEY = 'f1clashFirebaseAutoSync';
+const GUEST_MODE_KEY = 'f1clashGuestMode';
+const TRACK_SELECTION_KEY = 'f1clashSelectedTrack';
+const TRACK_SELECTION_OPTIONS_KEY = 'f1clashTrackOptions';
+const TRACK_SELECTION_INDEX_KEY = 'f1clashSelectedTrackIndex';
+const DRIVER_PAIR_SELECTION_KEY = 'f1clashSelectedDriverPair';
 const MAX_FULL_OPTIMIZER_COMBOS = 120000;
 
 const tracksDb = [
@@ -40,57 +50,503 @@ const tracksDb = [
   { name: 'Abu Dhabi', laps: 8, pitLoss: 21, wear: 0.97, baseLap: 87.5, tempo: 81, kurven: 70, antrieb: 67, quali: 57, drs: 59, meta: 'Balanced Finale' }
 ];
 
-const trackWeights = Object.fromEntries(tracksDb.map((t) => {
-  const sum = statKeys.reduce((s, k) => s + t[k], 0);
-  return [t.name, Object.fromEntries(statKeys.map((k) => [k, t[k] / sum]))];
+const trackWeights = Object.fromEntries(tracksDb.map((track) => {
+  const sum = statKeys.reduce((acc, key) => acc + track[key], 0);
+  return [track.name, Object.fromEntries(statKeys.map((key) => [key, track[key] / sum]))];
 }));
 
-function buildCategoryParts(category, names, base) {
-  return names.map((name, i) => ({
-    name,
-    category,
-    tempo: base.tempo + (i % 5) * 2 + Math.floor(i / 3),
-    kurven: base.kurven + ((i + 1) % 5) * 2,
-    antrieb: base.antrieb + ((i + 2) % 4) * 2,
-    quali: base.quali + ((i + 3) % 6),
-    drs: base.drs + ((i + 4) % 5)
-  }));
+function isGuestModeEnabled() {
+  try { sessionStorage.removeItem(GUEST_MODE_KEY); } catch {}
+  try { localStorage.removeItem(GUEST_MODE_KEY); } catch {}
+  // Test/demo mode is hard-disabled so interactive pages remain fully usable.
+  return false;
 }
 
+function applyGuestModeUi() {
+  if (!isGuestModeEnabled()) return;
+  if (document.body) document.body.classList.add('guest-mode');
+
+  const shell = document.querySelector('.app-shell');
+  if (shell && !document.getElementById('guestModeBanner')) {
+    const currentPage = (location.pathname.split('/').pop() || 'index.html').split('?')[0] || 'index.html';
+    const registrationHref = `registration.html?next=${encodeURIComponent(currentPage)}`;
+    const banner = document.createElement('div');
+    banner.id = 'guestModeBanner';
+    banner.className = 'guest-mode-banner neon-card';
+    banner.innerHTML = `
+      <div class="guest-mode-banner__copy">Demo-Modus aktiv: Optimizer/Testfunktionen sind nutzbar. Nur produktive Speicher-, Sync- und Push-Aktionen sind deaktiviert.</div>
+      <a class="guest-mode-banner__action" href="${registrationHref}">Zur Registrierung</a>
+    `;
+    shell.insertBefore(banner, shell.firstChild || null);
+  }
+
+  const blockedActionIds = new Set([
+    'saveButton',
+    'saveSetupButton',
+    'syncButton',
+    'enableNotificationsButton',
+    'notifyRaceButton',
+    'notifyPitButton',
+    'refreshLeaderboardButton'
+  ]);
+
+  const shouldBlockInGuestMode = (el) => {
+    const id = String(el.id || '');
+    if (blockedActionIds.has(id)) return true;
+    if (el.matches('[data-guest-block]')) return true;
+    return false;
+  };
+
+  // Allow read-only/testing features in demo mode and block only productive actions.
+  document.querySelectorAll('main button, main input, main textarea, main select').forEach((el) => {
+    const id = String(el.id || '');
+    const allowById = id === 'trackSelectionPageButton';
+    const allowByAttr = el.hasAttribute('data-guest-allow');
+    const shouldBlock = shouldBlockInGuestMode(el);
+    if (allowById || allowByAttr || !shouldBlock) {
+      if ('disabled' in el) el.disabled = false;
+      el.removeAttribute('aria-disabled');
+      return;
+    }
+    if ('disabled' in el) el.disabled = true;
+    el.setAttribute('aria-disabled', 'true');
+  });
+}
+
+function buildAllClashReferenceKnowledge() {
+  return {
+    version: 2,
+    updatedAt: '2026-03-12T00:00:00.000Z',
+    sources: [
+      {
+        type: 'allclash',
+        id: 'allclash-series-9',
+        title: 'Beat Series 9 in F1 Clash',
+        url: 'https://www.allclash.com/beat-series-9-in-f1-clash-best-car-setup-drivers-pit-stop-strategy-rec-boosters/',
+        updatedAt: '2026-03-10',
+        visibleTracks: ['Japan', 'Monaco', 'Netherlands', 'Italy'],
+        visibleDrivers: ['Fittipaldi', 'D.Hill', 'G.Hill', 'J.Villeneuve'],
+        setupSummary: 'Brakes: The Descent/Rumble | Gearbox: The Dynamo/Fury | Rear Wing: X-Hale/Aero Blade | Front Wing: Vortex/The Sabre | Suspension: Gyro/The Arc | Engine: Mach III/Mach II',
+        driverPairings: { bestPair: ['Fittipaldi', 'D.Hill'], top4: ['Fittipaldi', 'D.Hill', 'G.Hill', 'J.Villeneuve'] },
+        note: 'Public AllClash series guide data only.'
+      },
+      {
+        type: 'allclash',
+        id: 'allclash-series-10',
+        title: 'Beat Series 10 in F1 Clash',
+        url: 'https://www.allclash.com/beat-series-10-in-f1-clash-best-car-setup-drivers-pit-stop-strategy-rec-boosters/',
+        updatedAt: '2026-03-02',
+        visibleTracks: ['Canada', 'Azerbaijan', 'Las Vegas', 'Abu Dhabi'],
+        visibleDrivers: ['Mansell', 'Tsunoda', 'Antonelli', 'Hadjar'],
+        setupSummary: 'Brakes: Flow 1K/Rumble | Gearbox: Metronome/The Dynamo | Rear Wing: Aero Blade/Power Lift | Front Wing: Vortex/Curler | Suspension: Quantum/Gyro | Engine: Mach III/Behemoth',
+        driverPairings: { bestPair: ['Mansell', 'Tsunoda'], top4: ['Mansell', 'Tsunoda', 'Antonelli', 'Hadjar'] },
+        note: 'Public AllClash series guide data only.'
+      },
+      {
+        type: 'allclash',
+        id: 'allclash-series-11',
+        title: 'Beat Series 11 in F1 Clash',
+        url: 'https://www.allclash.com/beat-series-11-in-f1-clash-best-car-setup-drivers-pit-stop-strategy-rec-boosters/',
+        updatedAt: '2026-03-11',
+        visibleTracks: ['Austria', 'Netherlands', 'Monaco', 'Italy'],
+        visibleDrivers: ['Fittipaldi', 'Sainz', 'Piastri', 'D.Hill'],
+        setupSummary: 'Brakes: Boombox/Flow 1K | Gearbox: Metronome/Fury | Rear Wing: The Valkyrie/X-Hale | Front Wing: Flex XL/Vortex | Suspension: Gyro/Quantum | Engine: Mach III/Behemoth',
+        driverPairings: { bestPair: ['Fittipaldi', 'Sainz'], top4: ['Fittipaldi', 'Sainz', 'Piastri', 'D.Hill'], note: 'S11 beste F2P-Option; Tsunoda gut für F2P-Nutzer.' },
+        note: 'Public AllClash series guide. Reddit-Community-Bestätigung (März 2026): Setup Flow 1K + Metronome + Valkyrie + Flex XL + Quantum + Mach III aktuell gültig. Tsunoda von F2P-Nutzern als stärkster frei verfügbarer Fahrer bestätigt. S11 gilt lt. AllClash als F2P-freundlichste Option bis Season-Reset Mai 2026.'
+      },
+      {
+        type: 'allclash',
+        id: 'allclash-series-12',
+        title: 'Beat Series 12 in F1 Clash',
+        url: 'https://www.allclash.com/beat-series-12-in-f1-clash-best-car-setup-drivers-pit-stop-strategy-rec-boosters/',
+        updatedAt: '2026-03-11',
+        visibleTracks: ['Spain', 'Canada', 'Netherlands', 'Brazil'],
+        visibleDrivers: ['Prost', 'Lauda', 'Senna', 'Schumacher'],
+        setupSummary: 'Brakes: Grindlock/Rumble | Gearbox: Jittershift/The Dynamo | Rear Wing: Aero Blade/The Valkyrie | Front Wing: Curler/Edgecutter | Suspension: Joltcoil/Nexus | Engine: Turbo Jet/Mach III',
+        driverPairings: { bestPair: ['Prost', 'Lauda'], top4: ['Prost', 'Lauda', 'Senna', 'Schumacher'], note: 'Special Edition Territorium – Epic erst ab Rang ~18.' },
+        note: 'Public AllClash series guide. ACHTUNG: S12 ist Special-Edition-Territorium – bestes Epic-Fahrer steht erst auf Rang ~18. Empfehlung: S11 spielen bis Season-Reset Anfang Mai 2026. Barcelona (Spain): 2-Stop (Soft) bei Reifenmanagement ≥90 optimal; sonst 1-Stop auf Medium möglich.'
+      },
+      {
+        type: 'allclash',
+        id: 'allclash-emilia-romagna',
+        title: 'F1 Clash Gran Premio Dell’Emilia-Romagna Event Guide',
+        url: 'https://www.allclash.com/f1-clash-gran-premio-dellemilia-romagna-event-guide-champion/',
+        updatedAt: '2026-03-11',
+        brackets: ['Junior', 'Challenger', 'Contender', 'Champion'],
+        driverPairings: {
+          junior: {
+            Imola: ['Bearman', 'Ocon', 'Antonelli', 'Hadjar'],
+            Belgium: ['Albon', 'Ocon', 'Stroll', 'Lawson', 'Bearman'],
+            Austria: ['Hadjar', 'Bortoleto', 'Tsunoda', 'Doohan'],
+            Azerbaijan: ['Hadjar', 'Bearman', 'Tsunoda', 'Albon'],
+            Italy: ['Hadjar', 'Bortoleto', 'Tsunoda', 'Doohan'],
+            China: ['Hadjar', 'Bearman', 'Tsunoda', 'Albon'],
+            Japan: ['Hadjar', 'Bortoleto', 'Tsunoda', 'Doohan']
+          },
+          champion: {
+            Imola: ['Alonso', 'Leclerc', 'Gasly', 'Sainz', 'Piastri'],
+            Belgium: ['Norris', 'Hamilton', 'Gasly', 'Sainz', 'Hulkenberg'],
+            Austria: ['Verstappen', 'Sainz', 'Norris', 'Alonso', 'Piastri'],
+            Azerbaijan: ['Hamilton', 'Piastri', 'Verstappen', 'Alonso', 'Tsunoda'],
+            Italy: ['Verstappen', 'Sainz', 'Norris', 'Alonso', 'Piastri'],
+            China: ['Hamilton', 'Piastri', 'Verstappen', 'Alonso', 'Tsunoda'],
+            Japan: ['Verstappen', 'Sainz', 'Norris', 'Alonso', 'Piastri']
+          }
+        },
+        note: 'Rotation: Imolax2, Spa (Belgium), Spielberg (Austria), Baku (Azerbaijan), Monza (Italy), Shanghai (China), Suzuka (Japan). Champion Imola: 1-Stop pflicht. Junior: Hadjar Epic universell bester Fahrer. Setup Champion Imola/Spa/Shanghai: Rumble/Dynamo/Aero Blade/Curier/Nexus/Turbo Jet. Setup Spielberg/Baku/Monza: Flow 1K/Beast/Valkyrie/Flex XL/Quantum/Behemoth. Setup Suzuka: Boombox/Metronome/Valkyrie/Flex XL/Gyro/Mach III.'
+      },
+      {
+        type: 'allclash',
+        id: 'allclash-monaco-gp',
+        title: 'F1 Clash Grand Prix de Monaco Event Guide',
+        url: 'https://www.allclash.com/f1-clash-grand-prix-de-monaco-event-guide-champion/',
+        updatedAt: '2025-05-23',
+        brackets: ['Junior', 'Challenger', 'Contender', 'Champion'],
+        driverPairings: {
+          champion: {
+            Monaco: ['Verstappen', 'Sainz', 'Norris', 'Alonso', 'Piastri'],
+            'United Kingdom': ['Norris', 'Gasly', 'Hamilton', 'Sainz', 'Hulkenberg'],
+            'United States': ['Norris', 'Gasly', 'Hamilton', 'Sainz', 'Hulkenberg'],
+            Singapore: ['Alonso', 'Leclerc', 'Gasly', 'Sainz', 'Piastri'],
+            'Abu Dhabi': ['Hamilton', 'Piastri', 'Verstappen', 'Alonso', 'Tsunoda'],
+            Australia: ['Alonso', 'Leclerc', 'Gasly', 'Sainz', 'Piastri']
+          }
+        },
+        note: 'Rotation: Monaco x3 (dry + Rain), Silverstone (UK), Austin (US), Singapore, Abu Dhabi, Melbourne. Monaco: Boombox/Metronome/Valkyrie/Flex XL/Gyro/Mach III, 1-Stop. Silverstone/Melbourne: Flow 1K/Beast/Valkyrie/Flex XL/Quantum/Behemoth. Singapore/Abu Dhabi: Rumble/Dynamo/Aero Blade/Curier/Nexus/Turbo Jet.'
+      },
+      {
+        type: 'allclash',
+        id: 'allclash-legendary-china',
+        title: 'F1 Clash Legendary China Event Guide',
+        url: 'https://www.allclash.com/f1-clash-legendary-china-event-guide-junior-challenger-contender-champion/',
+        updatedAt: '2026-03-11',
+        brackets: ['Junior 1-3', 'Challenger 1-6', 'Contender 1-9', 'Champion 1-12'],
+        driverPairings: { boosted: ['Fittipaldi'], note: 'Fittipaldi in-game boosted – klarer Standout der Event-Woche.' },
+        note: 'Public event structure plus featured asset note only.'
+      },
+      {
+        type: 'allclash',
+        id: 'allclash-legendary-australia',
+        title: 'F1 Clash Legendary Australian Event Guide',
+        url: 'https://www.allclash.com/f1-clash-legendary-australian-event-guide-junior-challenger-contender-champion/',
+        updatedAt: '2026-03-02',
+        brackets: ['Junior 1-3', 'Challenger 1-6', 'Contender 1-9', 'Champion 1-12'],
+        driverPairings: { boosted: ['Mansell'], note: 'Mansell in-game boosted – klarer Standout der Event-Woche.' },
+        note: 'Public event structure plus featured asset note only.'
+      },
+      {
+        type: 'allclash',
+        id: 'allclash-champions-circuit',
+        title: 'F1 Clash Champions Circuit Event Guide',
+        url: 'https://www.allclash.com/f1-clash-champions-circuit-event-guide-junior-challenger-contender-champion/',
+        updatedAt: '2026-01-14',
+        brackets: ['Junior', 'Challenger', 'Contender', 'Champion'],
+        driverPairings: { boosted: ['Norris', 'Hamilton', 'Verstappen', 'Alonso'], note: 'Epic-Versionen geboosted; Legendaries und Special Editions bleiben teils stärker.' },
+        note: 'Champion: Epic-Versionen von Norris, Hamilton, Verstappen, Alonso hochkompetitiv. Track-Details PRO-gesperrt.'
+      },
+      {
+        type: 'allclash',
+        id: 'allclash-titans-90s',
+        title: 'F1 Clash Titans of the 90s Event Guide',
+        url: 'https://www.allclash.com/f1-clash-titans-of-the-90s-event-guide-junior-challenger-contender-champion/',
+        updatedAt: '2026-01-06',
+        brackets: ['Junior', 'Challenger', 'Contender', 'Champion'],
+        driverPairings: {
+          challenger: { boosted: ['Berger'], note: 'Berger dominiert die Challenger-Klasse.' },
+          contender: { boosted: ['J.Villeneuve'], note: 'J.Villeneuve stark in der Contender-Klasse.' },
+          champion: { boosted: ['Schumacher'], note: 'Schumacher spielbar im Champion; Turbocharged SEs dominieren.' }
+        },
+        note: 'Berger dominiert Challenger; J.Villeneuve stark in Contender; Schumacher viable in Champion. Track-Details PRO-gesperrt.'
+      }
+    ],
+    tracks: {
+      Imola: {
+        partBoosts: { Rumble: 0.55, 'The Dynamo': 0.55, 'Aero Blade': 0.55, Curler: 0.55, Nexus: 0.55, 'Turbo Jet': 0.55 },
+        strategyBoosts: { one_stop: 2.0, two_stop: -1.5 },
+        driverBoosts: { Alonso: 1.5, Leclerc: 1.3, Gasly: 1.2, Piastri: 1.1 },
+        notes: 'Emilia-Romagna Champion: Alonso und Leclerc Top-Picks. 1-Stop Pflicht. Setup: Rumble/Dynamo/Aero Blade/Curier/Nexus/Turbo Jet.'
+      },
+      Monaco: {
+        partBoosts: { Boombox: 0.55, Metronome: 0.55, 'The Valkyrie': 0.55, 'Flex XL': 0.55, Gyro: 0.55, 'Mach III': 0.55 },
+        strategyBoosts: { one_stop: 1.9, two_stop: -0.9 },
+        driverBoosts: { Verstappen: 1.4, Sainz: 1.3, Norris: 1.2, Alonso: 1.1 },
+        notes: 'Monaco GP plus S11: Verstappen, Sainz, Norris Top-Picks. 1-Stop empfohlen. Setup: Boombox/Metronome/Valkyrie/Flex XL/Gyro/Mach III.'
+      },
+      Japan: {
+        partBoosts: { Boombox: 0.55, Metronome: 0.55, 'The Valkyrie': 0.55, 'Flex XL': 0.55, Gyro: 0.55, 'Mach III': 0.55 },
+        strategyBoosts: { one_stop: 2.2, two_stop: -1.1 },
+        driverBoosts: { Verstappen: 1.4, Sainz: 1.3, Norris: 1.2 },
+        notes: 'S9 plus Emilia-Romagna Champion: Suzuka bevorzugt 1-Stop. Verstappen, Sainz, Norris Top-Picks.'
+      },
+      Canada: {
+        partBoosts: {},
+        strategyBoosts: { one_stop: 2.1, two_stop: -1.0 },
+        driverBoosts: {},
+        notes: 'S10: Montreal bevorzugt 1-Stop mit Medium-basierten Stints.'
+      },
+      Spain: {
+        partBoosts: {},
+        strategyBoosts: { one_stop: 0.5, two_stop: 1.5 },
+        driverBoosts: {},
+        notes: 'S12: Barcelona bevorzugt 2-Stop bei TM >= 90; sonst 1-Stop möglich.'
+      },
+      Belgium: {
+        partBoosts: { Rumble: 0.5, 'The Dynamo': 0.5, 'Aero Blade': 0.5, Curler: 0.5, Nexus: 0.5, 'Turbo Jet': 0.5 },
+        strategyBoosts: {},
+        driverBoosts: { Norris: 1.5, Hamilton: 1.3, Gasly: 1.2, Sainz: 1.1 },
+        notes: 'Emilia-Romagna Champion: Norris und Hamilton Top-Picks für Spa.'
+      },
+      Austria: {
+        partBoosts: { 'Flow 1K': 0.55, 'The Beast': 0.55, 'The Valkyrie': 0.55, 'Flex XL': 0.55, Quantum: 0.55, Behemoth: 0.55 },
+        strategyBoosts: { one_stop: 2.0, two_stop: -1.0 },
+        driverBoosts: { Verstappen: 1.5, Sainz: 1.3, Norris: 1.2, Alonso: 1.1 },
+        notes: 'S11 plus Emilia-Romagna Champion: Spielberg bevorzugt 1-Stop. Verstappen, Sainz, Norris Top-Picks.'
+      },
+      Azerbaijan: {
+        partBoosts: { 'Flow 1K': 0.55, 'The Beast': 0.55, 'The Valkyrie': 0.55, 'Flex XL': 0.55, Quantum: 0.55, Behemoth: 0.55 },
+        strategyBoosts: {},
+        driverBoosts: { Hamilton: 1.5, Piastri: 1.3, Verstappen: 1.2, Alonso: 1.1 },
+        notes: 'S10 plus Emilia-Romagna Champion: Hamilton und Piastri Top-Picks für Baku.'
+      },
+      Italy: {
+        partBoosts: { 'Flow 1K': 0.55, 'The Beast': 0.55, 'The Valkyrie': 0.55, 'Flex XL': 0.55, Quantum: 0.55, Behemoth: 0.55 },
+        strategyBoosts: {},
+        driverBoosts: { Verstappen: 1.5, Sainz: 1.3, Norris: 1.2, Alonso: 1.1 },
+        notes: 'S9/S11 plus Emilia-Romagna Champion: Verstappen und Sainz Top-Picks für Monza.'
+      },
+      China: {
+        partBoosts: { Rumble: 0.45, 'The Dynamo': 0.45, 'Aero Blade': 0.45, Curler: 0.45, Nexus: 0.45, 'Turbo Jet': 0.45 },
+        strategyBoosts: {},
+        driverBoosts: { Fittipaldi: 1.6, Hamilton: 1.2, Piastri: 1.2 },
+        notes: 'Legendary China: Fittipaldi geboostet. Emilia-Romagna Champion allgemein: Hamilton und Piastri bester Stat-Fit.'
+      },
+      Australia: {
+        partBoosts: { 'Flow 1K': 0.45, 'The Beast': 0.45, 'The Valkyrie': 0.45, 'Flex XL': 0.45, Quantum: 0.45, Behemoth: 0.45 },
+        strategyBoosts: {},
+        driverBoosts: { Mansell: 1.6, Alonso: 1.2, Leclerc: 1.1 },
+        notes: 'Legendary Australia: Mansell geboostet. Monaco GP Champion allgemein: Alonso und Leclerc bester Stat-Fit für Melbourne.'
+      },
+      'United Kingdom': {
+        partBoosts: { 'Flow 1K': 0.5, 'The Beast': 0.5, 'The Valkyrie': 0.5, 'Flex XL': 0.5, Quantum: 0.5, Behemoth: 0.5 },
+        strategyBoosts: {},
+        driverBoosts: { Norris: 1.5, Hamilton: 1.3, Gasly: 1.2, Sainz: 1.1 },
+        notes: 'Monaco GP Champion: Norris und Hamilton Top-Picks für Silverstone.'
+      },
+      'United States': {
+        partBoosts: { Boombox: 0.5, Metronome: 0.5, 'The Valkyrie': 0.5, 'Flex XL': 0.5, Gyro: 0.5, 'Mach III': 0.5 },
+        strategyBoosts: {},
+        driverBoosts: { Norris: 1.4, Hamilton: 1.3, Gasly: 1.2, Sainz: 1.1 },
+        notes: 'Monaco GP Champion: Norris, Hamilton, Gasly Top-Picks für Austin.'
+      },
+      Singapore: {
+        partBoosts: { Rumble: 0.5, 'The Dynamo': 0.5, 'Aero Blade': 0.5, Curler: 0.5, Nexus: 0.5, 'Turbo Jet': 0.5 },
+        strategyBoosts: {},
+        driverBoosts: { Alonso: 1.5, Leclerc: 1.3, Gasly: 1.2, Piastri: 1.1 },
+        notes: 'Monaco GP Champion: Alonso und Leclerc Top-Picks für Singapur.'
+      },
+      'Abu Dhabi': {
+        partBoosts: { Rumble: 0.5, 'The Dynamo': 0.5, 'Aero Blade': 0.5, Curler: 0.5, Nexus: 0.5, 'Turbo Jet': 0.5 },
+        strategyBoosts: {},
+        driverBoosts: { Hamilton: 1.4, Piastri: 1.3, Verstappen: 1.2, Alonso: 1.1 },
+        notes: 'Monaco GP Champion: Hamilton und Piastri Top-Picks für Abu Dhabi.'
+      }
+    },
+    driverPairings: {
+      series: {
+        S9: { bestPair: ['Fittipaldi', 'D.Hill'], top4: ['Fittipaldi', 'D.Hill', 'G.Hill', 'J.Villeneuve'] },
+        S10: { bestPair: ['Mansell', 'Tsunoda'], top4: ['Mansell', 'Tsunoda', 'Antonelli', 'Hadjar'] },
+        S11: { bestPair: ['Fittipaldi', 'Sainz'], top4: ['Fittipaldi', 'Sainz', 'Piastri', 'D.Hill'], note: 'S11 beste F2P-Option; Tsunoda gut für F2P-Nutzer.' },
+        S12: { bestPair: ['Prost', 'Lauda'], top4: ['Prost', 'Lauda', 'Senna', 'Schumacher'], note: 'Special Edition Territorium; Epic erst ab Rang ~18.' }
+      },
+      events: {
+        'emilia-romagna': {
+          junior: {
+            Imola: ['Bearman', 'Ocon', 'Antonelli', 'Hadjar'],
+            Belgium: ['Albon', 'Ocon', 'Stroll', 'Lawson'],
+            Austria: ['Hadjar', 'Bortoleto', 'Tsunoda', 'Doohan'],
+            Azerbaijan: ['Hadjar', 'Bearman', 'Tsunoda', 'Albon'],
+            Italy: ['Hadjar', 'Bortoleto', 'Tsunoda', 'Doohan'],
+            China: ['Hadjar', 'Bearman', 'Tsunoda', 'Albon'],
+            Japan: ['Hadjar', 'Bortoleto', 'Tsunoda', 'Doohan']
+          },
+          champion: {
+            Imola: ['Alonso', 'Leclerc', 'Gasly', 'Sainz', 'Piastri'],
+            Belgium: ['Norris', 'Hamilton', 'Gasly', 'Sainz', 'Hulkenberg'],
+            Austria: ['Verstappen', 'Sainz', 'Norris', 'Alonso', 'Piastri'],
+            Azerbaijan: ['Hamilton', 'Piastri', 'Verstappen', 'Alonso', 'Tsunoda'],
+            Italy: ['Verstappen', 'Sainz', 'Norris', 'Alonso', 'Piastri'],
+            China: ['Hamilton', 'Piastri', 'Verstappen', 'Alonso', 'Tsunoda'],
+            Japan: ['Verstappen', 'Sainz', 'Norris', 'Alonso', 'Piastri']
+          }
+        },
+        'monaco-gp': {
+          champion: {
+            Monaco: ['Verstappen', 'Sainz', 'Norris', 'Alonso', 'Piastri'],
+            'United Kingdom': ['Norris', 'Gasly', 'Hamilton', 'Sainz', 'Hulkenberg'],
+            'United States': ['Norris', 'Gasly', 'Hamilton', 'Sainz', 'Hulkenberg'],
+            Singapore: ['Alonso', 'Leclerc', 'Gasly', 'Sainz', 'Piastri'],
+            'Abu Dhabi': ['Hamilton', 'Piastri', 'Verstappen', 'Alonso', 'Tsunoda'],
+            Australia: ['Alonso', 'Leclerc', 'Gasly', 'Sainz', 'Piastri']
+          }
+        },
+        'champions-circuit': {
+          champion: { boosted: ['Norris', 'Hamilton', 'Verstappen', 'Alonso'] }
+        },
+        'titans-90s': {
+          challenger: { boosted: ['Berger'] },
+          contender: { boosted: ['J.Villeneuve'] },
+          champion: { boosted: ['Schumacher'] }
+        }
+      }
+    }
+  };
+}
+
+function buildCategoryParts(category, entries, baseStats) {
+  const safeEntries = Array.isArray(entries) ? entries : [];
+  const rarityBoost = {
+    Common: 0,
+    Rare: 3,
+    Epic: 7,
+    Legendary: 10
+  };
+
+  return safeEntries.map((entry, index) => {
+    const rarity = entry?.rarity || 'Common';
+    const boost = (rarityBoost[rarity] || 0) + index;
+    return {
+      name: String(entry?.name || `Part ${index + 1}`),
+      category,
+      rarity,
+      tempo: Number(baseStats?.tempo || 0) + Math.round(boost * 0.8),
+      kurven: Number(baseStats?.kurven || 0) + Math.round(boost * 0.7),
+      antrieb: Number(baseStats?.antrieb || 0) + Math.round(boost * 0.9),
+      quali: Number(baseStats?.quali || 0) + Math.round(boost * 0.6),
+      drs: Number(baseStats?.drs || 0) + Math.round(boost * 0.5)
+    };
+  });
+}
+
+// Teile-Datenbank: offizielle F1 Clash 2025 Namen (Resource Sheet by TR The Flash, 22/02/26)
 const partCatalog = [
-  ...buildCategoryParts('engine', ['Quantum','Power Lift','Titan Core','Pulse V8','Inferno Unit','Dragstar','Crimson V','Vector R','Stormcell','Helix One'], { tempo: 54, kurven: 20, antrieb: 50, quali: 26, drs: 18 }),
-  ...buildCategoryParts('front_wing', ['Mach III','BoomBox','Falcon X','AeroNova','Vortex W','EagleEye','NeonWing','Apex F','Cobra Aero','Spectra Wing'], { tempo: 24, kurven: 58, antrieb: 14, quali: 36, drs: 28 }),
-  ...buildCategoryParts('rear_wing', ['Raptor RW','Delta RW','Sonic Tail','Ghost RW','Nebula RW','Vertex RW','Iron Tail','Comet RW','Nova RW','Pulse RW'], { tempo: 28, kurven: 52, antrieb: 16, quali: 34, drs: 32 }),
-  ...buildCategoryParts('gearbox', ['Sabre','Metronome','TorqueX','GearFlux','IronBox','SwiftShift','Vector Gear','Neptune G','RidgeBox','TurboLink'], { tempo: 18, kurven: 28, antrieb: 60, quali: 18, drs: 18 }),
-  ...buildCategoryParts('suspension', ['Flexion','Hydra S','Axle Pro','Carbon S','GripFlow','AeroFlex','TriLink','Pulse S','Vector S','Zenith S'], { tempo: 14, kurven: 44, antrieb: 30, quali: 20, drs: 14 }),
-  ...buildCategoryParts('brakes', ['Redline B','Carbon Stop','Apex Brake','Nova Brake','Storm Brake','GripStop','Pulse Brake','Comet Brake','Zen Brake','Delta Brake'], { tempo: 12, kurven: 32, antrieb: 34, quali: 24, drs: 12 })
+  ...buildCategoryParts('brakes', [
+    { name: 'Pivot',          rarity: 'Common' },
+    { name: 'The Stabiliser', rarity: 'Common' },
+    { name: 'The Descent',    rarity: 'Rare'   },
+    { name: 'Rumble',         rarity: 'Rare'   },
+    { name: 'Flow 1K',        rarity: 'Rare'   },
+    { name: 'Supernova',      rarity: 'Epic'   },
+    { name: 'Boombox',        rarity: 'Epic'   },
+    { name: 'Grindlock',      rarity: 'Epic'   },
+  ], { tempo: 12, kurven: 32, antrieb: 34, quali: 24, drs: 12 }),
+
+  ...buildCategoryParts('gearbox', [
+    { name: 'Hustle',       rarity: 'Common' },
+    { name: 'Slickshift',   rarity: 'Rare'   },
+    { name: 'Beat',         rarity: 'Common' },
+    { name: 'Fury',         rarity: 'Epic'   },
+    { name: 'The Dynamo',   rarity: 'Rare'   },
+    { name: 'The Beast',    rarity: 'Epic'   },
+    { name: 'Metronome',    rarity: 'Rare'   },
+    { name: 'Jittershift',  rarity: 'Epic'   },
+    { name: 'Starter',      rarity: 'Epic'   },
+  ], { tempo: 26, kurven: 18, antrieb: 56, quali: 24, drs: 30 }),
+
+  ...buildCategoryParts('rear_wing', [
+    { name: 'Motion',       rarity: 'Common' },
+    { name: 'Gale Force',   rarity: 'Common' },
+    { name: 'The Spire',    rarity: 'Rare'   },
+    { name: 'Power Lift',   rarity: 'Rare'   },
+    { name: 'Aero Blade',   rarity: 'Rare'   },
+    { name: 'X-Hale',       rarity: 'Epic'   },
+    { name: 'The Valkyrie', rarity: 'Epic'   },
+    { name: 'Starter',      rarity: 'Epic'   },
+  ], { tempo: 28, kurven: 52, antrieb: 16, quali: 34, drs: 32 }),
+
+  ...buildCategoryParts('front_wing', [
+    { name: 'The Dash',    rarity: 'Common' },
+    { name: 'Glide',       rarity: 'Common' },
+    { name: 'Synergy',     rarity: 'Common' },
+    { name: 'The Sabre',   rarity: 'Rare'   },
+    { name: 'Curler',      rarity: 'Rare'   },
+    { name: 'Vortex',      rarity: 'Epic'   },
+    { name: 'Flex XL',     rarity: 'Epic'   },
+    { name: 'Edgecutter',  rarity: 'Epic'   },
+    { name: 'Starter',     rarity: 'Epic'   },
+  ], { tempo: 24, kurven: 58, antrieb: 14, quali: 36, drs: 28 }),
+
+  ...buildCategoryParts('suspension', [
+    { name: 'Swish',        rarity: 'Common' },
+    { name: 'Curver 2.5',   rarity: 'Common' },
+    { name: 'The Arc',      rarity: 'Common' },
+    { name: 'Quantum',      rarity: 'Rare'   },
+    { name: 'Gyro',         rarity: 'Rare'   },
+    { name: 'Equinox',      rarity: 'Epic'   },
+    { name: 'Joltcoil',     rarity: 'Epic'   },
+    { name: 'Nexus',        rarity: 'Epic'   },
+    { name: 'Fluxspring',   rarity: 'Epic'   },
+    { name: 'Starter',      rarity: 'Epic'   },
+  ], { tempo: 14, kurven: 44, antrieb: 30, quali: 20, drs: 14 }),
+
+  ...buildCategoryParts('engine', [
+    { name: 'Mach I',       rarity: 'Common' },
+    { name: 'Spark-E',      rarity: 'Common' },
+    { name: 'The Reactor',  rarity: 'Common' },
+    { name: 'Mach II',      rarity: 'Rare'   },
+    { name: 'Behemoth',     rarity: 'Rare'   },
+    { name: 'Mach III',     rarity: 'Epic'   },
+    { name: 'Chaos Core',   rarity: 'Epic'   },
+    { name: 'Turbo Jet',    rarity: 'Epic'   },
+  ], { tempo: 54, kurven: 20, antrieb: 50, quali: 26, drs: 18 }),
 ];
 
-partCatalog.forEach((part) => {
-  part.levelCap = 12;
-});
-
+// Fahrer-Datenbank: offizielles F1 Clash 2025 Roster (Resource Sheet by TR The Flash, 22/02/26)
+// Seltenheiten: Common, Rare, Epic, Legendary, Prospect Standard, Prospect Turbocharged,
+//               Podium Stars, Podium Stars Legends
 const driversDb = [
-  { name: 'Verstappen', pace: 95, qualifying: 95, tyre: 88, overtaking: 92, consistency: 90 },
-  { name: 'Leclerc', pace: 92, qualifying: 94, tyre: 84, overtaking: 86, consistency: 84 },
-  { name: 'Norris', pace: 90, qualifying: 89, tyre: 86, overtaking: 85, consistency: 87 },
-  { name: 'Hamilton', pace: 89, qualifying: 88, tyre: 92, overtaking: 90, consistency: 91 },
-  { name: 'Alonso', pace: 87, qualifying: 86, tyre: 91, overtaking: 88, consistency: 92 },
-  { name: 'Russell', pace: 88, qualifying: 90, tyre: 85, overtaking: 84, consistency: 86 },
-  { name: 'Piastri', pace: 87, qualifying: 87, tyre: 84, overtaking: 83, consistency: 85 },
-  { name: 'Sainz', pace: 86, qualifying: 88, tyre: 85, overtaking: 84, consistency: 86 },
-  { name: 'Perez', pace: 84, qualifying: 83, tyre: 82, overtaking: 84, consistency: 79 },
-  { name: 'Gasly', pace: 82, qualifying: 82, tyre: 80, overtaking: 79, consistency: 80 },
-  { name: 'Ocon', pace: 81, qualifying: 80, tyre: 81, overtaking: 78, consistency: 81 },
-  { name: 'Albon', pace: 80, qualifying: 79, tyre: 79, overtaking: 77, consistency: 80 },
-  { name: 'Tsunoda', pace: 79, qualifying: 80, tyre: 77, overtaking: 79, consistency: 76 },
-  { name: 'Stroll', pace: 77, qualifying: 75, tyre: 76, overtaking: 74, consistency: 75 },
-  { name: 'Hulkenberg', pace: 78, qualifying: 78, tyre: 78, overtaking: 76, consistency: 79 },
-  { name: 'Bottas', pace: 78, qualifying: 79, tyre: 77, overtaking: 73, consistency: 80 },
-  { name: 'Magnussen', pace: 76, qualifying: 75, tyre: 74, overtaking: 76, consistency: 73 },
-  { name: 'Zhou', pace: 75, qualifying: 74, tyre: 75, overtaking: 72, consistency: 74 },
-  { name: 'Ricciardo', pace: 77, qualifying: 76, tyre: 76, overtaking: 78, consistency: 75 },
-  { name: 'Sargeant', pace: 72, qualifying: 71, tyre: 70, overtaking: 69, consistency: 70 }
+  // ── 2025 Grid ───────────────────────────────────────────────────────────────
+  { name: 'Verstappen', rarity: 'Epic', pace: 52, qualifying: 67, tyre: 57, overtaking: 62, consistency: 72 },
+  { name: 'Norris', rarity: 'Epic', pace: 52, qualifying: 62, tyre: 72, overtaking: 57, consistency: 67 },
+  { name: 'Leclerc', rarity: 'Epic', pace: 63, qualifying: 68, tyre: 48, overtaking: 58, consistency: 53 },
+  { name: 'Hamilton', rarity: 'Epic', pace: 57, qualifying: 62, tyre: 67, overtaking: 72, consistency: 52 },
+  { name: 'Russell', rarity: 'Epic', pace: 57, qualifying: 72, tyre: 62, overtaking: 67, consistency: 52 },
+  { name: 'Piastri', rarity: 'Epic', pace: 58, qualifying: 53, tyre: 48, overtaking: 68, consistency: 63 },
+  { name: 'Sainz', rarity: 'Epic', pace: 58, qualifying: 53, tyre: 63, overtaking: 48, consistency: 68 },
+  { name: 'Alonso', rarity: 'Epic', pace: 72, qualifying: 57, tyre: 52, overtaking: 62, consistency: 67 },
+  { name: 'Gasly', rarity: 'Epic', pace: 58, qualifying: 63, tyre: 68, overtaking: 53, consistency: 48 },
+  { name: 'Hulkenberg', rarity: 'Epic', pace: 53, qualifying: 68, tyre: 63, overtaking: 58, consistency: 48 },
+  { name: 'Ocon', rarity: 'Epic', pace: 58, qualifying: 53, tyre: 63, overtaking: 48, consistency: 43 },
+  { name: 'Albon', rarity: 'Epic', pace: 43, qualifying: 48, tyre: 63, overtaking: 58, consistency: 53 },
+  { name: 'Tsunoda', rarity: 'Epic', pace: 43, qualifying: 58, tyre: 48, overtaking: 63, consistency: 53 },
+  { name: 'Stroll', rarity: 'Epic', pace: 43, qualifying: 53, tyre: 63, overtaking: 58, consistency: 48 },
+  { name: 'Antonelli', rarity: 'Epic', pace: 18, qualifying: 23, tyre: 8, overtaking: 13, consistency: 3 },
+  { name: 'Hadjar', rarity: 'Common', pace: 4, qualifying: 2, tyre: 5, overtaking: 6, consistency: 3 },
+  { name: 'Doohan', rarity: 'Common', pace: 3, qualifying: 4, tyre: 5, overtaking: 2, consistency: 6 },
+  { name: 'Bearman', rarity: 'Common', pace: 5, qualifying: 3, tyre: 4, overtaking: 6, consistency: 2 },
+  { name: 'Colapinto', rarity: 'Common', pace: 17, qualifying: 5, tyre: 1, overtaking: 9, consistency: 13 },
+  { name: 'Bortoleto', rarity: 'Common', pace: 1, qualifying: 5, tyre: 17, overtaking: 9, consistency: 13 },
+  { name: 'Lawson', rarity: 'Common', pace: 5, qualifying: 13, tyre: 17, overtaking: 9, consistency: 1 },
+  // ── Legends (Legendary) ─────────────────────────────────────────────────────
+  { name: 'Senna', rarity: 'Legendary', pace: 59, qualifying: 65, tyre: 59, overtaking: 68, consistency: 62 },
+  { name: 'Schumacher', rarity: 'Legendary', pace: 55, qualifying: 58, tyre: 61, overtaking: 55, consistency: 64 },
+  { name: 'Prost', rarity: 'Legendary', pace: 64, qualifying: 55, tyre: 58, overtaking: 55, consistency: 61 },
+  { name: 'Lauda', rarity: 'Legendary', pace: 61, qualifying: 55, tyre: 64, overtaking: 58, consistency: 55 },
+  { name: 'Mansell', rarity: 'Legendary', pace: 57, qualifying: 51, tyre: 39, overtaking: 45, consistency: 33 },
+  { name: 'Stewart', rarity: 'Legendary', pace: 61, qualifying: 55, tyre: 55, overtaking: 58, consistency: 64 },
+  { name: 'Fittipaldi', rarity: 'Legendary', pace: 45, qualifying: 39, tyre: 33, overtaking: 57, consistency: 51 },
+  { name: 'G.Hill', rarity: 'Legendary', pace: 33, qualifying: 45, tyre: 39, overtaking: 51, consistency: 57 },
+  { name: 'Brabham', rarity: 'Legendary', pace: 61, qualifying: 55, tyre: 55, overtaking: 64, consistency: 58 },
+  { name: 'D.Hill', rarity: 'Legendary', pace: 45, qualifying: 51, tyre: 39, overtaking: 33, consistency: 57 },
+  { name: 'G.Villeneuve', rarity: 'Legendary', pace: 57, qualifying: 39, tyre: 33, overtaking: 45, consistency: 51 },
+  { name: 'J.Villeneuve', rarity: 'Legendary', pace: 43, qualifying: 37, tyre: 31, overtaking: 25, consistency: 19 },
+  { name: 'Button', rarity: 'Legendary', pace: 19, qualifying: 37, tyre: 43, overtaking: 25, consistency: 31 },
+  { name: 'Coulthard', rarity: 'Legendary', pace: 37, qualifying: 25, tyre: 43, overtaking: 19, consistency: 31 },
+  { name: 'Berger', rarity: 'Legendary', pace: 19, qualifying: 25, tyre: 31, overtaking: 37, consistency: 43 },
+  { name: 'Massa', rarity: 'Legendary', pace: 5, qualifying: 9, tyre: 13, overtaking: 21, consistency: 17 },
+  { name: 'Webber', rarity: 'Legendary', pace: 17, qualifying: 13, tyre: 21, overtaking: 5, consistency: 9 },
+  { name: 'Fisichella', rarity: 'Legendary', pace: 21, qualifying: 17, tyre: 13, overtaking: 9, consistency: 5 },
+  { name: 'Hunt', rarity: 'Legendary', pace: 37, qualifying: 25, tyre: 19, overtaking: 43, consistency: 31 },
+  { name: 'Andretti', rarity: 'Legendary', pace: 25, qualifying: 37, tyre: 31, overtaking: 43, consistency: 19 },
 ];
 
 let currentSeason = new Date().getFullYear();
@@ -133,6 +589,36 @@ function escapeHtml(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+function applyNeonButtonPalette() {
+  const nodes = Array.from(document.querySelectorAll("button, .pill, input[type='button'], input[type='submit'], input[type='reset']"));
+  const neonHues = [
+    [8, 34], [22, 52], [48, 82], [84, 116], [128, 166], [170, 202],
+    [206, 238], [244, 274], [286, 320], [332, 14]
+  ];
+  nodes.forEach((el) => {
+    if (!el || typeof el.style?.setProperty !== 'function') return;
+    const idx = nodes.indexOf(el) % neonHues.length;
+    const [hue, hue2] = neonHues[idx];
+    el.style.setProperty('--btn-neon-h', String(hue));
+    el.style.setProperty('--btn-neon-h2', String(hue2));
+  });
+}
+
+function setupNeonButtonPalette() {
+  if (!document?.body) return;
+  applyNeonButtonPalette();
+  if (window.__neonButtonPaletteObserver) return;
+  const observer = new MutationObserver(() => {
+    if (window.__neonButtonPaletteRaf) cancelAnimationFrame(window.__neonButtonPaletteRaf);
+    window.__neonButtonPaletteRaf = requestAnimationFrame(() => {
+      applyNeonButtonPalette();
+      window.__neonButtonPaletteRaf = 0;
+    });
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+  window.__neonButtonPaletteObserver = observer;
 }
 
 function applyActiveSubnavByPath() {
@@ -180,9 +666,15 @@ function loadRegistrationProfile() {
   }
 }
 
-function setResult(id, text) {
+function setResult(id, text, kind) {
   const out = byId(id);
-  if (out) out.textContent = text;
+  if (!out) return;
+  out.textContent = text;
+  if (kind) {
+    out.dataset.kind = String(kind).toLowerCase();
+  } else {
+    delete out.dataset.kind;
+  }
 }
 
 function hasUi(...ids) {
@@ -1066,6 +1558,74 @@ function getCommunityDriverBoost(trackName, driverName) {
   return Number((trackCfg.driverBoosts || {})[driverName] || 0);
 }
 
+function getCommunityTrackHint(trackName) {
+  const trackCfg = getTrackCommunity(trackName);
+  const topDrivers = Object.entries(trackCfg.driverBoosts || {})
+    .sort((a, b) => Number(b[1]) - Number(a[1]))
+    .slice(0, 3)
+    .map(([name]) => name);
+  return {
+    notes: String(trackCfg.notes || '').trim(),
+    topDrivers,
+    strategyKeys: Object.entries(trackCfg.strategyBoosts || {})
+      .sort((a, b) => Number(b[1]) - Number(a[1]))
+      .filter(([, value]) => Number(value) > 0)
+      .map(([key]) => key)
+  };
+}
+
+function renderCommunityTrackInsight(trackName, panelId = 'communityTrackInsight') {
+  const panel = byId(panelId);
+  if (!panel) return;
+  const activeTrack = trackName || byId('trackSelect')?.value || byId('builderTrackSelect')?.value;
+  if (!activeTrack) {
+    panel.innerHTML = '';
+    return;
+  }
+
+  const trackCfg = getTrackCommunity(activeTrack);
+  const hint = getCommunityTrackHint(activeTrack);
+  const topDriverEntries = Object.entries(trackCfg.driverBoosts || {})
+    .sort((a, b) => Number(b[1]) - Number(a[1]))
+    .slice(0, 3);
+  const topStrategyEntries = Object.entries(trackCfg.strategyBoosts || {})
+    .filter(([, value]) => Number(value) > 0)
+    .sort((a, b) => Number(b[1]) - Number(a[1]))
+    .slice(0, 3);
+  const topPartEntries = Object.entries(trackCfg.partBoosts || {})
+    .sort((a, b) => Number(b[1]) - Number(a[1]))
+    .slice(0, 6);
+
+  const strategyLabels = {
+    one_stop: '1-Stop',
+    two_stop: '2-Stop',
+    balanced: 'Balanced',
+    aggressive: 'Aggressive'
+  };
+
+  const driverClass = (value) => (value >= 1.4 ? 'community-pill--high' : value >= 1.1 ? 'community-pill--mid' : 'community-pill--low');
+  const strategyClass = (value) => (value >= 1.5 ? 'community-pill--high' : value >= 0.8 ? 'community-pill--mid' : 'community-pill--low');
+  const partClass = (value) => (value >= 0.55 ? 'community-pill--high' : value >= 0.45 ? 'community-pill--mid' : 'community-pill--low');
+
+  const renderPill = (label, value, cls) => `<span class="community-pill ${cls}">${escapeHtml(label)} <em>+${Number(value).toFixed(2)}</em></span>`;
+
+  const rows = [
+    topDriverEntries.length
+      ? `<div class="community-insight__line"><strong>Fahrer:</strong><div class="community-insight__pills">${topDriverEntries.map(([name, value]) => renderPill(name, value, driverClass(Number(value)))).join('')}</div></div>`
+      : '',
+    topStrategyEntries.length
+      ? `<div class="community-insight__line"><strong>Strategie:</strong><div class="community-insight__pills">${topStrategyEntries.map(([key, value]) => renderPill(strategyLabels[key] || key, value, strategyClass(Number(value)))).join('')}</div></div>`
+      : '',
+    topPartEntries.length
+      ? `<div class="community-insight__line"><strong>Setup-Teile:</strong><div class="community-insight__pills">${topPartEntries.map(([name, value]) => renderPill(name, value, partClass(Number(value)))).join('')}</div></div>`
+      : ''
+  ].filter(Boolean).join('');
+
+  panel.innerHTML = `<h3 class="community-insight__title">AllClash Live-Hinweis (${escapeHtml(activeTrack)})</h3>
+    <div class="community-insight__rows">${rows || '<div>Keine spezifischen Community-Boosts für diese Strecke.</div>'}</div>
+    ${hint.notes ? `<div class="community-insight__notes">${escapeHtml(hint.notes)}</div>` : ''}`;
+}
+
 window.getCommunityPartBonus = getCommunityPartBonus;
 window.getCommunityStrategyBoost = getCommunityStrategyBoost;
 
@@ -1136,6 +1696,44 @@ function exportCommunityKnowledgeToTextarea() {
   updateCommunityKnowledgeResult(tr('community_export_ok'));
 }
 
+function loadAllClashReferenceKnowledge() {
+  const seed = buildAllClashReferenceKnowledge();
+  const result = saveCommunityKnowledgeWithMode(seed);
+  const textArea = byId('communityKnowledgeInput');
+  if (textArea) textArea.value = JSON.stringify(result.saved, null, 2);
+  const modeText = result.mode === 'merge' ? 'Merge' : 'Override';
+  const conflictNote = result.conflicts.length ? ` | Konflikte: ${result.conflicts.length} (${result.conflicts.slice(0, 4).join(' ; ')})` : '';
+  updateCommunityKnowledgeResult(tr('community_allclash_ok', {
+    mode: modeText,
+    sources: result.saved.sources.length,
+    tracks: Object.keys(result.saved.tracks).length,
+    conflicts: conflictNote
+  }));
+  runStrategyCalculation();
+  optimizeSelectedTrack();
+}
+
+function ensureAllClashReferenceKnowledgeUpToDate() {
+  const current = loadCommunityKnowledge();
+  const seed = normalizeCommunityKnowledge(buildAllClashReferenceKnowledge());
+
+  const currentSourceIds = new Set((current.sources || []).map((source) => source?.id).filter(Boolean));
+  const seedSourceIds = (seed.sources || []).map((source) => source?.id).filter(Boolean);
+  const missingSeedSources = seedSourceIds.some((id) => !currentSourceIds.has(id));
+  const hasNoTracks = !current.tracks || !Object.keys(current.tracks).length;
+  const seedIsNewer = String(seed.updatedAt || '') > String(current.updatedAt || '');
+  const versionOlder = Number(current.version || 0) < Number(seed.version || 0);
+
+  if (!hasNoTracks && !missingSeedSources && !seedIsNewer && !versionOlder) {
+    communityKnowledge = current;
+    return false;
+  }
+
+  const mergeResult = mergeCommunityKnowledge(current, seed);
+  saveCommunityKnowledge(mergeResult.merged);
+  return true;
+}
+
 function resetCommunityKnowledge() {
   localStorage.removeItem(COMMUNITY_KNOWLEDGE_KEY);
   communityKnowledge = loadCommunityKnowledge();
@@ -1165,6 +1763,7 @@ function initCommunityKnowledgePanel() {
 
   addListener('communityImportButton', 'click', importCommunityKnowledgeFromTextarea);
   addListener('communityImportFileButton', 'click', importCommunityKnowledgeFromFile);
+  addListener('communityLoadAllClashButton', 'click', loadAllClashReferenceKnowledge);
   addListener('communityExportButton', 'click', exportCommunityKnowledgeToTextarea);
   addListener('communityResetButton', 'click', resetCommunityKnowledge);
 }
@@ -1233,21 +1832,37 @@ function driverAbilityScoreOnTrack(driver, trackName) {
     + driver.consistency * 0.12;
 }
 
+function driverEffectiveScoreOnTrack(driver, trackName, stageMap = null) {
+  const activeStageMap = stageMap || loadDriverStageMap();
+  const stage = getDriverStageNumber(driver.name, activeStageMap);
+  const base = driverAbilityScoreOnTrack(driver, trackName);
+  const stageBoost = 1 + (stage - 1) * 0.013;
+  const effective = base * stageBoost;
+  const communityBoost = getCommunityDriverBoost(trackName, driver.name);
+  const communityAdjusted = effective + communityBoost * 6;
+  return {
+    name: driver.name,
+    stage,
+    base,
+    stageBoost,
+    effective,
+    communityBoost,
+    communityAdjusted
+  };
+}
+
 function getDriverAbilityContext(trackName) {
   const stageMap = loadDriverStageMap();
-  const ranked = driversDb.map((driver) => {
-    const stage = getDriverStageNumber(driver.name, stageMap);
-    const base = driverAbilityScoreOnTrack(driver, trackName);
-    const stageBoost = 1 + (stage - 1) * 0.013;
-    const effective = base * stageBoost;
-    return { name: driver.name, stage, base, effective };
-  }).sort((a, b) => b.effective - a.effective);
+  const ranked = driversDb
+    .map((driver) => driverEffectiveScoreOnTrack(driver, trackName, stageMap))
+    .sort((a, b) => b.communityAdjusted - a.communityAdjusted);
 
   const top = ranked.slice(0, 2);
-  const avgTopEffective = top.length ? top.reduce((sum, row) => sum + row.effective, 0) / top.length : 0;
+  const avgTopEffective = top.length ? top.reduce((sum, row) => sum + row.communityAdjusted, 0) / top.length : 0;
   const driverModifier = Math.max(0, Math.min(2.2, (avgTopEffective - 70) * 0.028));
 
   return {
+    ranking: ranked,
     topDrivers: top,
     avgTopEffective,
     driverModifier
@@ -1270,13 +1885,12 @@ function renderDriverImpact(trackName, driverCtx) {
   }
 
   const lines = driverCtx.topDrivers.map((entry, idx) => {
-    const stageBoost = 1 + (entry.stage - 1) * 0.013;
     return tr('driver_impact_line', {
       idx: idx + 1,
       name: entry.name,
       stage: entry.stage,
       base: entry.base.toFixed(2),
-      boost: stageBoost.toFixed(3),
+      boost: entry.stageBoost.toFixed(3),
       effective: entry.effective.toFixed(2)
     });
   });
@@ -1302,14 +1916,14 @@ function renderDriverImpact(trackName, driverCtx) {
 
   const stageMap = loadDriverStageMap();
   const ranking = driversDb.map((driver) => {
-    const stage = getDriverStageNumber(driver.name, stageMap);
-    const base = driverAbilityScoreOnTrack(driver, trackName);
-    const stageBoost = 1 + (stage - 1) * 0.013;
-    const effective = base * stageBoost;
-    const stageImpact = (stageBoost - 1) * 100;
-    const communityBoost = getCommunityDriverBoost(trackName, driver.name);
-    const communityValue = effective + communityBoost;
-    return { name: `${driver.name} (${`S${stage}`})`, effective, stageImpact, communityValue };
+    const score = driverEffectiveScoreOnTrack(driver, trackName, stageMap);
+    const stageImpact = (score.stageBoost - 1) * 100;
+    return {
+      name: `${driver.name} (${`S${score.stage}`})`,
+      effective: score.effective,
+      stageImpact,
+      communityValue: score.communityAdjusted
+    };
   });
 
   let metricKey = 'effective';
@@ -1359,9 +1973,12 @@ function buildDriverQualityRanks() {
   }));
 }
 
-function driverEditionType(name) {
+function driverEditionType(driver) {
+  const name = typeof driver === 'string' ? driver : driver?.name;
+  const rarity = String(typeof driver === 'object' ? (driver?.rarity || '') : '').toLowerCase();
   if (SPECIAL_DRIVER_NAMES.has(name)) return 'special';
-  if (LEGENDARY_DRIVER_NAMES.has(name)) return 'legendary';
+  if (rarity.includes('podium stars') || rarity.includes('prospect')) return 'special';
+  if (LEGENDARY_DRIVER_NAMES.has(name) || rarity === 'legendary') return 'legendary';
   return 'standard';
 }
 
@@ -1398,6 +2015,304 @@ function fillTrackSelects() {
   });
 }
 
+function applyStoredTrackSelection() {
+  const queryTrack = (() => {
+    try {
+      return String(new URLSearchParams(window.location.search).get('track') || '').trim();
+    } catch {
+      return '';
+    }
+  })();
+  const queryTrackIndex = (() => {
+    try {
+      const raw = String(new URLSearchParams(window.location.search).get('trackIndex') || '').trim();
+      if (!raw) return null;
+      const parsed = Number.parseInt(raw, 10);
+      return Number.isFinite(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  })();
+  if (queryTrackIndex != null && queryTrackIndex >= 0) {
+    try { localStorage.setItem(TRACK_SELECTION_INDEX_KEY, String(queryTrackIndex)); } catch {}
+  }
+  const stored = queryTrack || String(localStorage.getItem(TRACK_SELECTION_KEY) || '').trim();
+  if (!stored) return;
+  const select = byId('trackSelect');
+  if (!select) return;
+
+  const normalize = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const aliasByToken = {
+    // Round IDs
+    r1: 'bahrain',
+    r2: 'saudiarabia',
+    r3: 'australia',
+    r4: 'japan',
+    r5: 'china',
+    r6: 'miami',
+    r7: 'emiliaromagna',
+    r8: 'monaco',
+    r9: 'spain',
+    r10: 'canada',
+    r11: 'austria',
+    r12: 'unitedkingdom',
+    r13: 'belgium',
+    r14: 'hungary',
+    r15: 'netherlands',
+    r16: 'italy',
+    r17: 'azerbaijan',
+    r18: 'singapore',
+    r19: 'unitedstates',
+    r20: 'mexico',
+    r21: 'brazil',
+    r22: 'lasvegas',
+    r23: 'qatar',
+    r24: 'abudhabi',
+
+    // Circuit aliases
+    sakhir: 'bahrain',
+    jeddah: 'saudiarabia',
+    melbourne: 'australia',
+    suzuka: 'japan',
+    shanghai: 'china',
+    imola: 'emiliaromagna',
+    barcelona: 'spain',
+    montreal: 'canada',
+    spielberg: 'austria',
+    silverstone: 'unitedkingdom',
+    spa: 'belgium',
+    budapest: 'hungary',
+    zandvoort: 'netherlands',
+    monza: 'italy',
+    baku: 'azerbaijan',
+    austin: 'unitedstates',
+    mexicocity: 'mexico',
+    saopaulo: 'brazil',
+    lusail: 'qatar',
+    yasmarina: 'abudhabi',
+
+    // Known variants
+    uk: 'unitedkingdom',
+    usa: 'unitedstates',
+    emiliaromagna: 'imola',
+    miami: 'unitedstates'
+  };
+
+  const resolveAliasToken = (token) => {
+    let current = token;
+    const visited = new Set();
+    while (aliasByToken[current] && !visited.has(current)) {
+      visited.add(current);
+      current = aliasByToken[current];
+    }
+    return current;
+  };
+
+  const options = Array.from(select.options || []);
+  if (!options.length && stored) {
+    const fallbackOption = document.createElement('option');
+    fallbackOption.value = stored;
+    fallbackOption.textContent = stored;
+    select.appendChild(fallbackOption);
+  }
+  const hydratedOptions = Array.from(select.options || []);
+  const storedIndex = Number.parseInt(String(localStorage.getItem(TRACK_SELECTION_INDEX_KEY) || ''), 10);
+  const direct = hydratedOptions.find((opt) => opt.value === stored);
+  const storedNorm = normalize(stored);
+  const resolvedStored = resolveAliasToken(storedNorm);
+  const candidates = Array.from(new Set([
+    storedNorm,
+    resolvedStored,
+    resolveAliasToken('r' + String(storedNorm).replace(/^r/i, '')),
+    resolveAliasToken(String(storedNorm).replace(/^round/, 'r'))
+  ].filter(Boolean)));
+  const fallback = hydratedOptions.find((opt) => String(opt.value || '').toLowerCase() === stored.toLowerCase());
+  const normalized = hydratedOptions.find((opt) => candidates.includes(normalize(opt.value)));
+  const fuzzy = hydratedOptions.find((opt) => {
+    const valueNorm = normalize(opt.value);
+    return candidates.some((token) => valueNorm.includes(token) || token.includes(valueNorm));
+  });
+  const byIndex = Number.isFinite(storedIndex) && storedIndex >= 0 && storedIndex < hydratedOptions.length
+    ? hydratedOptions[storedIndex]
+    : null;
+  const chosen = direct || fallback || normalized || fuzzy || byIndex;
+  if (!chosen) return null;
+
+  try {
+    localStorage.setItem(TRACK_SELECTION_KEY, chosen.value);
+    const idx = hydratedOptions.findIndex((opt) => opt.value === chosen.value);
+    if (idx >= 0) localStorage.setItem(TRACK_SELECTION_INDEX_KEY, String(idx));
+  } catch {}
+
+  select.value = chosen.value;
+  const strategy = byId('strategyTrackSelect');
+  const builder = byId('builderTrackSelect');
+  if (strategy) strategy.value = chosen.value;
+  if (builder) builder.value = chosen.value;
+
+  try {
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    if (strategy) strategy.dispatchEvent(new Event('change', { bubbles: true }));
+    if (builder) builder.dispatchEvent(new Event('change', { bubbles: true }));
+  } catch {}
+
+  return chosen.value;
+}
+
+function updateSelectedTrackBadge() {
+  const badge = byId('selectedTrackBadge');
+  const select = byId('trackSelect');
+  if (!badge || !select) return;
+  if (!select.options.length) {
+    // Retry once in case select options were not ready at first paint.
+    try { fillTrackSelects(); } catch {}
+  }
+  const queryTrack = (() => {
+    try {
+      return String(new URLSearchParams(window.location.search).get('track') || '').trim();
+    } catch {
+      return '';
+    }
+  })();
+  const storedTrack = (() => {
+    try {
+      return String(localStorage.getItem(TRACK_SELECTION_KEY) || '').trim();
+    } catch {
+      return '';
+    }
+  })();
+  const current = select.options[select.selectedIndex]?.textContent || select.value || queryTrack || storedTrack || '-';
+  badge.textContent = `Aktuelle Strecke: ${current}`;
+}
+
+function initTrackSelectionLauncher() {
+  const button = byId('trackSelectionPageButton');
+  const select = byId('trackSelect');
+  if (!button || !select) return;
+
+  if (!select.options.length) {
+    const stored = (() => {
+      try {
+        return String(localStorage.getItem(TRACK_SELECTION_KEY) || '').trim();
+      } catch {
+        return '';
+      }
+    })();
+    if (stored) {
+      const option = document.createElement('option');
+      option.value = stored;
+      option.textContent = stored;
+      select.appendChild(option);
+    }
+  }
+
+  if (!select.value && select.options.length > 0) {
+    select.value = String(select.options[0]?.value || '').trim();
+  }
+
+  try {
+    const currentValue = String(select.value || '').trim();
+    if (currentValue) localStorage.setItem(TRACK_SELECTION_KEY, currentValue);
+    const optionValues = Array.from(select.options || [])
+      .map((opt) => String(opt.value || '').trim())
+      .filter(Boolean);
+    if (optionValues.length) localStorage.setItem(TRACK_SELECTION_OPTIONS_KEY, JSON.stringify(optionValues));
+  } catch {}
+
+  updateSelectedTrackBadge();
+
+  if (!button.dataset.bound) {
+    button.dataset.bound = '1';
+    button.addEventListener('click', () => {
+      try {
+        const value = String(select.value || '').trim();
+        if (value) localStorage.setItem(TRACK_SELECTION_KEY, value);
+        const idx = select.selectedIndex;
+        if (Number.isInteger(idx) && idx >= 0) localStorage.setItem(TRACK_SELECTION_INDEX_KEY, String(idx));
+        const optionValues = Array.from(select.options || [])
+          .map((opt) => String(opt.value || '').trim())
+          .filter(Boolean);
+        if (optionValues.length) localStorage.setItem(TRACK_SELECTION_OPTIONS_KEY, JSON.stringify(optionValues));
+      } catch {}
+      window.location.href = 'track-selection.html?next=optimizer.html';
+    });
+  }
+}
+
+function initCustomTrackSelect() {
+  const select = byId('trackSelect');
+  const toggle = byId('trackSelectToggle');
+  const menu = byId('trackSelectMenu');
+  if (!select || !toggle || !menu) return;
+
+  const closeMenu = () => {
+    menu.hidden = true;
+    toggle.setAttribute('aria-expanded', 'false');
+  };
+
+  const updateToggleLabel = () => {
+    const current = select.options[select.selectedIndex];
+    toggle.textContent = current?.textContent || 'Strecke waehlen';
+  };
+
+  const renderMenu = () => {
+    menu.innerHTML = '';
+    Array.from(select.options).forEach((opt) => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'track-select-option' + (opt.value === select.value ? ' is-selected' : '');
+      item.textContent = opt.textContent || opt.value;
+      item.setAttribute('role', 'option');
+      item.setAttribute('aria-selected', opt.value === select.value ? 'true' : 'false');
+      item.addEventListener('click', () => {
+        if (select.value !== opt.value) {
+          select.value = opt.value;
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        updateToggleLabel();
+        renderMenu();
+        closeMenu();
+      });
+      menu.appendChild(item);
+    });
+  };
+
+  if (!toggle.dataset.bound) {
+    toggle.dataset.bound = '1';
+
+    toggle.addEventListener('click', () => {
+      const opening = menu.hidden;
+      if (opening) {
+        renderMenu();
+        menu.hidden = false;
+        toggle.setAttribute('aria-expanded', 'true');
+      } else {
+        closeMenu();
+      }
+    });
+
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (menu.hidden) return;
+      if (target === toggle || menu.contains(target)) return;
+      closeMenu();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !menu.hidden) closeMenu();
+    });
+
+    select.addEventListener('change', () => {
+      updateToggleLabel();
+      renderMenu();
+    });
+  }
+
+  updateToggleLabel();
+  renderMenu();
+}
+
 function fillDriverSelects() {
   const a = byId('driverASelect');
   const b = byId('driverBSelect');
@@ -1409,6 +2324,39 @@ function fillDriverSelects() {
     a.appendChild(oa); b.appendChild(ob);
     if (idx === 1) b.value = d.name;
   });
+
+  try {
+    const raw = localStorage.getItem(DRIVER_PAIR_SELECTION_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        const aName = String(parsed.a || '').trim();
+        const bName = String(parsed.b || '').trim();
+        if (aName && Array.from(a.options).some((opt) => opt.value === aName)) a.value = aName;
+        if (bName && Array.from(b.options).some((opt) => opt.value === bName)) b.value = bName;
+      }
+    }
+  } catch {}
+
+  const persistPair = (source = 'manual') => {
+    const payload = {
+      a: String(a.value || ''),
+      b: String(b.value || ''),
+      source,
+      updatedAt: new Date().toISOString()
+    };
+    try { localStorage.setItem(DRIVER_PAIR_SELECTION_KEY, JSON.stringify(payload)); } catch {}
+  };
+
+  if (!a.dataset.pairPersistBound) {
+    a.dataset.pairPersistBound = '1';
+    a.addEventListener('change', () => persistPair('manual'));
+  }
+  if (!b.dataset.pairPersistBound) {
+    b.dataset.pairPersistBound = '1';
+    b.addEventListener('change', () => persistPair('manual'));
+  }
+  persistPair('init');
 }
 
 function renderStatInputs(containerId, prefix) {
@@ -1838,21 +2786,95 @@ function renderAllTrackCharts() {
   });
 }
 
+let _activePartCategory = 'all';
+let _activeDriverCategory = 'standard';
+let _activeSpecialDriverCategory = 'podium-stars';
+
 function buildInventory() {
   const wrap = byId('partsInventory');
   if (!wrap) return;
   wrap.innerHTML = '';
+  const _catNav = byId('partsCategoryNav');
+  if (_catNav && !_catNav._wired) {
+    _catNav._wired = true;
+    _catNav.querySelectorAll('button[data-part-cat]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        _activePartCategory = btn.dataset.partCat || 'all';
+        buildInventory();
+      });
+    });
+  }
+  if (_catNav) {
+    _catNav.querySelectorAll('button[data-part-cat]').forEach((btn) => {
+      const active = btn.dataset.partCat === _activePartCategory;
+      btn.classList.toggle('ghost-link', !active);
+      btn.setAttribute('aria-pressed', String(active));
+    });
+  }
   const metaMap = loadPartMetaMap();
 
-  partCatalog.forEach((part) => {
+  function partSlug(name) {
+    return String(name || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  function partPhotoCandidates(name, category) {
+    const slug = partSlug(name);
+    const catSlug = category ? partSlug(category) : null;
+    const catFirst = catSlug ? [
+      `assets/parts/${slug}-${catSlug}.png`,
+      `assets/parts/${slug}-${catSlug}.jpg`,
+      `assets/parts/${slug}-${catSlug}.jpeg`,
+      `assets/parts/${slug}-${catSlug}.webp`,
+    ] : [];
+    return [
+      ...catFirst,
+      `assets/parts/${slug}.png`,
+      `assets/parts/${slug}.jpg`,
+      `assets/parts/${slug}.jpeg`,
+      `assets/parts/${slug}.webp`,
+    ];
+  }
+
+  function partInitialsAvatar(name) {
+    const safe = String(name || '').trim();
+    const initials = safe
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part.charAt(0).toUpperCase())
+      .join('') || 'PT';
+    const hue = (safe.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0) + 40) % 360;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="hsl(${hue},75%,50%)"/><stop offset="100%" stop-color="hsl(${(hue + 34) % 360},75%,34%)"/></linearGradient></defs><rect width="72" height="72" rx="16" fill="url(#g)"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="#f6f9ff" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700">${escapeHtml(initials)}</text></svg>`;
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  }
+
+  function renderPartLegendStats(part, level, mod) {
+    const eff = getPartEffectiveStats(part, { [part.name]: { level, mod } });
+    return `Stats L${level}: T ${Math.round(eff.tempo)} | K ${Math.round(eff.kurven)} | A ${Math.round(eff.antrieb)} | Q ${Math.round(eff.quali)} | D ${Math.round(eff.drs)}`;
+  }
+
+  const _visibleParts = _activePartCategory === 'all'
+    ? partCatalog
+    : partCatalog.filter((p) => p.category === _activePartCategory);
+  _visibleParts.forEach((part) => {
     const owned = ownedParts.includes(part.name);
     const el = document.createElement('div');
     el.className = 'inventory-card part-card';
+    const mod = Number(metaMap[part.name]?.mod || 0);
     const level = Math.max(1, Math.min(12, Number(metaMap[part.name]?.level || 1)));
     const quality = partQualityByLevel(level);
+    const updatedAtText = formatLocalDateTime(metaMap[part.name]?.updatedAt);
     el.innerHTML = `
-      <h4>${part.name}</h4>
-      <div class="part-meta">Kategorie: ${part.category} | Qualität: ${quality}</div>
+      <div class="part-head">
+        <img class="part-photo" alt="${part.name}" loading="lazy" decoding="async" />
+        <h4>${part.name}</h4>
+      </div>
+      <div class="part-meta" data-part-quality="${part.name}">Kategorie: ${part.category} | Qualität: ${quality}</div>
+      <div class="part-meta" data-part-legend="${part.name}">${renderPartLegendStats(part, level, mod)}</div>
+      <div class="part-meta" data-part-updated="${part.name}">Letztes Update: ${updatedAtText}</div>
       <button class="part-ownership" type="button">${owned ? 'Im Besitz' : 'Nicht im Besitz'}</button>
       <div class="part-controls">
         <label for="part_level_${part.dbId || part.name}">Level</label>
@@ -1861,6 +2883,23 @@ function buildInventory() {
     `;
     el.draggable = owned;
     el.style.opacity = owned ? '1' : '.45';
+    const photoNode = el.querySelector('.part-photo');
+    if (photoNode) {
+      const candidates = partPhotoCandidates(part.name, part.category);
+      let candidateIndex = 0;
+      const applyCandidate = () => {
+        if (candidateIndex >= candidates.length) {
+          photoNode.src = partInitialsAvatar(part.name);
+          return;
+        }
+        photoNode.src = candidates[candidateIndex];
+      };
+      photoNode.addEventListener('error', () => {
+        candidateIndex += 1;
+        applyCandidate();
+      });
+      applyCandidate();
+    }
     const ownBtn = el.querySelector('.part-ownership');
     ownBtn?.addEventListener('click', () => {
       if (ownedParts.includes(part.name)) ownedParts = ownedParts.filter((p) => p !== part.name);
@@ -1873,9 +2912,17 @@ function buildInventory() {
     levelSelect?.addEventListener('change', (event) => {
       const next = Number(event.target.value || 1);
       const previous = metaMap[part.name] || {};
-      metaMap[part.name] = { ...previous, level: Math.max(1, Math.min(12, next)), mod: Number(previous.mod || 0), updatedAt: new Date().toISOString() };
+      const nextLevel = Math.max(1, Math.min(12, next));
+      const nextMod = Number(previous.mod || 0);
+      const timestamp = new Date().toISOString();
+      metaMap[part.name] = { ...previous, level: nextLevel, mod: nextMod, updatedAt: timestamp };
       savePartMetaMap(metaMap);
-      buildInventory();
+      const qualityNode = el.querySelector('[data-part-quality]');
+      if (qualityNode) qualityNode.textContent = `Kategorie: ${part.category} | Qualität: ${partQualityByLevel(nextLevel)}`;
+      const legendNode = el.querySelector('[data-part-legend]');
+      if (legendNode) legendNode.textContent = renderPartLegendStats(part, nextLevel, nextMod);
+      const updatedNode = el.querySelector('[data-part-updated]');
+      if (updatedNode) updatedNode.textContent = `Letztes Update: ${formatLocalDateTime(timestamp)}`;
     });
     if (owned) {
       el.addEventListener('dragstart', (e) => {
@@ -1890,38 +2937,184 @@ function buildInventory() {
 function buildDriverInventory() {
   const standardWrap = byId('driversStandardList');
   const legendaryWrap = byId('driversLegendaryList');
-  const specialWrap = byId('driversSpecialList');
-  if (!standardWrap || !legendaryWrap || !specialWrap) return;
+  const specialPodiumStarsWrap = byId('driversSpecialPodiumStarsList');
+  const specialPodiumStarsLegendsWrap = byId('driversSpecialPodiumStarsLegendsList');
+  const specialHotContendersWrap = byId('driversSpecialHotContendersList');
+  const standardSection = byId('driversStandardSection');
+  const legendarySection = byId('driversLegendarySection');
+  const specialSection = byId('driversSpecialSection');
+  const specialPodiumStarsSection = byId('driversSpecialPodiumStarsSection');
+  const specialPodiumStarsLegendsSection = byId('driversSpecialPodiumStarsLegendsSection');
+  const specialHotContendersSection = byId('driversSpecialHotContendersSection');
+  const driverNav = byId('driversCategoryNav');
+  const specialNav = byId('driversSpecialCategoryNav');
+  if (!standardWrap || !legendaryWrap || !specialPodiumStarsWrap || !specialPodiumStarsLegendsWrap || !specialHotContendersWrap) return;
+
+  if (driverNav && !driverNav._wired) {
+    driverNav._wired = true;
+    driverNav.querySelectorAll('button[data-driver-cat]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        _activeDriverCategory = btn.dataset.driverCat || 'standard';
+        buildDriverInventory();
+      });
+    });
+  }
+  if (driverNav) {
+    driverNav.querySelectorAll('button[data-driver-cat]').forEach((btn) => {
+      const active = btn.dataset.driverCat === _activeDriverCategory;
+      btn.classList.toggle('ghost-link', !active);
+      btn.setAttribute('aria-pressed', String(active));
+    });
+  }
+  if (specialNav && !specialNav._wired) {
+    specialNav._wired = true;
+    specialNav.querySelectorAll('button[data-special-driver-cat]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        _activeSpecialDriverCategory = btn.dataset.specialDriverCat || 'podium-stars';
+        buildDriverInventory();
+      });
+    });
+  }
+  if (specialNav) {
+    specialNav.querySelectorAll('button[data-special-driver-cat]').forEach((btn) => {
+      const active = btn.dataset.specialDriverCat === _activeSpecialDriverCategory;
+      btn.classList.toggle('ghost-link', !active);
+      btn.setAttribute('aria-pressed', String(active));
+    });
+  }
+
+  const specialVisible = _activeDriverCategory === 'special';
+  if (standardSection) standardSection.hidden = _activeDriverCategory !== 'standard';
+  if (legendarySection) legendarySection.hidden = _activeDriverCategory !== 'legendary';
+  if (specialSection) specialSection.hidden = !specialVisible;
+  if (specialPodiumStarsSection) specialPodiumStarsSection.hidden = !specialVisible || _activeSpecialDriverCategory !== 'podium-stars';
+  if (specialPodiumStarsLegendsSection) specialPodiumStarsLegendsSection.hidden = !specialVisible || _activeSpecialDriverCategory !== 'podium-stars-legends';
+  if (specialHotContendersSection) specialHotContendersSection.hidden = !specialVisible || _activeSpecialDriverCategory !== 'hot-contenders';
 
   standardWrap.innerHTML = '';
   legendaryWrap.innerHTML = '';
-  specialWrap.innerHTML = '';
+  specialPodiumStarsWrap.innerHTML = '';
+  specialPodiumStarsLegendsWrap.innerHTML = '';
+  specialHotContendersWrap.innerHTML = '';
 
   const qualityRanks = buildDriverQualityRanks();
   const stageMap = loadDriverStageMap();
 
+  function stageMultiplier(stageLabel) {
+    const match = String(stageLabel || 'S1').match(/^S(\d{1,2})$/i);
+    const stageNum = Math.max(1, Math.min(12, match ? Number(match[1]) : 1));
+    return 1 + (stageNum - 1) * 0.013;
+  }
+
+  function renderDriverLegendStats(driver, stageLabel) {
+    const mult = stageMultiplier(stageLabel);
+    const pace = Math.round(driver.pace * mult);
+    const qualifying = Math.round(driver.qualifying * mult);
+    const tyre = Math.round(driver.tyre * mult);
+    const overtaking = Math.round(driver.overtaking * mult);
+    const consistency = Math.round(driver.consistency * mult);
+    return `Pace ${pace} | Quali ${qualifying} | Reifen ${tyre} | Overtake ${overtaking} | Konstanz ${consistency}`;
+  }
+
+  function driverSlug(name) {
+    return String(name || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  function driverPhotoCandidates(name) {
+    const slug = driverSlug(name);
+    return [
+      `assets/drivers/${slug}.png`,
+      `assets/drivers/${slug}.jpg`,
+      `assets/drivers/${slug}.jpeg`,
+      `assets/drivers/${slug}.webp`
+    ];
+  }
+
+  function specialDriverCategory(driver) {
+    const rarity = String(driver?.rarity || '').toLowerCase();
+    if (rarity.includes('podium stars legends')) return 'podium-stars-legends';
+    if (rarity.includes('prospect')) return 'hot-contenders';
+    if (rarity.includes('podium stars')) return 'podium-stars';
+    return 'podium-stars';
+  }
+
+  function driverInitialsAvatar(name) {
+    const safe = String(name || '').trim();
+    const initials = safe
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part.charAt(0).toUpperCase())
+      .join('') || 'DR';
+    const hue = safe.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0) % 360;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="hsl(${hue},78%,52%)"/><stop offset="100%" stop-color="hsl(${(hue + 46) % 360},78%,38%)"/></linearGradient></defs><rect width="72" height="72" rx="16" fill="url(#g)"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="#f6f9ff" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="700">${escapeHtml(initials)}</text></svg>`;
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  }
+
   driversDb.forEach((driver) => {
     const stage = DRIVER_STAGES.includes(stageMap[driver.name]?.stage) ? stageMap[driver.name].stage : 'S1';
     const rank = qualityRanks[driver.name] || 1;
+    const corePoolTag = USER_CORE_DRIVER_POOL.has(driver.name) ? 'Core Pool' : 'Extended Pool';
+    const updatedAtText = formatLocalDateTime(stageMap[driver.name]?.updatedAt);
     const card = document.createElement('div');
     card.className = 'inventory-card driver-card';
     card.innerHTML = `
-      <h4>${driver.name}</h4>
-      <div class="driver-meta">Qualität ${rank}/10 (absteigend)</div>
+      <div class="driver-head">
+        <img class="driver-photo" alt="${driver.name}" loading="lazy" decoding="async" />
+        <h4>${driver.name}</h4>
+      </div>
+      <div class="driver-meta">Seltenheit: ${driver.rarity} | Qualität ${rank}/10 | ${corePoolTag}</div>
+      <div class="driver-meta" data-driver-legend="${driver.name}">${renderDriverLegendStats(driver, stage)}</div>
+      <div class="driver-meta" data-driver-updated="${driver.name}">Letztes Update: ${updatedAtText}</div>
       <div class="driver-controls">
         <label for="driver_stage_${driver.name.replace(/\s+/g, '_')}">Stufe</label>
         <select id="driver_stage_${driver.name.replace(/\s+/g, '_')}">${DRIVER_STAGES.map((entry) => `<option value="${entry}" ${entry === stage ? 'selected' : ''}>${entry}</option>`).join('')}</select>
       </div>
     `;
 
-    const targetType = driverEditionType(driver.name);
-    const targetWrap = targetType === 'special' ? specialWrap : (targetType === 'legendary' ? legendaryWrap : standardWrap);
+    const targetType = driverEditionType(driver);
+    let targetWrap = standardWrap;
+    if (targetType === 'legendary') {
+      targetWrap = legendaryWrap;
+    } else if (targetType === 'special') {
+      const specialCategory = specialDriverCategory(driver);
+      targetWrap = specialCategory === 'podium-stars-legends'
+        ? specialPodiumStarsLegendsWrap
+        : (specialCategory === 'hot-contenders' ? specialHotContendersWrap : specialPodiumStarsWrap);
+    }
     targetWrap.appendChild(card);
+
+    const photoNode = card.querySelector('.driver-photo');
+    if (photoNode) {
+      const candidates = driverPhotoCandidates(driver.name);
+      let candidateIndex = 0;
+      const applyCandidate = () => {
+        if (candidateIndex >= candidates.length) {
+          photoNode.src = driverInitialsAvatar(driver.name);
+          return;
+        }
+        photoNode.src = candidates[candidateIndex];
+      };
+      photoNode.addEventListener('error', () => {
+        candidateIndex += 1;
+        applyCandidate();
+      });
+      applyCandidate();
+    }
 
     const select = card.querySelector('select');
     select?.addEventListener('change', (event) => {
-      stageMap[driver.name] = { stage: event.target.value, updatedAt: new Date().toISOString() };
+      const timestamp = new Date().toISOString();
+      const selectedStage = event.target.value;
+      stageMap[driver.name] = { stage: selectedStage, updatedAt: timestamp };
       saveDriverStageMap(stageMap);
+      const legendNode = card.querySelector('[data-driver-legend]');
+      if (legendNode) legendNode.textContent = renderDriverLegendStats(driver, selectedStage);
+      const statusNode = card.querySelector('[data-driver-updated]');
+      if (statusNode) statusNode.textContent = `Letztes Update: ${formatLocalDateTime(timestamp)}`;
     });
   });
 }
@@ -1937,6 +3130,8 @@ function setupDropSlots() {
       const name = e.dataTransfer.getData('partName');
       if (category !== cat) return;
       manualSetup[cat] = name;
+      const track = getBuilderTrackName();
+      if (track) saveManualMap(track, { ...manualSetup });
       renderManualSlots();
     });
   });
@@ -2065,6 +3260,7 @@ function optimizeSelectedTrack() {
   const trackSelect = byId('trackSelect');
   if (!trackSelect) return;
   const track = trackSelect.value;
+  renderCommunityTrackInsight(track);
   const res = optimizeTrack(track, false);
   if (!res.best) {
     setResult('optimizerResult', tr('optimizer_not_enough_parts'));
@@ -2077,7 +3273,13 @@ function optimizeSelectedTrack() {
     ? `${res.comboCount}/${res.estimatedComboCount}`
     : `${res.comboCount}`;
   const reducedHint = res.reducedApplied ? ' | Schnellmodus aktiv' : '';
-  setResult('optimizerResult', `${track}: Bestes Setup ${names} | Score ${res.best.score.toFixed(2)} | Community-Bonus ${Number(res.best.communityBonus || 0).toFixed(2)} | Kombis ${comboInfo} | Laufzeit ${res.ms.toFixed(1)}ms${reducedHint} | Top5: ${topTxt}`);
+  const trackHint = getCommunityTrackHint(track);
+  const hintText = [
+    trackHint.topDrivers.length ? `Empf. Fahrer: ${trackHint.topDrivers.join(', ')}` : '',
+    trackHint.strategyKeys.length ? `Empf. Strategie: ${trackHint.strategyKeys.join(', ')}` : '',
+    trackHint.notes || ''
+  ].filter(Boolean).join(' | ');
+  setResult('optimizerResult', `${track}: Bestes Setup ${names} | Score ${res.best.score.toFixed(2)} | Community-Bonus ${Number(res.best.communityBonus || 0).toFixed(2)} | Kombis ${comboInfo} | Laufzeit ${res.ms.toFixed(1)}ms${reducedHint} | Top5: ${topTxt}${hintText ? ` | Hinweis: ${hintText}` : ''}`);
   updateKpis(res.comboCount);
 }
 
@@ -2094,6 +3296,7 @@ function optimizeAllTracks() {
     setResult('optimizerResult', tr('optimizer_all_tracks_done', { count: tracksDb.length }));
     return;
   }
+  chartNode.hidden = false;
   if (seasonBestChart) seasonBestChart.destroy();
   seasonBestChart = new Chart(chartNode, {
     type: 'bar',
@@ -2115,20 +3318,128 @@ function saveManualMap(track, setup) {
 
 function applyAutoSetupToBuilder() {
   const track = getBuilderTrackName();
-  const res = optimizeTrack(track, false);
-  if (!res.best) {
-    setResult('builderResult', tr('builder_autosetup_missing'));
-    return;
+  renderCommunityTrackInsight(track, 'communityBuilderInsight');
+  const trackData = getTrack(track);
+  const partMetaMap = loadPartMetaMap();
+
+  // Kategorie-Affinitäten gemäß F1 Clash Sheet-Logik
+  const CATEGORY_AFFINITY = {
+    engine:     ['antrieb'],
+    gearbox:    ['antrieb', 'tempo'],
+    rear_wing:  ['drs', 'tempo'],
+    front_wing: ['kurven', 'quali'],
+    suspension: ['kurven', 'antrieb'],
+    brakes:     ['kurven', 'antrieb'],
+  };
+  const RARITY_BONUS  = { Common: 0, Rare: 8, Epic: 18 };
+  const RARITY_COLOR  = { Common: '#9ca3af', Rare: '#60a5fa', Epic: '#c084fc' };
+  const CAT_LABEL     = {
+    engine: 'Motor', front_wing: 'Frontflügel', rear_wing: 'Heckflügel',
+    gearbox: 'Getriebe', suspension: 'Fahrwerk', brakes: 'Bremsen',
+  };
+
+  const setup   = {};
+  const details = [];
+
+  for (const cat of PART_CATEGORIES) {
+    const pool = ownedByCategory(cat);
+    if (!pool.length) { details.push({ cat, picked: null }); continue; }
+
+    let best = null;
+    let bestScore = -Infinity;
+    for (const part of pool) {
+      const eff = getPartEffectiveStats(part, partMetaMap);
+      const affinityKeys = CATEGORY_AFFINITY[cat] || statKeys;
+      const affScore = affinityKeys.reduce((s, k) => s + (trackData[k] / 100) * eff[k], 0);
+      const communityPartBonus = getCommunityPartBonus(track, [part]) * 8;
+      const total = affScore + (RARITY_BONUS[part.rarity] || 0) + communityPartBonus;
+      if (total > bestScore) { bestScore = total; best = part; }
+    }
+
+    if (best) {
+      setup[best.category] = best.name;
+      const eff = getPartEffectiveStats(best, partMetaMap);
+      details.push({ cat, picked: best, eff, mainStat: (CATEGORY_AFFINITY[cat] || ['tempo'])[0] });
+    } else {
+      details.push({ cat, picked: null });
+    }
   }
-  const setup = {};
-  res.best.parts.forEach((p) => { setup[p.category] = p.name; });
+
   manualSetup = setup;
   renderManualSlots();
-  setResult('builderResult', tr('builder_autosetup_set', { track, score: res.best.score.toFixed(2) }));
+
+  // Gesamtscore berechnen
+  const allParts = PART_CATEGORIES
+    .map((cat) => partCatalog.find((p) => p.category === cat && p.name === setup[cat]))
+    .filter(Boolean);
+  const totalScore = allParts.length === PART_CATEGORIES.length
+    ? scoreStats(
+        allParts.reduce((acc, p) => {
+          const e = getPartEffectiveStats(p, partMetaMap);
+          statKeys.forEach((k) => { acc[k] = (acc[k] || 0) + e[k]; });
+          return acc;
+        }, {}),
+        trackWeights[track]
+      ) + synergyBonus(allParts) + getCommunityPartBonus(track, allParts)
+    : 0;
+
+  // Track-Fokus (Top-2 Gewichtungen) ermitteln
+  const focusLabel = [...statKeys]
+    .sort((a, b) => (trackData[b] || 0) - (trackData[a] || 0))
+    .slice(0, 2)
+    .map((k) => statLabels[k])
+    .join(' + ');
+
+  // HTML-Karten aufbauen
+  let html = `<div class="autosetup-result">
+  <div class="autosetup-header">
+    <span class="autosetup-track">${escapeHtml(track)}</span>
+    <span class="autosetup-focus">${escapeHtml(focusLabel)}</span>
+    ${totalScore > 0 ? `<span class="autosetup-score">Score <strong>${totalScore.toFixed(1)}</strong></span>` : ''}
+  </div>
+  <div class="autosetup-grid">`;
+
+  for (const d of details) {
+    const label = CAT_LABEL[d.cat] || d.cat;
+    if (!d.picked) {
+      html += `<div class="autosetup-card autosetup-card--missing">
+        <div class="autosetup-cat">${escapeHtml(label)}</div>
+        <div class="autosetup-part-name">Kein Teil</div>
+      </div>`;
+    } else {
+      const col     = RARITY_COLOR[d.picked.rarity] || '#aaa';
+      const mainVal = d.eff ? Math.round(d.eff[d.mainStat]) : 0;
+      const mainLbl = statLabels[d.mainStat] || d.mainStat;
+      html += `<div class="autosetup-card">
+        <div class="autosetup-cat">${escapeHtml(label)}</div>
+        <div class="autosetup-part-name">${escapeHtml(d.picked.name)}</div>
+        <div class="autosetup-rarity" style="color:${col}">${escapeHtml(d.picked.rarity)}</div>
+        <div class="autosetup-stat">${escapeHtml(mainLbl)}: ${mainVal}</div>
+      </div>`;
+    }
+  }
+
+  html += `</div>`;
+  const missing = details.filter((d) => !d.picked);
+  if (missing.length) {
+    html += `<p class="autosetup-warn">⚠ ${missing.length} Slot(s) fehlen: ${missing.map((d) => CAT_LABEL[d.cat]).join(', ')}</p>`;
+  }
+  const trackHint = getCommunityTrackHint(track);
+  if (trackHint.topDrivers.length || trackHint.notes) {
+    html += `<p class="autosetup-warn">AllClash: ${escapeHtml([
+      trackHint.topDrivers.length ? `Empfohlene Fahrer ${trackHint.topDrivers.join(', ')}` : '',
+      trackHint.notes || ''
+    ].filter(Boolean).join(' | '))}</p>`;
+  }
+  html += `</div>`;
+
+  const resultEl = byId('optimizerResult', 'builderResult');
+  if (resultEl) resultEl.innerHTML = html;
 }
 
 function scoreManualSetup() {
   const track = getBuilderTrackName();
+  renderCommunityTrackInsight(track, 'communityBuilderInsight');
   const partMetaMap = loadPartMetaMap();
   const parts = PART_CATEGORIES.map((cat) => partCatalog.find((p) => p.category === cat && p.name === manualSetup[cat])).filter(Boolean);
   if (parts.length !== PART_CATEGORIES.length) {
@@ -2145,7 +3456,12 @@ function scoreManualSetup() {
     return acc;
   }, { tempo: 0, kurven: 0, antrieb: 0, quali: 0, drs: 0 });
   const score = scoreStats(effStats, trackWeights[track]) + synergyBonus(parts) + getCommunityPartBonus(track, parts);
-  setResult('builderResult', tr('builder_manual_score', { track, score: score.toFixed(2) }));
+  const trackHint = getCommunityTrackHint(track);
+  const hintText = [
+    trackHint.topDrivers.length ? `Empf. Fahrer: ${trackHint.topDrivers.join(', ')}` : '',
+    trackHint.notes || ''
+  ].filter(Boolean).join(' | ');
+  setResult('builderResult', `${tr('builder_manual_score', { track, score: score.toFixed(2) })}${hintText ? ` | ${hintText}` : ''}`);
 }
 
 function saveSeasonSetup() {
@@ -2278,6 +3594,7 @@ function runStrategyCalculation() {
   const modeSelect = byId('strategyMode');
   if (!strategyTrackSelect || !modeSelect) return null;
   const track = getTrack(strategyTrackSelect.value);
+  renderCommunityTrackInsight(track.name);
   const mode = modeSelect.value;
   const plans = strategyPlans(track);
   const context = getSimulationContext(track.name);
@@ -2398,15 +3715,26 @@ function analyzeDriverPair() {
   const a = driversDb.find((d) => d.name === aSelect.value);
   const b = driversDb.find((d) => d.name === bSelect.value);
   if (!a || !b) return;
+  try {
+    localStorage.setItem(DRIVER_PAIR_SELECTION_KEY, JSON.stringify({
+      a: a.name,
+      b: b.name,
+      source: 'manual',
+      updatedAt: new Date().toISOString()
+    }));
+  } catch {}
   const synergy = (a.tyre + b.tyre + a.consistency + b.consistency) / 4;
-  const score = (driverTrackScore(a, track) + driverTrackScore(b, track)) / 2 + synergy * 0.2;
+  const aScore = driverEffectiveScoreOnTrack(a, track);
+  const bScore = driverEffectiveScoreOnTrack(b, track);
+  const score = (aScore.communityAdjusted + bScore.communityAdjusted) / 2 + synergy * 0.2;
+  const trackHint = getCommunityTrackHint(track);
   setResult('driverResult', tr('driver_pair_summary', {
     track,
     a: a.name,
     b: b.name,
     score: score.toFixed(2),
     rating: teamClass(score)
-  }));
+  }) + (trackHint.topDrivers.length ? ` | AllClash: ${trackHint.topDrivers.join(', ')}` : ''));
 }
 
 function findBestDriverPair() {
@@ -2419,16 +3747,29 @@ function findBestDriverPair() {
       const a = driversDb[i];
       const b = driversDb[j];
       const synergy = (a.tyre + b.tyre + a.consistency + b.consistency) / 4;
-      const score = (driverTrackScore(a, track) + driverTrackScore(b, track)) / 2 + synergy * 0.2;
+      const aScore = driverEffectiveScoreOnTrack(a, track);
+      const bScore = driverEffectiveScoreOnTrack(b, track);
+      const score = (aScore.communityAdjusted + bScore.communityAdjusted) / 2 + synergy * 0.2;
       if (!best || score > best.score) best = { a, b, score };
     }
   }
-  if (best) setResult('driverResult', tr('driver_best_pair_summary', {
-    track,
-    a: best.a.name,
-    b: best.b.name,
-    score: best.score.toFixed(2)
-  }));
+  if (best) {
+    try {
+      localStorage.setItem(DRIVER_PAIR_SELECTION_KEY, JSON.stringify({
+        a: best.a.name,
+        b: best.b.name,
+        source: 'best',
+        updatedAt: new Date().toISOString()
+      }));
+    } catch {}
+    const trackHint = getCommunityTrackHint(track);
+    setResult('driverResult', tr('driver_best_pair_summary', {
+      track,
+      a: best.a.name,
+      b: best.b.name,
+      score: best.score.toFixed(2)
+    }) + (trackHint.topDrivers.length ? ` | AllClash: ${trackHint.topDrivers.join(', ')}` : ''));
+  }
 }
 
 function evaluateCurrentSetup() {
@@ -3222,13 +4563,15 @@ function applyOcrSnapshot(snapshot) {
   if (addedDrivers > 0 || updatedDriverStages > 0) saveDriverStageMap(stageMap);
 
   const firstTrack = safeSnapshot.tracks[0] || '';
-  if (firstTrack) {
+  const persistedTrack = String(localStorage.getItem(TRACK_SELECTION_KEY) || '').trim();
+  if (firstTrack && !persistedTrack) {
     const mainTrackSelect = byId('trackSelect');
     const strategyTrackSelect = byId('strategyTrackSelect');
     const builderTrackSelect = byId('builderTrackSelect');
     if (mainTrackSelect) mainTrackSelect.value = firstTrack;
     if (strategyTrackSelect) strategyTrackSelect.value = firstTrack;
     if (builderTrackSelect) builderTrackSelect.value = firstTrack;
+    try { localStorage.setItem(TRACK_SELECTION_KEY, firstTrack); } catch {}
   }
 
   if (hasUi('partsInventory', 'garageInventory')) buildInventory();
@@ -3266,7 +4609,9 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
 
   const isNative = Boolean(window.Capacitor?.isNativePlatform?.());
-  if (isNative) {
+  const hostname = String(window.location.hostname || '').toLowerCase();
+  const isLocalDev = hostname === 'localhost' || hostname === '127.0.0.1';
+  if (isNative || isLocalDev) {
     navigator.serviceWorker.getRegistrations()
       .then((regs) => Promise.all(regs.map((reg) => reg.unregister())))
       .catch(() => {});
@@ -3285,6 +4630,8 @@ function registerServiceWorker() {
 function rerenderLocalizedRuntime() {
   renderSyncConsentState();
   renderSyncModeLabel();
+  renderCommunityTrackInsight(byId('trackSelect')?.value || byId('strategyTrackSelect')?.value || '');
+  renderCommunityTrackInsight(byId('builderTrackSelect')?.value || byId('trackSelect')?.value || '', 'communityBuilderInsight');
   if (hasUi('trackRadarChart') && shouldAutoRunHeavyTasks()) renderTrackRadar();
   if (hasUi('optimizerResult') && isOptimizerPageContext() && shouldAutoRunHeavyTasks()) optimizeSelectedTrack();
   if (hasUi('strategyChart', 'raceChart', 'positionChart', 'driverImpactChart') && shouldAutoRunHeavyTasks()) {
@@ -3299,6 +4646,8 @@ function rerenderLocalizedRuntime() {
 }
 
 async function init() {
+  applyGuestModeUi();
+
   // Global Chart.js dark-theme defaults — override grey #666 default
   if (typeof Chart !== 'undefined') {
     const mobileChart = Math.max(window.innerWidth || 0, document.documentElement?.clientWidth || 0, 360) <= 760;
@@ -3314,19 +4663,46 @@ async function init() {
   }
 
   document.addEventListener('app:language-changed', rerenderLocalizedRuntime);
+  setupNeonButtonPalette();
   applyActiveSubnavByPath();
   registerServiceWorker();
   await detectSeason();
+  ensureAllClashReferenceKnowledgeUpToDate();
 
   const hasOptimizerUi = hasUi('trackSelect', 'strategyTrackSelect', 'trackRadarChart', 'strategyChart');
   const isOptimizerPage = isOptimizerPageContext();
-  const hasGarageUi = hasUi('partsInventory', 'driversStandardList', 'garageInventory', 'ocrFile');
+  const hasGarageUi = hasUi('partsInventory', 'garageInventory');
+  const hasPaddockUi = hasUi('driversStandardList', 'ocrFile');
   const hasDashboardUi = hasUi('partsTableBody', 'partsCount', 'comboCount');
   const hasSyncUi = hasUi('f1SyncMethod', 'f1SyncResult', 'communityKnowledgeInput');
   const hasDriverCompareUi = hasUi('driverASelect', 'driverBSelect');
   const hasCalcUi = hasUi('setupAInputs', 'setupBInputs', 'teamScoreInputs', 'calcInputs');
 
-  if (hasOptimizerUi || hasCalcUi) fillTrackSelects();
+  if ((hasOptimizerUi || hasCalcUi) && !window.__f1TrackRestoreBound) {
+    window.__f1TrackRestoreBound = true;
+    const reapply = () => {
+      deferUiTask(() => {
+        applyStoredTrackSelection();
+        updateSelectedTrackBadge();
+      }, 0);
+    };
+    window.addEventListener('pageshow', reapply);
+    window.addEventListener('focus', reapply);
+  }
+
+  if (hasOptimizerUi || hasCalcUi) {
+    fillTrackSelects();
+    applyStoredTrackSelection();
+    initTrackSelectionLauncher();
+    initCustomTrackSelect();
+
+    if (hasOptimizerUi || hasCalcUi) {
+      deferUiTask(() => {
+        applyStoredTrackSelection();
+        updateSelectedTrackBadge();
+      }, 0);
+    }
+  }
   if (hasDriverCompareUi) fillDriverSelects();
   if (byId('setupAInputs')) renderStatInputs('setupAInputs', 'a');
   if (byId('setupBInputs')) renderStatInputs('setupBInputs', 'b');
@@ -3336,9 +4712,15 @@ async function init() {
   if (hasGarageUi) {
     deferUiTask(() => {
       buildInventory();
-      buildDriverInventory();
       setupDropSlots();
       renderManualSlots();
+      updateKpis();
+    }, 40);
+  }
+
+  if (hasPaddockUi) {
+    deferUiTask(() => {
+      buildDriverInventory();
       updateKpis();
     }, 40);
   } else if (hasDashboardUi) {
@@ -3376,8 +4758,11 @@ async function init() {
 
   addListener('trackAnalysisButton', 'click', renderTrackRadar);
   addListener('allChartsButton', 'click', renderAllTrackCharts);
-  addListener('trackSelect', 'change', () => { renderTrackRadar(); optimizeSelectedTrack(); });
-  addListener('builderTrackSelect', 'change', () => { setResult('builderResult', ''); });
+  addListener('trackSelect', 'change', () => { updateSelectedTrackBadge(); renderTrackRadar(); renderCommunityTrackInsight(byId('trackSelect')?.value || ''); optimizeSelectedTrack(); });
+  addListener('builderTrackSelect', 'change', () => {
+    setResult('builderResult', '');
+    renderCommunityTrackInsight(byId('builderTrackSelect')?.value || '', 'communityBuilderInsight');
+  });
   addListener('strategyTrackSelect', 'change', runStrategyCalculation);
   addListener('strategyMode', 'change', runStrategyCalculation);
 
@@ -3464,6 +4849,8 @@ async function init() {
     ? raceChartChoice.value
     : (initialTab?.getAttribute('data-choice-tab') || 'race');
   applyRaceChartChoice(initialChoice);
+  renderCommunityTrackInsight(byId('trackSelect')?.value || byId('strategyTrackSelect')?.value || '');
+  renderCommunityTrackInsight(byId('builderTrackSelect')?.value || byId('trackSelect')?.value || '', 'communityBuilderInsight');
 
   if (isOptimizerPage && shouldAutoRunHeavyTasks()) {
     deferUiTask(() => optimizeSelectedTrack(), 120);

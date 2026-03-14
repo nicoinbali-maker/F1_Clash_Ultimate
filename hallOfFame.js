@@ -2,6 +2,7 @@ const HALL_SEASON = 2026;
 const REGISTRATION_KEY = 'f1clashRegistration';
 const PART_SNAPSHOT_KEY = 'partCatalogSnapshot';
 const DRIVER_SNAPSHOT_KEY = 'driverCatalogSnapshot';
+const HALL_IMPORTED_HISTORY_KEY = 'hallImportedSeasonHistory';
 
 const HALL_TIMELINE = [
   { year: 2025, titleKey: 'hall_timeline_2025_title', detailKey: 'hall_timeline_2025_detail' },
@@ -110,6 +111,10 @@ function loadJson(key) {
   }
 }
 
+function saveJson(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
 function loadRegistrationProfile() {
   const raw = localStorage.getItem(REGISTRATION_KEY);
   if (!raw) return null;
@@ -156,7 +161,180 @@ function gatherSeasonSetups() {
       // noop
     }
   }
-  return entries.sort((a, b) => (b.season || 0) - (a.season || 0));
+  const imported = loadJson(HALL_IMPORTED_HISTORY_KEY);
+  if (Array.isArray(imported)) {
+    imported.forEach((entry) => {
+      const season = Number(entry?.season) || null;
+      const trackCount = Math.max(0, Number(entry?.trackCount) || 0);
+      if (!season) return;
+      entries.push({ season, trackCount });
+    });
+  }
+  const merged = new Map();
+  entries.forEach((entry) => {
+    if (!entry?.season) return;
+    const current = merged.get(entry.season);
+    if (!current || entry.trackCount > current.trackCount) merged.set(entry.season, entry);
+  });
+  return Array.from(merged.values()).sort((a, b) => (b.season || 0) - (a.season || 0));
+}
+
+function normalizeImportedDrivers(drivers) {
+  if (!Array.isArray(drivers)) return [];
+  return drivers
+    .filter((driver) => driver && typeof driver === 'object' && !Array.isArray(driver) && String(driver.name || '').trim())
+    .map((driver) => ({
+      name: String(driver.name || '').trim(),
+      rarity: String(driver.rarity || 'Unknown').trim(),
+      pace: Number(driver.pace || 0),
+      qualifying: Number(driver.qualifying || 0),
+      tyre: Number(driver.tyre || 0),
+      overtaking: Number(driver.overtaking || 0),
+      consistency: Number(driver.consistency || 0)
+    }));
+}
+
+function normalizeImportedParts(parts) {
+  if (!Array.isArray(parts)) return [];
+  return parts
+    .filter((part) => part && typeof part === 'object' && !Array.isArray(part) && String(part.name || '').trim() && String(part.category || '').trim())
+    .map((part) => {
+      const stats = part.stats && typeof part.stats === 'object' ? part.stats : part;
+      return {
+        name: String(part.name || '').trim(),
+        category: String(part.category || '').trim(),
+        rarity: String(part.rarity || 'Unknown').trim(),
+        tempo: Number(stats.tempo || 0),
+        kurven: Number(stats.kurven || 0),
+        antrieb: Number(stats.antrieb || 0),
+        quali: Number(stats.quali || 0),
+        drs: Number(stats.drs || 0)
+      };
+    });
+}
+
+function normalizeImportedSeasonHistory(entries) {
+  if (!Array.isArray(entries)) return [];
+  return entries
+    .map((entry) => ({
+      season: Number(entry?.season) || null,
+      trackCount: Math.max(0, Number(entry?.trackCount) || 0)
+    }))
+    .filter((entry) => !!entry.season);
+}
+
+function mergeDriverSnapshots(currentDrivers, importedDrivers) {
+  const map = new Map();
+  [...currentDrivers, ...importedDrivers].forEach((driver) => {
+    const name = String(driver?.name || '').trim();
+    if (!name) return;
+    const current = map.get(name);
+    if (!current) {
+      map.set(name, driver);
+      return;
+    }
+    const currentScore = Number(current.pace || 0) + Number(current.qualifying || 0) + Number(current.consistency || 0);
+    const nextScore = Number(driver.pace || 0) + Number(driver.qualifying || 0) + Number(driver.consistency || 0);
+    map.set(name, nextScore >= currentScore ? driver : current);
+  });
+  return Array.from(map.values());
+}
+
+function mergePartSnapshots(currentParts, importedParts) {
+  const map = new Map();
+  [...currentParts, ...importedParts].forEach((part) => {
+    const key = `${String(part?.category || '').trim()}::${String(part?.name || '').trim()}`;
+    if (!key || key === '::') return;
+    const current = map.get(key);
+    if (!current) {
+      map.set(key, part);
+      return;
+    }
+    const currentScore = Number(current.tempo || 0) + Number(current.kurven || 0) + Number(current.antrieb || 0) + Number(current.quali || 0) + Number(current.drs || 0);
+    const nextScore = Number(part.tempo || 0) + Number(part.kurven || 0) + Number(part.antrieb || 0) + Number(part.quali || 0) + Number(part.drs || 0);
+    map.set(key, nextScore >= currentScore ? part : current);
+  });
+  return Array.from(map.values());
+}
+
+function mergeSeasonHistory(currentHistory, importedHistory) {
+  const map = new Map();
+  [...currentHistory, ...importedHistory].forEach((entry) => {
+    const season = Number(entry?.season) || null;
+    const trackCount = Math.max(0, Number(entry?.trackCount) || 0);
+    if (!season) return;
+    const current = map.get(season);
+    if (!current || trackCount > current.trackCount) map.set(season, { season, trackCount });
+  });
+  return Array.from(map.values()).sort((a, b) => (b.season || 0) - (a.season || 0));
+}
+
+function importHallArchive(payload, mergeMode = true) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new Error(tr('hall_import_invalid'));
+  }
+
+  const player = payload.player && typeof payload.player === 'object' && !Array.isArray(payload.player)
+    ? payload.player
+    : null;
+  const drivers = normalizeImportedDrivers(payload.drivers);
+  const items = payload.items && typeof payload.items === 'object' && !Array.isArray(payload.items)
+    ? payload.items
+    : {};
+  const importedParts = normalizeImportedParts(items.parts);
+  const ownedPartNames = Array.isArray(items.ownedPartNames)
+    ? items.ownedPartNames.filter((name) => typeof name === 'string')
+    : importedParts.filter((part) => !!part.owned).map((part) => part.name);
+  const seasonHistory = normalizeImportedSeasonHistory(payload.seasonHistory);
+
+  const currentProfile = loadRegistrationProfile();
+  const currentDrivers = normalizeImportedDrivers(loadJson(DRIVER_SNAPSHOT_KEY) || []);
+  const currentOwnedParts = loadOwnedParts();
+  const currentParts = normalizeImportedParts(loadJson(PART_SNAPSHOT_KEY) || []);
+  const currentSeasonHistory = normalizeImportedSeasonHistory(loadJson(HALL_IMPORTED_HISTORY_KEY) || []);
+
+  const nextProfile = mergeMode ? (currentProfile || player) : player;
+  const nextDrivers = mergeMode ? mergeDriverSnapshots(currentDrivers, drivers) : drivers;
+  const nextOwnedParts = mergeMode
+    ? Array.from(new Set([...currentOwnedParts, ...ownedPartNames]))
+    : ownedPartNames;
+  const nextParts = mergeMode ? mergePartSnapshots(currentParts, importedParts) : importedParts;
+  const nextSeasonHistory = mergeMode ? mergeSeasonHistory(currentSeasonHistory, seasonHistory) : seasonHistory;
+
+  if (nextProfile) saveJson(REGISTRATION_KEY, nextProfile);
+  if (nextDrivers.length) saveJson(DRIVER_SNAPSHOT_KEY, nextDrivers);
+  if (nextOwnedParts.length) saveJson('ownedParts', nextOwnedParts);
+  if (nextParts.length) saveJson(PART_SNAPSHOT_KEY, nextParts);
+  if (nextSeasonHistory.length) saveJson(HALL_IMPORTED_HISTORY_KEY, nextSeasonHistory);
+
+  return {
+    drivers: nextDrivers.length,
+    parts: nextParts.length || nextOwnedParts.length,
+    seasons: nextSeasonHistory.length,
+    playerImported: !!nextProfile,
+    mergeMode
+  };
+}
+
+async function handleHallImportFile(file, mergeMode) {
+  if (!file) {
+    setResult('hallExportResult', tr('hall_import_missing'), 'error');
+    return;
+  }
+  try {
+    const raw = await file.text();
+    const payload = JSON.parse(raw);
+    const summary = importHallArchive(payload, mergeMode);
+    renderHallData();
+    setResult('hallExportResult', tr('hall_imported', {
+      drivers: summary.drivers,
+      parts: summary.parts,
+      seasons: summary.seasons,
+      mode: summary.mergeMode ? tr('hall_import_mode_merge') : tr('hall_import_mode_replace')
+    }));
+  } catch (error) {
+    setResult('hallExportResult', tr('hall_import_failed', { message: error.message }), 'error');
+  }
 }
 
 function categorizeParts(ownedParts, snapshot) {
@@ -341,8 +519,22 @@ function toLocalDateStamp(date = new Date()) {
 
 function exportHallArchive(context) {
   const achievements = buildAchievementStatus(context);
+  const exportedParts = context.partSnapshot.map((part) => ({
+    name: part.name,
+    category: part.category,
+    rarity: part.rarity || 'Unknown',
+    owned: context.ownedParts.includes(part.name),
+    stats: {
+      tempo: part.tempo ?? 0,
+      kurven: part.kurven ?? 0,
+      antrieb: part.antrieb ?? 0,
+      quali: part.quali ?? 0,
+      drs: part.drs ?? 0
+    }
+  }));
+
   const payload = {
-    version: 1,
+    version: 2,
     app: tr('hall_export_app_name'),
     season: HALL_SEASON,
     exportedAt: new Date().toISOString(),
@@ -354,7 +546,9 @@ function exportHallArchive(context) {
         category,
         owned: data.owned,
         total: data.total
-      }))
+      })),
+      ownedPartNames: context.ownedParts.slice(),
+      parts: exportedParts
     },
     drivers: context.driverSnapshot,
     seasonHistory: context.seasonSetups
@@ -382,11 +576,22 @@ function initHall() {
   applyActiveSubnavByPath();
   const refresh = document.getElementById('refreshHallButton');
   const exportButton = document.getElementById('exportHallButton');
+  const importButton = document.getElementById('importHallButton');
+  const importInput = document.getElementById('hallImportInput');
+  const importMerge = document.getElementById('hallImportMerge');
   if (refresh) {
     refresh.addEventListener('click', renderHallData);
   }
   if (exportButton) {
     exportButton.addEventListener('click', () => exportHallArchive(renderHallData()));
+  }
+  if (importButton && importInput) {
+    importButton.addEventListener('click', () => importInput.click());
+    importInput.addEventListener('change', async (event) => {
+      const [file] = Array.from(event.target.files || []);
+      await handleHallImportFile(file, !!importMerge?.checked);
+      event.target.value = '';
+    });
   }
   renderHallData();
 }

@@ -1,10 +1,13 @@
-const CACHE_NAME = 'f1-clash-ultimate-v34';
+const CACHE_NAME = 'f1-clash-ultimate-v37';
 const ASSETS = [
   '/',
   '/i18n.js',
   '/index.html',
   '/garage.html',
+  '/fahrerlager.html',
   '/optimizer.html',
+  '/optimizer-lite.js',
+  '/track-selection.html',
   '/sync.html',
   '/team.html',
   '/leaderboard.html',

@@ -1,0 +1,18 @@
+
+FILE: Screenshot_2026-03-13-22-19-54-232_com.google.android.youtube.jpg
+  right_mid: Speed14 | Cornering3 | PowerUnit 12 | Qualifying 29
+  right_lower: Speed14 | Cornering3o | PowerUnit12 | Qualifying29 | AvgPitStopTime0.62s
+  center_lower: MACH | ENGINE | Speed 14 | Cornering 30 | PowerUnit12 | Qualifying 29 | AvgPitStopTime0.62s
+  bottom_band: EN | Speed 14 | Cornering | 930 | PowerUnit | 12 | Qualifying29 | AvgPitStopTime0.62s | TORE
+
+FILE: Screenshot_2026-03-13-22-22-25-808_com.google.android.youtube.jpg
+  right_mid: REAR.WING | RARE | 54 | GEARBOX | EPIC | RONOME | X-HALE | ENGINE | VMACHII | EPIC | MLDCORE
+  right_lower: ENGINE | MACHII | EPIC | S7 | MLDCORE
+  center_lower: ENGIN | MA | SUSPENSION | EPIC | S7 | GYRO | RARE | S9
+  bottom_band: GYRU | RARE | MLDCORE | Speed | 25 | Speed | 16 | Cornering | 60 | Cornering | 49 | PowerUnit | 21 | PowerUnit | 19
+
+FILE: Screenshot_2026-03-13-22-22-42-958_com.google.android.youtube.jpg
+  right_mid: REAR.WING | GEARBOX | RARE | EPIC | RONOME | X-HALE | ENGINE | MACHI | EPIC | S7 | WILDCORE
+  right_lower: ENGINE | MACHI | EPIC | S7 | WILDCORE | Speed | 16
+  center_lower: MEIRONOME | ing21 | ENGINE | MACHI | SUSPENSION | EPIC | GYRO | S7 | RARE | S9
+  bottom_band: RARE | WILDCORE | Speed | 25 | Speed | 16 | FRONTWING | Cornering | 60 | Cornering | 49 | FLEX XL | PowerUnit | 21 | PowerUnit | Qualifying | Qualifying | 18 | Speed20PowerUnit19Qualifying21 | EPIC

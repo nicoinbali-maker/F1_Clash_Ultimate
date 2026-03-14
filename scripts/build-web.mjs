@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync, rmSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const root = resolve(process.cwd());
@@ -26,13 +26,31 @@ const files = [
 if (existsSync(dist)) rmSync(dist, { recursive: true, force: true });
 mkdirSync(dist, { recursive: true });
 
-for (const file of files) {
-  cpSync(resolve(root, file), resolve(dist, file), { recursive: true });
+function copyAsRegularFile(source, target) {
+  const data = readFileSync(source);
+  mkdirSync(resolve(target, '..'), { recursive: true });
+  writeFileSync(target, data);
 }
 
-cpSync(resolve(root, 'assets'), resolve(dist, 'assets'), { recursive: true });
+function copyTreeAsRegular(source, target) {
+  const stat = lstatSync(source);
+  if (stat.isDirectory()) {
+    mkdirSync(target, { recursive: true });
+    for (const name of readdirSync(source)) {
+      copyTreeAsRegular(resolve(source, name), resolve(target, name));
+    }
+    return;
+  }
+  copyAsRegularFile(source, target);
+}
+
+for (const file of files) {
+  copyTreeAsRegular(resolve(root, file), resolve(dist, file));
+}
+
+copyTreeAsRegular(resolve(root, 'assets'), resolve(dist, 'assets'));
 
 mkdirSync(resolve(dist, 'vendor'), { recursive: true });
-cpSync(resolve(root, 'node_modules/chart.js/dist/chart.umd.min.js'), resolve(dist, 'vendor/chart.umd.min.js'));
-cpSync(resolve(root, 'node_modules/tesseract.js/dist/tesseract.min.js'), resolve(dist, 'vendor/tesseract.min.js'));
-cpSync(resolve(root, 'node_modules/tesseract.js/dist/worker.min.js'), resolve(dist, 'vendor/worker.min.js'));
+copyAsRegularFile(resolve(root, 'node_modules/chart.js/dist/chart.umd.min.js'), resolve(dist, 'vendor/chart.umd.min.js'));
+copyAsRegularFile(resolve(root, 'node_modules/tesseract.js/dist/tesseract.min.js'), resolve(dist, 'vendor/tesseract.min.js'));
+copyAsRegularFile(resolve(root, 'node_modules/tesseract.js/dist/worker.min.js'), resolve(dist, 'vendor/worker.min.js'));

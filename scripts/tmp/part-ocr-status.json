@@ -1,0 +1,16 @@
+{
+  "phase": "done",
+  "source_dir": "C:\\Users\\prisc\\OneDrive\\Desktop\\Neuer Ordner (2)\\Neuer Ordner\\Autoparts",
+  "total_source_files": 63,
+  "pending_source_files": 0,
+  "requested_start": 0,
+  "requested_limit": 3,
+  "batch_size": 0,
+  "force_rescan": false,
+  "current_file": null,
+  "processed_in_batch": 0,
+  "matched_parts": 45,
+  "available_parts": 48,
+  "missing_parts": 2,
+  "error_files": 0
+}

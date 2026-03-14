@@ -1,0 +1,170 @@
+[
+  {
+    "driver": "albon",
+    "source": "",
+    "target": "albon.jpg",
+    "status": "no-source-kept-existing"
+  },
+  {
+    "driver": "alonso",
+    "source": "Alonso.jpg",
+    "target": "alonso.jpg",
+    "status": "matched-and-copied"
+  },
+  {
+    "driver": "bottas",
+    "source": "",
+    "target": "bottas.jpg",
+    "status": "no-source-kept-existing"
+  },
+  {
+    "driver": "gasly",
+    "source": "Gasley.jpg",
+    "target": "gasly.jpg",
+    "status": "matched-and-copied"
+  },
+  {
+    "driver": "hamilton",
+    "source": "Hammilton.jpg",
+    "target": "hamilton.jpg",
+    "status": "matched-and-copied"
+  },
+  {
+    "driver": "latifi",
+    "source": "",
+    "target": "latifi.jpg",
+    "status": "no-source-kept-existing"
+  },
+  {
+    "driver": "leclerc",
+    "source": "Leclerc.jpg",
+    "target": "leclerc.jpg",
+    "status": "matched-and-copied"
+  },
+  {
+    "driver": "magnussen",
+    "source": "",
+    "target": "magnussen.jpg",
+    "status": "no-source-kept-existing"
+  },
+  {
+    "driver": "norris",
+    "source": "Norris.jpg",
+    "target": "norris.jpg",
+    "status": "matched-and-copied"
+  },
+  {
+    "driver": "ocon",
+    "source": "Occon.jpg",
+    "target": "ocon.jpg",
+    "status": "matched-and-copied"
+  },
+  {
+    "driver": "perez",
+    "source": "",
+    "target": "perez.jpg",
+    "status": "no-source-kept-existing"
+  },
+  {
+    "driver": "ricciardo",
+    "source": "",
+    "target": "ricciardo.jpg",
+    "status": "no-source-kept-existing"
+  },
+  {
+    "driver": "russell",
+    "source": "Russel.jpg",
+    "target": "russell.jpg",
+    "status": "matched-and-copied"
+  },
+  {
+    "driver": "sainz",
+    "source": "Sainz.jpg",
+    "target": "sainz.jpg",
+    "status": "matched-and-copied"
+  },
+  {
+    "driver": "schumacher",
+    "source": "",
+    "target": "schumacher.jpg",
+    "status": "no-source-kept-existing"
+  },
+  {
+    "driver": "stroll",
+    "source": "Sroll.jpg",
+    "target": "stroll.jpg",
+    "status": "matched-and-copied"
+  },
+  {
+    "driver": "tsunoda",
+    "source": "Tzunoda.jpg",
+    "target": "tsunoda.jpg",
+    "status": "matched-and-copied"
+  },
+  {
+    "driver": "verstappen",
+    "source": "Verstappen.JPG",
+    "target": "verstappen.jpg",
+    "status": "matched-and-copied"
+  },
+  {
+    "driver": "vettel",
+    "source": "",
+    "target": "vettel.jpg",
+    "status": "no-source-kept-existing"
+  },
+  {
+    "driver": "zhou",
+    "source": "",
+    "target": "zhou.jpg",
+    "status": "no-source-kept-existing"
+  },
+  {
+    "driver": "antonelli",
+    "source": "Antonelli.jpg",
+    "target": "antonelli.jpg",
+    "status": "matched-and-copied"
+  },
+  {
+    "driver": "bearman",
+    "source": "Bearman.jpg",
+    "target": "bearman.jpg",
+    "status": "matched-and-copied"
+  },
+  {
+    "driver": "bortoleto",
+    "source": "Bortoletto.jpg",
+    "target": "bortoleto.jpg",
+    "status": "matched-and-copied"
+  },
+  {
+    "driver": "colapinto",
+    "source": "Colapinto.jpg",
+    "target": "colapinto.jpg",
+    "status": "matched-and-copied"
+  },
+  {
+    "driver": "hadjar",
+    "source": "Hadjar.jpg",
+    "target": "hadjar.jpg",
+    "status": "matched-and-copied"
+  },
+  {
+    "driver": "hulkenberg",
+    "source": "Hülkenberg.jpg",
+    "target": "hulkenberg.jpg",
+    "status": "matched-and-copied"
+  },
+  {
+    "driver": "lawson",
+    "source": "Lawson.jpg",
+    "target": "lawson.jpg",
+    "status": "matched-and-copied"
+  },
+  {
+    "driver": "piastri",
+    "source": "Piastri_mst.jpg",
+    "target": "piastri.jpg",
+    "status": "matched-and-copied"
+  }
+]

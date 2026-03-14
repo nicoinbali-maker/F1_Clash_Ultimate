@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>F1 Clash Companion - Streckenwahl 2025</title>
+  <meta name="theme-color" content="#0a0d17" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/ferrari2000_candyred_192.png" />
+  <link rel="apple-touch-icon" href="assets/ferrari2000_candyred_192.png" />
+  <link rel="stylesheet" href="style.css?v=20260313a" />
+  <style>
+    .ts-page{background:#070b14;min-height:100vh}
+    .ts-hero{position:relative;padding:1.4rem 1.2rem 1.1rem;background:linear-gradient(135deg,#0b1628 0%,#130b20 60%,#0a111f 100%);border-bottom:1px solid rgba(121,233,255,.18);overflow:hidden}
+    .ts-hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0,transparent 48px,rgba(121,233,255,.025) 48px,rgba(121,233,255,.025) 49px);pointer-events:none}
+    .ts-hero__inner{position:relative;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+    .ts-hero__icon{width:48px;height:48px;border-radius:50%;box-shadow:0 0 18px rgba(121,233,255,.35);flex-shrink:0}
+    .ts-hero__text{flex:1;min-width:0}
+    .ts-hero__kicker{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#ffe84d;background:rgba(255,232,77,.1);border:1px solid rgba(255,232,77,.3);border-radius:999px;padding:.15rem .7rem;margin-bottom:.35rem}
+    .ts-hero__title{margin:0;font-size:1.45rem;font-weight:800;color:#f0f6ff;line-height:1.2}
+    .ts-hero__sub{margin:.25rem 0 0;font-size:.82rem;color:rgba(170,195,230,.75)}
+    .ts-hero__sub strong{color:#79e9ff}
+    .ts-hero__back{flex-shrink:0;display:inline-flex;align-items:center;gap:.35rem;padding:.45rem 1rem;border-radius:999px;background:rgba(121,233,255,.08);border:1px solid rgba(121,233,255,.3);color:#79e9ff;font-size:.82rem;font-weight:600;text-decoration:none;transition:150ms ease}
+    .ts-hero__back:hover{background:rgba(121,233,255,.15)}
+    .ts-profile{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem .9rem;padding:.65rem 1.2rem;background:rgba(9,15,27,.8);border-bottom:1px solid rgba(121,233,255,.1);font-size:.8rem}
+    .ts-profile__chip{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .65rem;border-radius:999px;background:rgba(121,233,255,.07);border:1px solid rgba(121,233,255,.18);color:#b8d0ea}
+    .ts-profile__chip strong{color:#79e9ff}
+    .ts-toolbar{display:flex;align-items:center;gap:.7rem;padding:.8rem 1.2rem .5rem;flex-wrap:wrap}
+    .ts-toolbar__title{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(150,175,210,.6);flex-shrink:0}
+    .ts-search{flex:1;min-width:160px;max-width:340px;padding:.48rem .9rem;background:rgba(9,15,27,.7);border:1px solid rgba(121,233,255,.2);border-radius:999px;color:#eaf4ff;font-size:.88rem;outline:none}
+    .ts-search::placeholder{color:rgba(150,185,220,.45)}
+    .ts-search:focus{border-color:rgba(121,233,255,.5)}
+    .ts-counter{font-size:.75rem;color:rgba(150,185,220,.55);white-space:nowrap}
+    .ts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.75rem;padding:.5rem 1.2rem 2rem}
+    .ts-card{position:relative;display:flex;flex-direction:column;background:linear-gradient(160deg,rgba(10,22,42,.95) 0%,rgba(20,10,22,.9) 100%);border:1px solid rgba(121,233,255,.18);border-radius:1.1rem;padding:.85rem .95rem .8rem;cursor:pointer;text-align:left;transition:border-color 150ms,box-shadow 150ms,transform 120ms;overflow:hidden}
+    .ts-card::after{content:'\2192 Setup-Optimizer starten';position:absolute;bottom:0;left:0;right:0;padding:.45rem .95rem;background:linear-gradient(0deg,rgba(121,233,255,.12) 0%,transparent 100%);font-size:.72rem;font-weight:700;color:#79e9ff;letter-spacing:.04em;opacity:0;transition:opacity 180ms}
+    .ts-card:hover{transform:translateY(-2px);border-color:rgba(121,233,255,.5);box-shadow:0 0 0 1px rgba(121,233,255,.18),0 10px 24px rgba(0,0,0,.4)}
+    .ts-card:hover::after{opacity:1}
+    .ts-card:focus-visible{outline:2px solid #79e9ff;outline-offset:2px}
+    .ts-card.is-active{border-color:rgba(255,232,77,.7);box-shadow:0 0 0 1px rgba(255,232,77,.2),0 0 22px rgba(255,232,77,.14)}
+    .ts-card.is-active::before{content:'\2713 AKTIV';position:absolute;top:.6rem;right:.7rem;font-size:.62rem;font-weight:800;letter-spacing:.08em;color:#ffe84d;background:rgba(255,232,77,.1);border:1px solid rgba(255,232,77,.35);border-radius:999px;padding:.08rem .5rem}
+    .ts-card__header{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem}
+    .ts-card__flag{font-size:1.35rem;line-height:1;flex-shrink:0}
+    .ts-card__round{font-size:.65rem;font-weight:800;letter-spacing:.06em;color:#081019;background:linear-gradient(135deg,#79e9ff,#ffe84d);border-radius:999px;padding:.12rem .5rem;flex-shrink:0}
+    .ts-card__name{margin:0;font-size:1.05rem;font-weight:800;color:#f0f6ff;line-height:1.2}
+    .ts-card__circuit{margin:.12rem 0 0;font-size:.78rem;color:rgba(160,190,225,.65)}
+    .ts-card__tags{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.6rem}
+    .ts-tag{font-size:.65rem;font-weight:700;letter-spacing:.04em;padding:.1rem .5rem;border-radius:999px}
+    .ts-tag--speed{background:rgba(0,255,200,.1);border:1px solid rgba(0,255,200,.3);color:#00ffc8}
+    .ts-tag--df{background:rgba(121,233,255,.1);border:1px solid rgba(121,233,255,.3);color:#79e9ff}
+    .ts-tag--balance{background:rgba(255,180,0,.1);border:1px solid rgba(255,180,0,.3);color:#ffb400}
+    .ts-tag--tire{background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);color:#ff4d6d}
+    .ts-empty{grid-column:1/-1;padding:2.5rem 1rem;text-align:center;color:rgba(150,185,220,.4);font-size:.92rem}
+    @media(max-width:480px){
+      .ts-hero__title{font-size:1.15rem}
+      .ts-grid{grid-template-columns:1fr 1fr;gap:.55rem;padding:.4rem .8rem 2rem}
+      .ts-card__name{font-size:.92rem}
+      .ts-card__tags{gap:.22rem}
+      .ts-tag{font-size:.6rem}
+    }
+  </style>
+</head>
+<body class="neon-body ts-page">
+
+  <header class="ts-hero">
+    <div class="ts-hero__inner">
+      <img src="assets/ferrari2000_candyred_192.png" alt="F1CC" class="ts-hero__icon" />
+      <div class="ts-hero__text">
+        <span class="ts-hero__kicker">F1 Clash 2025 &bull; Grand Prix Kalender</span>
+        <h1 class="ts-hero__title">Streckenwahl</h1>
+        <p class="ts-hero__sub">W&auml;hle einen Grand Prix &rarr; <strong>Setup-Optimizer &amp; KI-Strategie</strong> werden automatisch konfiguriert</p>
+      </div>
+      <a class="ts-hero__back" id="backToOptimizerLink" href="optimizer.html">&#8592; Setup-Optimizer</a>
+    </div>
+  </header>
+
+  <div class="ts-profile" id="trackProfilePanel" aria-live="polite"></div>
+
+  <div class="ts-toolbar">
+    <span class="ts-toolbar__title">24 Rennen 2025</span>
+    <input class="ts-search" id="tsSearch" type="search" placeholder="Strecke suchen&hellip;" autocomplete="off" />
+    <span class="ts-counter" id="tsCounter"></span>
+  </div>
+
+  <div class="ts-grid" id="trackCatalogGrid"></div>
+
+  <script>
+    (function(){
+      var TSK = 'f1clashSelectedTrack', TSOK = 'f1clashTrackOptions', TSIK = 'f1clashSelectedTrackIndex';
+      var NEXT = new URLSearchParams(window.location.search).get('next') || 'optimizer.html';
+
+      var TRACKS = [
+        {round:1, name:'Bahrain',        country:'Bahrain',        circuit:'Sakhir',      flag:'\uD83C\uDDE7\uD83C\uDDED', speed:'Mittel',  focus:'Balance',  tire:'Mittel'},
+        {round:2, name:'Saudi Arabia',   country:'Saudi Arabia',   circuit:'Jeddah',      flag:'\uD83C\uDDF8\uD83C\uDDE6', speed:'Schnell', focus:'Speed',    tire:'Mittel'},
+        {round:3, name:'Australia',      country:'Australia',      circuit:'Melbourne',   flag:'\uD83C\uDDE6\uD83C\uDDFA', speed:'Mittel',  focus:'Balance',  tire:'Hoch'},
+        {round:4, name:'Japan',          country:'Japan',          circuit:'Suzuka',      flag:'\uD83C\uDDEF\uD83C\uDDF5', speed:'Schnell', focus:'Abtrieb',  tire:'Hoch'},
+        {round:5, name:'China',          country:'China',          circuit:'Shanghai',    flag:'\uD83C\uDDE8\uD83C\uDDF3', speed:'Mittel',  focus:'Balance',  tire:'Mittel'},
+        {round:6, name:'Miami',          country:'United States',  circuit:'Miami',       flag:'\uD83C\uDDFA\uD83C\uDDF8', speed:'Schnell', focus:'Speed',    tire:'Mittel'},
+        {round:7, name:'Emilia Romagna', country:'Italy',          circuit:'Imola',       flag:'\uD83C\uDDEE\uD83C\uDDF9', speed:'Mittel',  focus:'Balance',  tire:'Niedrig'},
+        {round:8, name:'Monaco',         country:'Monaco',         circuit:'Monaco',      flag:'\uD83C\uDDF2\uD83C\uDDE8', speed:'Langsam', focus:'Abtrieb',  tire:'Niedrig'},
+        {round:9, name:'Spain',          country:'Spain',          circuit:'Barcelona',   flag:'\uD83C\uDDEA\uD83C\uDDF8', speed:'Mittel',  focus:'Abtrieb',  tire:'Hoch'},
+        {round:10,name:'Canada',         country:'Canada',         circuit:'Montreal',    flag:'\uD83C\uDDE8\uD83C\uDDE6', speed:'Schnell', focus:'Speed',    tire:'Mittel'},
+        {round:11,name:'Austria',        country:'Austria',        circuit:'Spielberg',   flag:'\uD83C\uDDE6\uD83C\uDDF9', speed:'Schnell', focus:'Abtrieb',  tire:'Hoch'},
+        {round:12,name:'United Kingdom', country:'United Kingdom', circuit:'Silverstone', flag:'\uD83C\uDDEC\uD83C\uDDE7', speed:'Schnell', focus:'Speed',    tire:'Hoch'},
+        {round:13,name:'Belgium',        country:'Belgium',        circuit:'Spa',         flag:'\uD83C\uDDE7\uD83C\uDDEA', speed:'Schnell', focus:'Speed',    tire:'Hoch'},
+        {round:14,name:'Hungary',        country:'Hungary',        circuit:'Budapest',    flag:'\uD83C\uDDED\uD83C\uDDFA', speed:'Langsam', focus:'Abtrieb',  tire:'Hoch'},
+        {round:15,name:'Netherlands',    country:'Netherlands',    circuit:'Zandvoort',   flag:'\uD83C\uDDF3\uD83C\uDDF1', speed:'Schnell', focus:'Abtrieb',  tire:'Hoch'},
+        {round:16,name:'Italy',          country:'Italy',          circuit:'Monza',       flag:'\uD83C\uDDEE\uD83C\uDDF9', speed:'Schnell', focus:'Speed',    tire:'Niedrig'},
+        {round:17,name:'Azerbaijan',     country:'Azerbaijan',     circuit:'Baku',        flag:'\uD83C\uDDE6\uD83C\uDDFF', speed:'Schnell', focus:'Speed',    tire:'Niedrig'},
+        {round:18,name:'Singapore',      country:'Singapore',      circuit:'Singapore',   flag:'\uD83C\uDDF8\uD83C\uDDEC', speed:'Langsam', focus:'Abtrieb',  tire:'Mittel'},
+        {round:19,name:'United States',  country:'United States',  circuit:'Austin',      flag:'\uD83C\uDDFA\uD83C\uDDF8', speed:'Schnell', focus:'Balance',  tire:'Hoch'},
+        {round:20,name:'Mexico',         country:'Mexico',         circuit:'Mexico City', flag:'\uD83C\uDDF2\uD83C\uDDFD', speed:'Schnell', focus:'Speed',    tire:'Niedrig'},
+        {round:21,name:'Brazil',         country:'Brazil',         circuit:'Sao Paulo',   flag:'\uD83C\uDDE7\uD83C\uDDF7', speed:'Mittel',  focus:'Balance',  tire:'Hoch'},
+        {round:22,name:'Las Vegas',      country:'United States',  circuit:'Las Vegas',   flag:'\uD83C\uDDFA\uD83C\uDDF8', speed:'Schnell', focus:'Speed',    tire:'Niedrig'},
+        {round:23,name:'Qatar',          country:'Qatar',          circuit:'Lusail',      flag:'\uD83C\uDDF6\uD83C\uDDE6', speed:'Schnell', focus:'Abtrieb',  tire:'Hoch'},
+        {round:24,name:'Abu Dhabi',      country:'Abu Dhabi',      circuit:'Yas Marina',  flag:'\uD83C\uDDE6\uD83C\uDDEA', speed:'Mittel',  focus:'Balance',  tire:'Mittel'}
+      ];
+
+      var META={};
+      TRACKS.forEach(function(t){META[t.name.toLowerCase().replace(/[^a-z0-9]/g,'')]=t;});
+
+      function readProfile(){try{var r=localStorage.getItem('f1clashRegistration');return r?JSON.parse(r):null;}catch{return null;}}
+
+      function renderProfile(){
+        var p=document.getElementById('trackProfilePanel');if(!p)return;
+        var d=readProfile();
+        var name=d&&(d.firstName||d.lastName)?[d.firstName||'',d.lastName||''].join(' ').trim():'Demo Profil';
+        var id=d&&d.clashId?d.clashId:'guest';
+        var type=d&&d.playerType?d.playerType:'Unbekannt';
+        p.innerHTML='<span class="ts-profile__chip"><strong>Pilot</strong> '+name+'</span>'+
+          '<span class="ts-profile__chip"><strong>ID</strong> '+id+'</span>'+
+          '<span class="ts-profile__chip"><strong>Typ</strong> '+type+'</span>';
+      }
+
+      function nrm(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');}
+
+      var AL={r1:'bahrain',r2:'saudiarabia',r3:'australia',r4:'japan',r5:'china',r6:'miami',r7:'emiliaromagna',r8:'monaco',r9:'spain',r10:'canada',r11:'austria',r12:'unitedkingdom',r13:'belgium',r14:'hungary',r15:'netherlands',r16:'italy',r17:'azerbaijan',r18:'singapore',r19:'unitedstates',r20:'mexico',r21:'brazil',r22:'lasvegas',r23:'qatar',r24:'abudhabi',sakhir:'bahrain',jeddah:'saudiarabia',melbourne:'australia',suzuka:'japan',shanghai:'china',imola:'emiliaromagna',barcelona:'spain',montreal:'canada',spielberg:'austria',silverstone:'unitedkingdom',spa:'belgium',budapest:'hungary',zandvoort:'netherlands',monza:'italy',baku:'azerbaijan',austin:'unitedstates',mexicocity:'mexico',saopaulo:'brazil',lusail:'qatar',yasmarina:'abudhabi',uk:'unitedkingdom',usa:'unitedstates',miami:'unitedstates'};
+
+      function res(t){var c=String(t||'').trim(),v={};while(AL[c]&&!v[c]){v[c]=1;c=AL[c];}return c;}
+
+      function canonical(tn){
+        try{
+          var r=localStorage.getItem('f1clashTrackOptions');
+          var a=r?JSON.parse(r):[];
+          if(!Array.isArray(a))return tn;
+          var lst=a.map(function(x){return String(x||'').trim();}).filter(Boolean);
+          if(!lst.length)return tn;
+          var n=nrm(tn),cs=[n,res(n),res('r'+String(n).replace(/^r/i,''))].filter(Boolean);
+          return lst.find(function(v){return v===tn;})
+            || lst.find(function(v){return String(v).toLowerCase()===String(tn).toLowerCase();})
+            || lst.find(function(v){return cs.indexOf(nrm(v))>=0;})
+            || lst.find(function(v){
+              var vn=nrm(v);
+              return cs.some(function(t){return vn.indexOf(t)>=0||t.indexOf(vn)>=0;});
+            })
+            || tn;
+        }catch{return tn;}
+      }
+
+      function go(tn,idx){
+        var cv=canonical(tn);
+        try{localStorage.setItem(TSK,cv);if(Number.isInteger(idx)&&idx>=0)localStorage.setItem(TSIK,String(idx));}catch{}
+        var hq=NEXT.indexOf('?')>=0;
+        var iq=(Number.isInteger(idx)&&idx>=0)?'&trackIndex='+encodeURIComponent(String(idx)):'';
+        window.location.href=NEXT+(hq?'&':'?')+'track='+encodeURIComponent(cv)+iq;
+      }
+
+      function tcls(type,val){
+        if(type==='speed'){if(val==='Schnell')return 'ts-tag--speed';if(val==='Langsam')return 'ts-tag--df';return 'ts-tag--balance';}
+        if(type==='focus'){if(val==='Speed')return 'ts-tag--speed';if(val==='Abtrieb')return 'ts-tag--df';return 'ts-tag--balance';}
+        if(type==='tire'){if(val==='Hoch')return 'ts-tag--tire';if(val==='Niedrig')return 'ts-tag--speed';return 'ts-tag--balance';}
+        return 'ts-tag--balance';
+      }
+
+      var CARDS=[];
+
+      function build(){
+        var g=document.getElementById('trackCatalogGrid');if(!g)return;
+        var cur=localStorage.getItem(TSK)||'';var curN=nrm(cur);
+        try{var r=localStorage.getItem('f1clashTrackOptions');var ca=r?JSON.parse(r):[];var useCan=Array.isArray(ca)&&ca.length>0;}catch{var useCan=false;var ca=[];}
+        var list=useCan?ca.map(function(x){return String(x||'').trim();}).filter(Boolean):TRACKS.map(function(t){return t.name;});
+        g.innerHTML='';CARDS=[];
+        list.forEach(function(tn,i){
+          var n=nrm(tn);var m=META[n]||{};
+          var rl=m.round?'R'+m.round:'#'+(i+1);
+          var btn=document.createElement('button');
+          btn.type='button';
+          btn.dataset.search=(tn+' '+(m.circuit||'')+' '+(m.country||'')).toLowerCase();
+          btn.className='ts-card'+(n===curN?' is-active':'');
+          btn.innerHTML=
+            '<div class="ts-card__header">'+
+              '<span class="ts-card__flag" aria-hidden="true">'+(m.flag||'\uD83C\uDFC1')+'</span>'+
+              '<span class="ts-card__round">'+rl+'</span>'+
+            '</div>'+
+            '<p class="ts-card__name">'+tn+'</p>'+
+            '<p class="ts-card__circuit">'+(m.circuit||'Circuit')+(m.country?' &bull; '+m.country:'')+'</p>'+
+            '<div class="ts-card__tags">'+
+              '<span class="ts-tag '+tcls('speed',m.speed||'Mittel')+'">'+(m.speed||'Mittel')+'</span>'+
+              '<span class="ts-tag '+tcls('focus',m.focus||'Balance')+'">'+(m.focus||'Balance')+'</span>'+
+              '<span class="ts-tag '+tcls('tire',m.tire||'Mittel')+'">Reifen: '+(m.tire||'Mittel')+'</span>'+
+            '</div>';
+          btn.addEventListener('click',function(){go(tn,i);});
+          g.appendChild(btn);CARDS.push(btn);
+        });
+      }
+
+      function filter(q){
+        var query=(q||'').toLowerCase().trim();
+        var ctr=document.getElementById('tsCounter');
+        var g=document.getElementById('trackCatalogGrid');
+        var vis=0;
+        CARDS.forEach(function(b){var m=!query||b.dataset.search.indexOf(query)>=0;b.style.display=m?'':'none';if(m)vis++;});
+        if(ctr)ctr.textContent=query?vis+' Treffer':'';
+        var em=g?g.querySelector('.ts-empty'):null;
+        if(vis===0&&g){if(!em){em=document.createElement('div');em.className='ts-empty';g.appendChild(em);}em.textContent='Keine Strecke gefunden \u2013 \u201E'+q+'\u201C';}
+        else if(em)em.remove();
+      }
+
+      renderProfile();
+      build();
+      var bl=document.getElementById('backToOptimizerLink');if(bl)bl.href=NEXT;
+      var si=document.getElementById('tsSearch');
+      if(si){si.addEventListener('input',function(){filter(si.value);});si.addEventListener('search',function(){filter(si.value);});}
+    })();
+  </script>
+</body>
+</html>

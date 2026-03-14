@@ -14,9 +14,10 @@
   <script defer src="script.js"></script>
   <script defer src="advanced.js"></script>
 </head>
-<body class="neon-body main-cockpit">
+<body class="neon-body main-cockpit dashboard-page">
   <script>
     (function() {
+      const GUEST_MODE_KEY = 'f1clashGuestMode';
       let hasRegistration = false;
       try { hasRegistration = !!localStorage.getItem('f1clashRegistration'); } catch {}
       if (!hasRegistration) {
@@ -24,7 +25,11 @@
       }
       if (!hasRegistration) { try { const _fb = JSON.parse(localStorage.getItem('f1clashFirebaseAuth') || 'null'); hasRegistration = !!(_fb?.localId && _fb?.refreshToken); } catch {} }
       if (!hasRegistration) {
-        window.location.replace('registration.html?next=index.html');
+        try { localStorage.setItem(GUEST_MODE_KEY, '1'); } catch {}
+        try { sessionStorage.setItem(GUEST_MODE_KEY, '1'); } catch {}
+      } else {
+        try { localStorage.removeItem(GUEST_MODE_KEY); } catch {}
+        try { sessionStorage.removeItem(GUEST_MODE_KEY); } catch {}
       }
     })();
   </script>
@@ -64,9 +69,10 @@
     <nav class="subnav neon-card main-subnav">
       <a href="index.html" class="is-active" aria-current="page" data-i18n="nav_dashboard">Dashboard</a>
       <a href="garage.html" data-i18n="nav_garage">Garage</a>
+      <a href="fahrerlager.html" data-i18n="nav_paddock">Fahrerlager</a>
+      <a href="boosts.html">Boosts</a>
       <a href="optimizer.html" data-i18n="nav_optimizer">Optimizer</a>
       <a href="sync.html" data-i18n="nav_sync">Account-Sync</a>
-      <a href="optimizer.html" data-i18n="nav_race">Simulator</a>
       <a href="team.html" data-i18n="nav_clan">Clan</a>
       <a href="leaderboard.html" data-i18n="nav_leaderboard">Leaderboard</a>
       <a href="hall-of-fame.html" data-i18n="nav_hof">Hall of Fame</a>
@@ -95,6 +101,8 @@
         </div>
         <div class="main-hero-actions">
           <a href="index.html" class="pill ghost-link" data-i18n="nav_dashboard">Dashboard</a>
+          <a href="fahrerlager.html" class="pill ghost-link" data-i18n="nav_paddock">Fahrerlager</a>
+          <a href="boosts.html" class="pill ghost-link">Boosts</a>
           <a href="optimizer.html" class="pill ghost-link" data-i18n="nav_optimizer">Optimizer</a>
           <a href="hall-of-fame.html" class="pill ghost-link" data-i18n="nav_hof">Hall of Fame</a>
           <a href="https://github.com/nicoinbali-maker/F1_Clash_Ultimate/releases/latest/download/F1ClashCompanion-debug-f0152d7.apk"
@@ -173,9 +181,17 @@
             <img src="assets/Gemini_Generated_Image_rh7xbfrh7xbfrh7x.png" alt="Garage QR Visual" />
             <span data-i18n="nav_garage">Garage</span>
           </a>
+          <a class="qr-card" href="fahrerlager.html">
+            <img src="assets/Gemini_Generated_Image_y7l7m7y7l7m7y7l7%20(1).png" alt="Fahrerlager QR Visual" />
+            <span data-i18n="nav_paddock">Fahrerlager</span>
+          </a>
           <a class="qr-card" href="optimizer.html">
             <img src="assets/Gemini_Generated_Image_wf7wxowf7wxowf7w.png" alt="Optimizer QR Visual" />
             <span data-i18n="nav_optimizer">Optimizer</span>
+          </a>
+          <a class="qr-card" href="boosts.html">
+            <img src="assets/Gemini_Generated_Image_wf7wxowf7wxowf7w.png" alt="Boosts QR Visual" />
+            <span>Boosts</span>
           </a>
           <a class="qr-card" href="sync.html">
             <img src="assets/Gemini_Generated_Image_y7l7m7y7l7m7y7l7%20(1).png" alt="Sync QR Visual" />

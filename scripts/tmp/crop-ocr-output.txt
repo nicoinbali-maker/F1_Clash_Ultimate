@@ -1,0 +1,45 @@
+
+FILE: Screenshot_2026-03-13-22-13-11-004_com.google.android.youtube.jpg (2712x1220)
+  CROP mid_lower: STYPHOON | ALKYRIE | EPIC | S11 | STRIES | NG
+  CROP mid_center: Cornering | 23 | PowerUnit | 21 | Qualifying | 924 | AvgPitStopTime | 20.27s | STYPHOON | S11 | USTRIES
+  CROP lower: S11 | EPIC | DUSTRIES | OON | HE VALKYR | EARWING
+
+FILE: Screenshot_2026-03-13-22-16-53-744_com.google.android.youtube.jpg (2712x1220)
+  CROP mid_lower: Speed | 25 | ERONTWING
+  CROP mid_center: 
+  CROP lower: Speed | 25 | FRONTWING | Cornering | 60 | FLEX XL | PowerUnit | 21 | Qualifying | 23 | E2IC | AvaPitstonTime
+
+FILE: Screenshot_2026-03-13-22-17-15-053_com.google.android.youtube.jpg (2712x1220)
+  CROP mid_lower: GEARBOX
+  CROP mid_center: Qualifying | 21 | AvgPitStopTime | 0.69s
+  CROP lower: GEARBOX | SLICKSHIFT | RARE
+
+FILE: Screenshot_2026-03-13-22-19-54-232_com.google.android.youtube.jpg (2712x1220)
+  CROP mid_lower: ENGINE | Speed14 | Cornering | 30
+  CROP mid_center: RARE | S4
+  CROP lower: ENGINE | Speed 14 | Cornering 30 | PowerUnit | 12 | Qualifying29 | AvgPitStopTimeo.62s
+
+FILE: Screenshot_2026-03-13-22-21-41-849_com.google.android.youtube.jpg (2712x1220)
+  CROP mid_lower: EROBL | BLA | S11 | EPIC | HOON | ERO BL | BLA | EROBLA | BLA | BLA | THE VALKY | EROBLA
+  CROP mid_center: Speed 30 | Quzalifying11 | PowerUniti3 | Poweoit21 | RARE | S9 | Cornering28 | AvgPitStopTime0.48s | Qualifying24 | AvgPitStopTime0.27s | AZON | TYPHOON
+  CROP lower: EROBLA | BLA | THe VALK | HORT2ON | SNOIIZAONNI | REARWING | REAR.WING | S4 | EPIC | X-HALE | Speed17 | PowerUnit53 Qualifying20
+
+FILE: Screenshot_2026-03-13-22-21-52-246_com.google.android.youtube.jpg (2712x1220)
+  CROP mid_lower: THEBEAST | FLOW1K | REAR | EPIC | S10 | RARE | S12 | SUSPENSION | ENGINE | VQUANTUM | BEHEMOTH | RARE
+  CROP mid_center: THE VALI | REARWING | BRAKES | GEARBOX | FLOW1K | THEBEAST | EPIC | S10 | RARE | S12 | SUSPENSION | ENGINE
+  CROP lower: SUSPENSION | ENGINE | QUANTUM | BEHEMOTH | RARE | S7 | RARE | S10 | FRONTWING | S8 | THESABRE | RARE
+
+FILE: Screenshot_2026-03-13-22-22-01-912_com.google.android.youtube.jpg (2712x1220)
+  CROP mid_lower: THEBEAST | FLOW1K | REAR | EPIC | S10 | RARE | S12 | SUSPENSION | ENGINE | VQUANTUM | BEHEMOTH | RARE
+  CROP mid_center: THE VALI | REARWING | BRAKES | GEARBOX | FLOW1K | THEBEAST | EPIC | S10 | RARE | S12 | SUSPENSION | ENGINE
+  CROP lower: SUSPENSION | ENGINE | QUANTUM | BEHEMOTH | RARE | S7 | RARE | S10 | FRONTWING | S8 | THESABRE | RARE
+
+FILE: Screenshot_2026-03-13-22-22-25-808_com.google.android.youtube.jpg (2712x1220)
+  CROP mid_lower: METRONOME | X-HALE | PowerUnit23Qualifying21 | g60AvgPitStopTimeo.2s | ENGINE | MACHII | SUSPENSION | GYRO | EPIC | RARE | MLDCORE
+  CROP mid_center: 54 | REAR.WING | S10 | GEARBOX | RARE | EPIC | METRONOME | X-HALE | PowerUnit23Qualifying21 | g60AvgPitStopTimeo.2s | ENGINE
+  CROP lower: ENGINE | MACHI | SUSPENSION | EPIC | GYRO | $7 | RARE | WILDCORE
+
+FILE: Screenshot_2026-03-13-22-22-42-958_com.google.android.youtube.jpg (2712x1220)
+  CROP mid_lower: METRONOME | X-HALE | Speed22PowerUnit23Qualifying21 | Cornering6oAvgPitStopTimeo.zs | ENGINE | MACHI | SUSPENSION | EPIC | GYRO | S7 | RARE | WLDCORE
+  CROP mid_center: NG | REAR.WING | GEARBOX | S10 | RARE | EPIC | METRONOME | X-HALE | Speed22PowerUnit23Qualifying21 | Cornering6oAvgPitStopTimeo.zs | ENGINE
+  CROP lower: ENGINE | MACHI | SUSPENSION | EPIC | GYRO | S7 | RARE | S9 | WILDCORE

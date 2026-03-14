@@ -1,0 +1,1052 @@
+{
+  "Screenshot_2026-03-13-22-11-59-688_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-11-59-688_com.google.android.youtube.jpg",
+    "signature": {
+      "size": 724446,
+      "mtime_ns": 1773436319000000000
+    },
+    "match": "Motion",
+    "score": 1.0,
+    "candidates": [
+      "MOTION"
+    ],
+    "copied": false,
+    "target": "motion.jpg",
+    "error": null
+  },
+  "Screenshot_2026-03-13-22-12-11-067_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-12-11-067_com.google.android.youtube.jpg",
+    "signature": {
+      "size": 808428,
+      "mtime_ns": 1773436331000000000
+    },
+    "match": "Gale Force",
+    "score": 1.0,
+    "candidates": [
+      "joyn",
+      "GALEFORCE.REAR WING.COMMON",
+      "S3",
+      "GALEFORCE",
+      "PowerUnit7",
+      "Speed 11",
+      "Qualifying2",
+      "Cornering22"
+    ],
+    "copied": false,
+    "target": "gale-force.jpg",
+    "error": null
+  },
+  "Screenshot_2026-03-13-22-12-15-417_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-12-15-417_com.google.android.youtube.jpg",
+    "signature": {
+      "size": 761669,
+      "mtime_ns": 1773436335000000000
+    },
+    "match": "X-Hale",
+    "score": 1.0,
+    "candidates": [
+      "Tuhe",
+      "joyn",
+      "Speed30PowerUnit13",
+      "Qualifying11",
+      "Cornering28AvgPitStopTime0.48s",
+      "X-HALE"
+    ],
+    "copied": false,
+    "target": "x-hale.jpg",
+    "error": null
+  },
+  "Screenshot_2026-03-13-22-12-34-890_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-12-34-890_com.google.android.youtube.jpg",
+    "match": "The Spire",
+    "score": 1.0,
+    "candidates": [
+      "Tuhe",
+      "THESPIRE",
+      "WILDCORE",
+      "Speed10PowerUnit29Quzlifying25",
+      "Cornering8AvgPitStopTimeo.62s"
+    ],
+    "copied": false,
+    "target": "the-spire.jpg"
+  },
+  "Screenshot_2026-03-13-22-12-40-947_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-12-40-947_com.google.android.youtube.jpg",
+    "match": "Power Lift",
+    "score": 1.0,
+    "candidates": [
+      "joyn",
+      "AVALANCHECO",
+      "POWERLIFT",
+      "6t"
+    ],
+    "copied": false,
+    "target": "power-lift.jpg"
+  },
+  "Screenshot_2026-03-13-22-12-57-740_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-12-57-740_com.google.android.youtube.jpg",
+    "match": "Aero Blade",
+    "score": 1.0,
+    "candidates": [
+      "AEROBLADE",
+      "AZON",
+      "EROBL",
+      "BLA",
+      "ERO BL",
+      "BLA",
+      "ERO BLA",
+      "BLA"
+    ],
+    "copied": false,
+    "target": "aero-blade.jpg"
+  },
+  "Screenshot_2026-03-13-22-13-05-559_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-13-05-559_com.google.android.youtube.jpg",
+    "match": "The Valkyrie",
+    "score": 1.0,
+    "candidates": [
+      "ube",
+      "joyn",
+      "Speed 60",
+      "Cornering 23",
+      "PowerUnit 21",
+      "Qualifying 24",
+      "AvgPitStopTime0.27s",
+      "THEVALKYRIE"
+    ],
+    "copied": false,
+    "target": "the-valkyrie.jpg"
+  },
+  "Screenshot_2026-03-13-22-13-11-004_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-13-11-004_com.google.android.youtube.jpg",
+    "match": "The Valkyrie",
+    "score": 1.0,
+    "candidates": [
+      "Tube",
+      "joyn",
+      "Speed 60",
+      "Cornering 23",
+      "PowerUnit 21",
+      "Qualifying 24",
+      "AvgPitStopTimeo.27s",
+      "THE VALKYRIE"
+    ],
+    "copied": false,
+    "target": "the-valkyrie.jpg"
+  },
+  "Screenshot_2026-03-13-22-13-22-088_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-13-22-088_com.google.android.youtube.jpg",
+    "match": "Pivot",
+    "score": 1.0,
+    "candidates": [
+      "Tuhe",
+      "joyn",
+      "PIUOT.BRAKES.",
+      "PIVOT",
+      "PowerUnit9",
+      "Speedi",
+      "Quzlifying 12",
+      "Cornering11"
+    ],
+    "copied": false,
+    "target": "pivot.jpg"
+  },
+  "Screenshot_2026-03-13-22-13-26-233_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-13-26-233_com.google.android.youtube.jpg",
+    "match": "The Stabiliser",
+    "score": 1.0,
+    "candidates": [
+      "joyn",
+      "Speed8",
+      "Cornering 20",
+      "PowerUnit7",
+      "Qualifying 6",
+      "AvgPitStopTime0.41s",
+      "THE STABILISER"
+    ],
+    "copied": false,
+    "target": "the-stabiliser.jpg"
+  },
+  "Screenshot_2026-03-13-22-13-32-830_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-13-32-830_com.google.android.youtube.jpg",
+    "match": "Supernova",
+    "score": 1.0,
+    "candidates": [
+      "NA",
+      "Speed33",
+      "PowerUnit13",
+      "Qualifying14",
+      "Cornering1i",
+      "AvgPitStopTime0.62s",
+      "SUPERNOVA"
+    ],
+    "copied": false,
+    "target": "supernova.jpg"
+  },
+  "Screenshot_2026-03-13-22-13-41-769_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-13-41-769_com.google.android.youtube.jpg",
+    "match": "The Stabiliser",
+    "score": 0.92,
+    "candidates": [
+      "THE",
+      "DESCENT",
+      "DESC",
+      "THE",
+      "HE",
+      "DES",
+      "HE DES",
+      "THE DE"
+    ],
+    "copied": false,
+    "target": "the-stabiliser.jpg"
+  },
+  "Screenshot_2026-03-13-22-14-04-368_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-14-04-368_com.google.android.youtube.jpg",
+    "match": "Rumble",
+    "score": 1.0,
+    "candidates": [
+      "joyn",
+      "AVALAN",
+      "RUMBLE",
+      "QRE",
+      "NewSeasonLaunch6thMay",
+      "Get aFREE",
+      "monthlys",
+      "subscription whenlinkingyour Amazonprime account to twitch"
+    ],
+    "copied": false,
+    "target": "rumble.jpg"
+  },
+  "Screenshot_2026-03-13-22-14-09-218_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-14-09-218_com.google.android.youtube.jpg",
+    "match": "Flow 1K",
+    "score": 1.0,
+    "candidates": [
+      "joyn",
+      "FLOW1K",
+      "S10",
+      "subscription when linking your Amazonprime account to twitch",
+      "ACCESS",
+      "STRATEGY GUIDES,",
+      "BOOSTGUIDES,PRIVATEFOR"
+    ],
+    "copied": false,
+    "target": "flow-1k.jpg"
+  },
+  "Screenshot_2026-03-13-22-14-18-354_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-14-18-354_com.google.android.youtube.jpg",
+    "match": "Boombox",
+    "score": 1.0,
+    "candidates": [
+      "joyn",
+      "BOOMBOX",
+      "S11",
+      "Speed22PowerUnit23Quzlifying21",
+      "Cornering6oAvgPitStopTimeo.zs",
+      "ORI",
+      "AMIN",
+      "FORUMSANDMOREBYBECOMINGACHANNEL"
+    ],
+    "copied": false,
+    "target": "boombox.jpg"
+  },
+  "Screenshot_2026-03-13-22-14-35-620_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-14-35-620_com.google.android.youtube.jpg",
+    "match": "The Dash",
+    "score": 1.0,
+    "candidates": [
+      "WING",
+      "Tuhe",
+      "joyn",
+      "FRON",
+      "THEDASH.FRONTWING.COMMON",
+      "S1",
+      "THEDASH",
+      "Speedil"
+    ],
+    "copied": false,
+    "target": "the-dash.jpg"
+  },
+  "Screenshot_2026-03-13-22-14-42-692_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-14-42-692_com.google.android.youtube.jpg",
+    "match": "Glide",
+    "score": 1.0,
+    "candidates": [
+      "WING",
+      "joyn",
+      "FRON",
+      "PowerUnit8",
+      "Speed18",
+      "Qualifying16",
+      "Cornering8",
+      "AvgPitStopTimeo.72s"
+    ],
+    "copied": false,
+    "target": "glide.jpg"
+  },
+  "Screenshot_2026-03-13-22-14-49-651_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-14-49-651_com.google.android.youtube.jpg",
+    "match": "Synergy",
+    "score": 1.0,
+    "candidates": [
+      "SYNERGY",
+      "enlinkingyour Amazon prime account to twitch",
+      "ACCESS",
+      "STRATEGY",
+      "GUIDES,BOOST",
+      "GUIDES,PRIVATEFORUMSANDMORE"
+    ],
+    "copied": false,
+    "target": "synergy.jpg"
+  },
+  "Screenshot_2026-03-13-22-14-56-456_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-14-56-456_com.google.android.youtube.jpg",
+    "match": "Vortex",
+    "score": 0.923,
+    "candidates": [
+      "WING",
+      "The",
+      "joyn",
+      "FRON",
+      "VVORTEX",
+      "Speedi9PowerUnit21Qualifying22",
+      "Cornering54AvgPitStopTimeo.37s",
+      "BOOST"
+    ],
+    "copied": false,
+    "target": "vortex.jpg"
+  },
+  "Screenshot_2026-03-13-22-15-09-257_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-15-09-257_com.google.android.youtube.jpg",
+    "match": "The Sabre",
+    "score": 1.0,
+    "candidates": [
+      "WING",
+      "joyn",
+      "FRONT",
+      "S8",
+      "THESABRE",
+      "Speed29",
+      "Cornering 26",
+      "PowerUnit 11"
+    ],
+    "copied": false,
+    "target": "the-sabre.jpg"
+  },
+  "Screenshot_2026-03-13-22-15-23-729_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-15-23-729_com.google.android.youtube.jpg",
+    "match": "Curler",
+    "score": 1.0,
+    "candidates": [
+      "Tube",
+      "joyn",
+      "CURLER",
+      "URLER",
+      "CJRLERCU",
+      "IRLERCU",
+      "URLER",
+      "URLER CI"
+    ],
+    "copied": false,
+    "target": "curler.jpg"
+  },
+  "Screenshot_2026-03-13-22-15-35-313_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-15-35-313_com.google.android.youtube.jpg",
+    "match": "Flex XL",
+    "score": 1.0,
+    "candidates": [
+      "Tuhe",
+      "joyn",
+      "FLEX XL",
+      "Quzlifying",
+      "S11",
+      "TORE",
+      "BOOST",
+      "FORUMSANDMOREBYE"
+    ],
+    "copied": false,
+    "target": "flex-xl.jpg"
+  },
+  "Screenshot_2026-03-13-22-15-50-439_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-15-50-439_com.google.android.youtube.jpg",
+    "match": "Hustle",
+    "score": 1.0,
+    "candidates": [
+      "Tube",
+      "joyn",
+      "HUSTLE.GEARBOX.COMMON",
+      "HUSTLE",
+      "Speed 10",
+      "PowerUnit i2",
+      "Qualifyings",
+      "Corneringi1"
+    ],
+    "copied": false,
+    "target": "hustle.jpg"
+  },
+  "Screenshot_2026-03-13-22-16-53-744_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-16-53-744_com.google.android.youtube.jpg",
+    "match": "Flex XL",
+    "score": 1.0,
+    "candidates": [
+      "WING",
+      "The",
+      "FRON",
+      "joyn",
+      "FLEX XL",
+      "S11",
+      "ATEFORUMSANDMOREBYBECOMINGACHANNEL",
+      "Pinnediinkinchat"
+    ],
+    "copied": false,
+    "target": "flex-xl.jpg"
+  },
+  "Screenshot_2026-03-13-22-17-07-862_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-17-07-862_com.google.android.youtube.jpg",
+    "match": "Hustle",
+    "score": 1.0,
+    "candidates": [
+      "joyn",
+      "HUSTLE.GEARBOX.COMMON",
+      "HUSTLE",
+      "Speed10",
+      "PowerUnit 12",
+      "Cornering 1",
+      "AvgPitStopTimeo.65s",
+      "TORE"
+    ],
+    "copied": false,
+    "target": "hustle.jpg"
+  },
+  "Screenshot_2026-03-13-22-17-15-053_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-17-15-053_com.google.android.youtube.jpg",
+    "match": "Chaos Core",
+    "score": 0.92,
+    "candidates": [
+      "Tube",
+      "joyn",
+      "SLICKSHIET",
+      "ORE",
+      "2 Weeks In Series 10.",
+      "11&12.F1ClashNewSegson",
+      "Launch6thMay",
+      "GetgFREE"
+    ],
+    "copied": false,
+    "target": "chaos-core.jpg"
+  },
+  "Screenshot_2026-03-13-22-17-21-317_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-17-21-317_com.google.android.youtube.jpg",
+    "match": "Beat",
+    "score": 1.0,
+    "candidates": [
+      "joyn",
+      "BEAT",
+      "S3",
+      "AT",
+      "EATBEATBE",
+      "BE",
+      "EATBEATF",
+      "EATP"
+    ],
+    "copied": false,
+    "target": "beat.jpg"
+  },
+  "Screenshot_2026-03-13-22-17-29-080_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-17-29-080_com.google.android.youtube.jpg",
+    "match": "Fury",
+    "score": 1.0,
+    "candidates": [
+      "Tuhe",
+      "joyn",
+      "FURY",
+      "VILD.CORE",
+      "Speed3oPowerUnit13Qualifying28",
+      "Cornering1lAvgPitStopTimeo.5ls",
+      "ACCESSSTRATEGYGUIDES.",
+      "BOOSTGUIDES.PRIVATEFORUMSANDMOREBYBECOMINGACHANNEL"
+    ],
+    "copied": false,
+    "target": "fury.jpg"
+  },
+  "Screenshot_2026-03-13-22-17-33-406_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-17-33-406_com.google.android.youtube.jpg",
+    "match": "Slickshift",
+    "score": 1.0,
+    "candidates": [
+      "Tube",
+      "joyn",
+      "SLICKSHIFT",
+      "ORE",
+      "MEMRER",
+      "PinnedIinkinchatorin"
+    ],
+    "copied": false,
+    "target": "slickshift.jpg"
+  },
+  "Screenshot_2026-03-13-22-17-37-124_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-17-37-124_com.google.android.youtube.jpg",
+    "match": "Beat",
+    "score": 1.0,
+    "candidates": [
+      "Tube",
+      "joyn",
+      "BEAT",
+      "S3",
+      "AT",
+      "EATBEATBE",
+      "BE",
+      "EATBEATF"
+    ],
+    "copied": false,
+    "target": "beat.jpg"
+  },
+  "Screenshot_2026-03-13-22-17-40-966_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-17-40-966_com.google.android.youtube.jpg",
+    "match": "Fury",
+    "score": 1.0,
+    "candidates": [
+      "Tubel",
+      "joyn",
+      "FURY",
+      "VILD.CORE",
+      "Speed30PowerUnit13Qualifying28",
+      "Cornering11AvgPitStopTimeo.5is",
+      "y videos"
+    ],
+    "copied": false,
+    "target": "fury.jpg"
+  },
+  "Screenshot_2026-03-13-22-17-46-565_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-17-46-565_com.google.android.youtube.jpg",
+    "match": "The Dynamo",
+    "score": 1.0,
+    "candidates": [
+      "Tubel",
+      "joyn",
+      "Speed 18",
+      "Cornering i5",
+      "PowerUnit44",
+      "Qualifying18",
+      "AvgPitStopTimeo.41s",
+      "THE DYNAMO"
+    ],
+    "copied": false,
+    "target": "the-dynamo.jpg"
+  },
+  "Screenshot_2026-03-13-22-17-56-588_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-17-56-588_com.google.android.youtube.jpg",
+    "match": "Metronome",
+    "score": 1.0,
+    "candidates": [
+      "Hube",
+      "joyn",
+      "NA",
+      "Speed19",
+      "PowerUnit i7",
+      "Qualifying20",
+      "Cornering 53",
+      "AvgPitStopTimeo.37s"
+    ],
+    "copied": false,
+    "target": "metronome.jpg"
+  },
+  "Screenshot_2026-03-13-22-18-15-823_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-18-15-823_com.google.android.youtube.jpg",
+    "match": "The Beast",
+    "score": 1.0,
+    "candidates": [
+      "THEBEAST",
+      "S12",
+      "MEMBER - Pinned link in chat or in description of my videos"
+    ],
+    "copied": false,
+    "target": "the-beast.jpg"
+  },
+  "Screenshot_2026-03-13-22-18-28-291_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-18-28-291_com.google.android.youtube.jpg",
+    "match": "Equinox",
+    "score": 1.0,
+    "candidates": [
+      "joyn",
+      "EQUINOX",
+      "Speed 12",
+      "Cornering9",
+      "PowerUnit 27",
+      "Qualifying 10",
+      "AvgPitStopTimeo.69s",
+      "TORE"
+    ],
+    "copied": false,
+    "target": "equinox.jpg"
+  },
+  "Screenshot_2026-03-13-22-18-40-791_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-18-40-791_com.google.android.youtube.jpg",
+    "match": "Swish",
+    "score": 1.0,
+    "candidates": [
+      "joyn",
+      "SWISH.SUSPENSION.COMMON",
+      "S2",
+      "SWISH",
+      "Speed i",
+      "PowerUnit14",
+      "Quzlifying 11",
+      "CorneringioAvgPitStopTimeo.55s"
+    ],
+    "copied": false,
+    "target": "swish.jpg"
+  },
+  "Screenshot_2026-03-13-22-18-55-202_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-18-55-202_com.google.android.youtube.jpg",
+    "match": "Curver 2.5",
+    "score": 1.0,
+    "candidates": [
+      "Tube",
+      "joyn",
+      "Speed21",
+      "PowerUnit7",
+      "Qualifying21",
+      "Cornering 9",
+      "AvgPitStopTimeo.72s",
+      "CURVER2.5"
+    ],
+    "copied": false,
+    "target": "curver-2-5.jpg"
+  },
+  "Screenshot_2026-03-13-22-19-02-286_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-19-02-286_com.google.android.youtube.jpg",
+    "match": "The Arc",
+    "score": 1.0,
+    "candidates": [
+      "joyn",
+      "THEARC",
+      "S5",
+      "AMIN",
+      "my videos"
+    ],
+    "copied": false,
+    "target": "the-arc.jpg"
+  },
+  "Screenshot_2026-03-13-22-19-07-568_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-19-07-568_com.google.android.youtube.jpg",
+    "match": "Quantum",
+    "score": 0.8,
+    "candidates": [
+      "joyn",
+      "VOUANTUM",
+      "WILDCORE",
+      "Speed42PowerUnit18Quzlifying17",
+      "Cornering14AvgPitStopTimeo.55s",
+      "OccurEvery2WeeksInSeries",
+      "TrackRotations",
+      "s10,11&12.F1ClashNewSed"
+    ],
+    "copied": false,
+    "target": "quantum.jpg"
+  },
+  "Screenshot_2026-03-13-22-19-19-242_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-19-19-242_com.google.android.youtube.jpg",
+    "match": "Gyro",
+    "score": 1.0,
+    "candidates": [
+      "joyn",
+      "GYRO",
+      "TORE",
+      "AMIN",
+      "vhen linkingyour Amazonprime account to twitch",
+      "ACCESS",
+      "BOOST",
+      "STRATEGYGUIDES,"
+    ],
+    "copied": false,
+    "target": "gyro.jpg"
+  },
+  "Screenshot_2026-03-13-22-19-29-480_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-19-29-480_com.google.android.youtube.jpg",
+    "match": "Nexus",
+    "score": 1.0,
+    "candidates": [
+      "joyn",
+      "NEXUS",
+      "S12",
+      "EXUS",
+      "NEXI",
+      "NEXUS",
+      "IEXUS",
+      "NEXUS"
+    ],
+    "copied": false,
+    "target": "nexus.jpg"
+  },
+  "Screenshot_2026-03-13-22-19-43-616_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-19-43-616_com.google.android.youtube.jpg",
+    "match": "Mach I",
+    "score": 0.92,
+    "candidates": [
+      "joyn",
+      "MACHI.ENGINE.",
+      "MACH",
+      "SCOUTOSPORT",
+      "Speed11",
+      "PowerUnit9",
+      "Quzlifying 11",
+      "Cornering 12"
+    ],
+    "copied": false,
+    "target": "mach-i.jpg"
+  },
+  "Screenshot_2026-03-13-22-19-48-679_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-19-48-679_com.google.android.youtube.jpg",
+    "match": "Spark-E",
+    "score": 1.0,
+    "candidates": [
+      "Tuhe",
+      "SPARK-E",
+      "ACCESSSTRATEGYGUIDES,",
+      "nlinkingyour Amazon prime account to twitch",
+      "BOOSTGUIDES,PRIVATEFORUMSANDMOREI"
+    ],
+    "copied": false,
+    "target": "spark-e.jpg"
+  },
+  "Screenshot_2026-03-13-22-19-54-232_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-19-54-232_com.google.android.youtube.jpg",
+    "match": "Mach I",
+    "score": 0.92,
+    "candidates": [
+      "MACH",
+      "Speed 14",
+      "Cornering3o",
+      "PowerUnit12",
+      "Qualifying29",
+      "AvgPitStopTimeo.62s",
+      "descriptionof my videos"
+    ],
+    "copied": false,
+    "target": "mach-i.jpg"
+  },
+  "Screenshot_2026-03-13-22-20-15-094_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-20-15-094_com.google.android.youtube.jpg",
+    "match": "The Stabiliser",
+    "score": 0.92,
+    "candidates": [
+      "Tuhe",
+      "joyn",
+      "THE",
+      "REACTOR",
+      "HE",
+      "REACT",
+      "THE",
+      "RE"
+    ],
+    "copied": false,
+    "target": "the-stabiliser.jpg"
+  },
+  "Screenshot_2026-03-13-22-20-23-533_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-20-23-533_com.google.android.youtube.jpg",
+    "match": "Mach II",
+    "score": 1.0,
+    "candidates": [
+      "Tuhe",
+      "joyn",
+      "MACHII",
+      "WILDCORE",
+      "Speed2oPowerUniti9Quzlifying21",
+      "Cornering54AvgPitStopTimeo.3s",
+      "very2WeekslInSeries10.11&12.F1ClgshNew",
+      "SeasonLaunch6thMay"
+    ],
+    "copied": false,
+    "target": "mach-ii.jpg"
+  },
+  "Screenshot_2026-03-13-22-20-33-335_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-20-33-335_com.google.android.youtube.jpg",
+    "match": "Behemoth",
+    "score": 1.0,
+    "candidates": [
+      "joyn",
+      "BEHEMOTH",
+      "S10",
+      "TOR",
+      "twitch",
+      "ACCESS",
+      "BOOST",
+      "GUIDES,PRIVATE"
+    ],
+    "copied": false,
+    "target": "behemoth.jpg"
+  },
+  "Screenshot_2026-03-13-22-20-44-843_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-20-44-843_com.google.android.youtube.jpg",
+    "match": "Turbo Jet",
+    "score": 1.0,
+    "candidates": [
+      "Tuhe",
+      "joyn",
+      "NO",
+      "Speed23",
+      "PowerUnit60Qualifying25",
+      "Cornering 21",
+      "AvgPitStopTimeo.3s",
+      "S12"
+    ],
+    "copied": false,
+    "target": "turbo-jet.jpg"
+  },
+  "Screenshot_2026-03-13-22-21-15-093_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-21-15-093_com.google.android.youtube.jpg",
+    "match": "Aero Blade",
+    "score": 1.0,
+    "candidates": [
+      "DRS",
+      "Speed 60",
+      "AEROBLADE",
+      "Cornering 23",
+      "PowerUnit 21",
+      "Speed30",
+      "PowerUnit13",
+      "Quzlifying11"
+    ],
+    "copied": false,
+    "target": "aero-blade.jpg"
+  },
+  "Screenshot_2026-03-13-22-21-41-849_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-21-41-849_com.google.android.youtube.jpg",
+    "match": "The Valkyrie",
+    "score": 1.0,
+    "candidates": [
+      "DRS",
+      "Speed 60",
+      "NO",
+      "AERO",
+      "BLADE",
+      "Cornering 23",
+      "PowerUnit 21",
+      "Speed30"
+    ],
+    "copied": false,
+    "target": "the-valkyrie.jpg"
+  },
+  "Screenshot_2026-03-13-22-21-52-246_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-21-52-246_com.google.android.youtube.jpg",
+    "match": "The Valkyrie",
+    "score": 1.0,
+    "candidates": [
+      "SPEED-285MAX",
+      "joyn",
+      "Speed60",
+      "Cornering 23",
+      "PowerUnit21",
+      "Qualifying24",
+      "AvgPitStopTimeo.27s",
+      "THE VALKYRIE"
+    ],
+    "copied": false,
+    "target": "the-valkyrie.jpg"
+  },
+  "Screenshot_2026-03-13-22-22-01-912_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-22-01-912_com.google.android.youtube.jpg",
+    "match": "The Valkyrie",
+    "score": 1.0,
+    "candidates": [
+      "Tube",
+      "SPEED-285MAX",
+      "joyn",
+      "Speed60",
+      "Cornering 23",
+      "PowerUnit 21",
+      "Qualifying24",
+      "AvgPitStopTimeo.27s"
+    ],
+    "copied": false,
+    "target": "the-valkyrie.jpg"
+  },
+  "Screenshot_2026-03-13-22-22-25-808_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-22-25-808_com.google.android.youtube.jpg",
+    "match": "Boombox",
+    "score": 1.0,
+    "candidates": [
+      "joyn",
+      "BOOMBOX",
+      "EPICS11",
+      "Speed19PowerUnit17Qualifying20",
+      "Speed30 PowerUnit13 Qualifying11",
+      "Cornering53",
+      "AvgPitStopTime0.37s",
+      "Cornering 28Avg Pit Stop Time 0.48s"
+    ],
+    "copied": false,
+    "target": "boombox.jpg"
+  },
+  "Screenshot_2026-03-13-22-22-42-958_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-22-42-958_com.google.android.youtube.jpg",
+    "match": "Boombox",
+    "score": 1.0,
+    "candidates": [
+      "CORNERING-3O4 MAX",
+      "Tube",
+      "joyn",
+      "BOOMBOX",
+      "NOA",
+      "NO",
+      "S11",
+      "Speed 30"
+    ],
+    "copied": false,
+    "target": "boombox.jpg"
+  },
+  "Screenshot_2026-03-13-22-23-02-295_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-23-02-295_com.google.android.youtube.jpg",
+    "match": "Aero Blade",
+    "score": 1.0,
+    "candidates": [
+      "POWER UNIT-304MAX",
+      "FTube",
+      "joyn",
+      "Speed 18",
+      "Cornering 15",
+      "AERO BLADE",
+      "PowerUnit44",
+      "Qualifying18"
+    ],
+    "copied": false,
+    "target": "aero-blade.jpg"
+  },
+  "Screenshot_2026-03-13-22-23-04-697_com.google.android.youtube.jpg": {
+    "source": "Screenshot_2026-03-13-22-23-04-697_com.google.android.youtube.jpg",
+    "match": "Aero Blade",
+    "score": 1.0,
+    "candidates": [
+      "POWER UNIT-304 MAX",
+      "Tube",
+      "joyn",
+      "l ·29%",
+      "Speed 18",
+      "Cornering 15",
+      "AERO BLADE",
+      "PowerUnit44"
+    ],
+    "copied": false,
+    "target": "aero-blade.jpg"
+  },
+  "WhatsApp Image 2026-03-13 at 23.10.22.jpeg": {
+    "source": "WhatsApp Image 2026-03-13 at 23.10.22.jpeg",
+    "match": "Grindlock",
+    "score": 1.0,
+    "candidates": [
+      "C幻·28%",
+      "BREMSEN",
+      "GRINDLOCK",
+      "Episch",
+      "SERIE12",
+      "Sammlenoch2furAufwertung",
+      "Maximalwerte",
+      "AuswirkungzufAutowerte"
+    ],
+    "copied": false,
+    "target": "grindlock.jpg"
+  },
+  "WhatsApp Image 2026-03-13 at 23.11.44.jpeg": {
+    "source": "WhatsApp Image 2026-03-13 at 23.11.44.jpeg",
+    "match": "Fluxspring",
+    "score": 1.0,
+    "candidates": [
+      "C幻·29%",
+      "AUFHANGUNG",
+      "FLUXSPRING",
+      "Episch",
+      "Gefundenin",
+      "SERIE12",
+      "Maximalwerte",
+      "Auswirkungzuf Autowerte"
+    ],
+    "copied": false,
+    "target": "fluxspring.jpg"
+  },
+  "WhatsApp Image 2026-03-13 at 23.15.34.jpeg": {
+    "source": "WhatsApp Image 2026-03-13 at 23.15.34.jpeg",
+    "match": "Joltcoil",
+    "score": 1.0,
+    "candidates": [
+      "AUFHANGUNG",
+      "JOLTCOIL",
+      "Episch",
+      "Gefundenin",
+      "SERIE12",
+      "Maximalwerte",
+      "AuswirkungaufAutowerte",
+      "Tempo"
+    ],
+    "copied": false,
+    "target": "joltcoil.jpg"
+  },
+  "WhatsApp Image 2026-03-13 at 23.22.53.jpeg": {
+    "source": "WhatsApp Image 2026-03-13 at 23.22.53.jpeg",
+    "match": "Mach II",
+    "score": 1.0,
+    "candidates": [
+      "MOTOR",
+      "MACHII",
+      "Episch",
+      "SERIE7",
+      "oderhoher",
+      "Sammlenoch115furAufwertung",
+      "Maximalwerte",
+      "AktuelleKomponentenwerte"
+    ],
+    "copied": false,
+    "target": "mach-ii.jpg"
+  },
+  "WhatsApp Image 2026-03-13 at 23.24.31.jpeg": {
+    "source": "WhatsApp Image 2026-03-13 at 23.24.31.jpeg",
+    "match": "Edgecutter",
+    "score": 1.0,
+    "candidates": [
+      "FRONTFLUGEL",
+      "STARTER",
+      "Fabrik2ustand",
+      "AuswirkungzufAutowerte",
+      "Tempo",
+      "Kurvenverhalten",
+      "Antrieb",
+      "Qualifikation"
+    ],
+    "copied": false,
+    "target": "edgecutter.jpg"
+  },
+  "WhatsApp Image 2026-03-13 at 23.25.39.jpeg": {
+    "source": "WhatsApp Image 2026-03-13 at 23.25.39.jpeg",
+    "match": "Jittershift",
+    "score": 1.0,
+    "candidates": [
+      "GETRIEBE",
+      "JITTERSHIFT",
+      "Episch",
+      "SERIE12",
+      "Aufwertung",
+      "Maximalwerte",
+      "AuswirkungzufAutowerte",
+      "Tempo"
+    ],
+    "copied": false,
+    "target": "jittershift.jpg"
+  },
+  "WhatsApp Image 2026-03-13 at 23.26.58.jpeg": {
+    "source": "WhatsApp Image 2026-03-13 at 23.26.58.jpeg",
+    "match": "Gale Force",
+    "score": 1.0,
+    "candidates": [
+      "GETRIEBE",
+      "STARTER",
+      "Fabrikzustand",
+      "AuswirkungzufAutowerte",
+      "Tempo",
+      "Kurvenverhalten",
+      "Antrieb",
+      "Qualifikation"
+    ],
+    "copied": false,
+    "target": "gale-force.jpg"
+  }
+}
