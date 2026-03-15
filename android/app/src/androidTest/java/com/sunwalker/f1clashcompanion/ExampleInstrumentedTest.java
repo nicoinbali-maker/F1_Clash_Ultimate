@@ -1,4 +1,4 @@
-package com.getcapacitor.myapp;
+package com.sunwalker.f1clashcompanion;
 
 import static org.junit.Assert.*;
 
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        assertEquals("com.getcapacitor.app", appContext.getPackageName());
+        assertEquals("com.sunwalker.f1clashcompanion", appContext.getPackageName());
     }
 }

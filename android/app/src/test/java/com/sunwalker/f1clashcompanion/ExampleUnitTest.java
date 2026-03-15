@@ -1,4 +1,4 @@
-package com.getcapacitor.myapp;
+package com.sunwalker.f1clashcompanion;
 
 import static org.junit.Assert.*;
 
