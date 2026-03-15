@@ -128,6 +128,13 @@
             <option value="overtaking">Overtaking</option>
             <option value="consistency">Consistency</option>
           </select>
+          <label for="driverSelectA">Fahrer 1 (manuell)</label>
+          <select id="driverSelectA" aria-label="Fahrer 1 waehlen"></select>
+          <label for="driverSelectB">Fahrer 2 (manuell)</label>
+          <select id="driverSelectB" aria-label="Fahrer 2 waehlen"></select>
+          <button id="resetDriverPairButton" class="pill" type="button">Fahrerpaarung auf Auto</button>
+          <div id="driverCatalogStatus" class="optimizer-lite-note" aria-live="polite">Fahrerliste wird synchronisiert...</div>
+          <p class="optimizer-lite-note">Wenn beide Fahrer gesetzt sind, nutzt der Optimizer diese Paarung statt der KI-Auswahl.</p>
           <div id="boostProfileHint" class="optimizer-lite-note" aria-live="polite"></div>
           <div id="selectedTrackBadge" aria-live="polite">Aktuelle Strecke: -</div>
           <p class="optimizer-lite-note">Die Auswahl wird dauerhaft gespeichert und beim naechsten Laden direkt wiederhergestellt.</p>

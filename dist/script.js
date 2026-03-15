@@ -16,6 +16,7 @@ const F1_SYNC_API_CONFIG_PREFIX = 'f1clashSyncApiConfig_';
 const FIREBASE_CONFIG_KEY = 'f1clashFirebaseConfig';
 const FIREBASE_AUTH_KEY = 'f1clashFirebaseAuth';
 const FIREBASE_AUTO_SYNC_KEY = 'f1clashFirebaseAutoSync';
+const SOUND_SETTINGS_KEY = 'f1clashSoundSettings';
 const GUEST_MODE_KEY = 'f1clashGuestMode';
 const TRACK_SELECTION_KEY = 'f1clashSelectedTrack';
 const TRACK_SELECTION_OPTIONS_KEY = 'f1clashTrackOptions';
@@ -786,6 +787,7 @@ function renderSyncConsentState() {
   if (apiBaseUrlNode && !apiBaseUrlNode.value) apiBaseUrlNode.value = apiConfig.baseUrl || '';
   if (apiClientIdNode && !apiClientIdNode.value) apiClientIdNode.value = apiConfig.clientId || '';
   if (apiTokenNode && !apiTokenNode.value) apiTokenNode.value = apiConfig.token || '';
+  renderDashboardSettingsProfile();
 }
 
 function saveSyncConsentFromUi() {
@@ -880,6 +882,308 @@ function renderFirebaseAuthState() {
   if (autoSyncNode) {
     autoSyncNode.checked = loadFirebaseAutoSyncEnabled();
   }
+  renderDashboardSettingsProfile();
+}
+
+function renderDashboardSettingsProfile() {
+  const summaryNode = byId('settingsProfileSummary');
+  if (!summaryNode) return;
+
+  const profile = loadRegistrationProfile();
+  const auth = loadFirebaseAuthState();
+  if (!profile && !auth) {
+    summaryNode.innerHTML = `<div class="settings-profile-item"><span>${escapeHtml(tr('settings_profile_empty'))}</span></div>`;
+    return;
+  }
+
+  const fullName = [profile?.firstName, profile?.lastName].filter(Boolean).join(' ').trim() || '-';
+  const playerType = String(profile?.playerType || '-');
+  const email = String(profile?.email || auth?.email || '-');
+  const clashId = String(profile?.clashId || getActiveProfileIdLocal() || '-');
+
+  summaryNode.innerHTML = `
+    <div class="settings-profile-item">
+      <span>${escapeHtml(tr('settings_profile_name'))}</span>
+      <strong>${escapeHtml(fullName)}</strong>
+    </div>
+    <div class="settings-profile-item">
+      <span>${escapeHtml(tr('settings_profile_type'))}</span>
+      <strong>${escapeHtml(playerType)}</strong>
+    </div>
+    <div class="settings-profile-item">
+      <span>${escapeHtml(tr('settings_profile_email'))}</span>
+      <strong>${escapeHtml(email)}</strong>
+    </div>
+    <div class="settings-profile-item">
+      <span>${escapeHtml(tr('settings_profile_clash_id'))}</span>
+      <strong>${escapeHtml(clashId)}</strong>
+    </div>
+  `;
+}
+
+function setLegalStatus(text, kind = 'info') {
+  setResult('settingsLegalStatus', text, kind);
+}
+
+function normalizeVolumePercent(value, fallback = 50) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return fallback;
+  return Math.max(0, Math.min(100, Math.round(num)));
+}
+
+function defaultSoundSettings() {
+  return {
+    enabled: true,
+    uiVolume: 65,
+    musicVolume: 45,
+    announcer: true
+  };
+}
+
+function loadSoundSettings() {
+  const defaults = defaultSoundSettings();
+  const raw = readJsonSafe(SOUND_SETTINGS_KEY, null);
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return defaults;
+  return {
+    enabled: raw.enabled !== false,
+    uiVolume: normalizeVolumePercent(raw.uiVolume, defaults.uiVolume),
+    musicVolume: normalizeVolumePercent(raw.musicVolume, defaults.musicVolume),
+    announcer: raw.announcer !== false
+  };
+}
+
+function applySoundSettingsToDocument(settings = loadSoundSettings()) {
+  if (!document.body) return;
+  document.body.dataset.soundEnabled = settings.enabled ? '1' : '0';
+  document.body.dataset.soundAnnouncer = settings.announcer ? '1' : '0';
+  document.body.style.setProperty('--sound-ui-volume', String(settings.uiVolume / 100));
+  document.body.style.setProperty('--sound-music-volume', String(settings.musicVolume / 100));
+}
+
+function saveSoundSettings(settings) {
+  const defaults = defaultSoundSettings();
+  const normalized = {
+    enabled: settings?.enabled !== false,
+    uiVolume: normalizeVolumePercent(settings?.uiVolume, defaults.uiVolume),
+    musicVolume: normalizeVolumePercent(settings?.musicVolume, defaults.musicVolume),
+    announcer: settings?.announcer !== false,
+    updatedAt: new Date().toISOString()
+  };
+  writeJsonSafe(SOUND_SETTINGS_KEY, normalized);
+  applySoundSettingsToDocument(normalized);
+  return normalized;
+}
+
+function collectSoundSettingsFromUi() {
+  return {
+    enabled: Boolean(byId('settingsSoundEnabled')?.checked),
+    uiVolume: normalizeVolumePercent(byId('settingsSoundUiVolume')?.value, 65),
+    musicVolume: normalizeVolumePercent(byId('settingsSoundMusicVolume')?.value, 45),
+    announcer: Boolean(byId('settingsSoundAnnouncer')?.checked)
+  };
+}
+
+function updateSoundSettingsStatus(settings) {
+  const statusNode = byId('settingsSoundStatus');
+  if (!statusNode) return;
+  statusNode.textContent = settings.enabled ? tr('settings_sound_status_on') : tr('settings_sound_status_off');
+}
+
+function renderSoundSettings() {
+  const enabledNode = byId('settingsSoundEnabled');
+  const uiNode = byId('settingsSoundUiVolume');
+  const musicNode = byId('settingsSoundMusicVolume');
+  const announcerNode = byId('settingsSoundAnnouncer');
+  const uiValueNode = byId('settingsSoundUiVolumeValue');
+  const musicValueNode = byId('settingsSoundMusicVolumeValue');
+
+  if (!enabledNode && !uiNode && !musicNode && !announcerNode) return;
+
+  const settings = loadSoundSettings();
+  if (enabledNode) enabledNode.checked = settings.enabled;
+  if (uiNode) uiNode.value = String(settings.uiVolume);
+  if (musicNode) musicNode.value = String(settings.musicVolume);
+  if (announcerNode) announcerNode.checked = settings.announcer;
+  if (uiValueNode) uiValueNode.textContent = `${settings.uiVolume}%`;
+  if (musicValueNode) musicValueNode.textContent = `${settings.musicVolume}%`;
+  updateSoundSettingsStatus(settings);
+  applySoundSettingsToDocument(settings);
+}
+
+function persistSoundSettingsFromUi() {
+  const settings = saveSoundSettings(collectSoundSettingsFromUi());
+  const uiValueNode = byId('settingsSoundUiVolumeValue');
+  const musicValueNode = byId('settingsSoundMusicVolumeValue');
+  if (uiValueNode) uiValueNode.textContent = `${settings.uiVolume}%`;
+  if (musicValueNode) musicValueNode.textContent = `${settings.musicVolume}%`;
+  updateSoundSettingsStatus(settings);
+}
+
+function resetSoundSettingsFromUi() {
+  saveSoundSettings(defaultSoundSettings());
+  renderSoundSettings();
+  setLegalStatus(tr('settings_sound_reset_done'), 'success');
+}
+
+async function playSoundPreviewFromUi() {
+  const settings = loadSoundSettings();
+  if (!settings.enabled) {
+    setLegalStatus(tr('settings_sound_disabled_hint'), 'warning');
+    return;
+  }
+
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) {
+    setLegalStatus(tr('settings_sound_unsupported'), 'error');
+    return;
+  }
+
+  try {
+    const ctx = new AudioCtx();
+    const gain = ctx.createGain();
+    const osc = ctx.createOscillator();
+    const volume = Math.max(0.05, settings.uiVolume / 100);
+    const now = ctx.currentTime;
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(volume * 0.65, now + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.34);
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(660, now);
+    osc.frequency.exponentialRampToValueAtTime(1080, now + 0.18);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.35);
+
+    window.setTimeout(() => {
+      ctx.close().catch(() => {});
+    }, 500);
+    setLegalStatus(tr('settings_sound_test_played'), 'info');
+  } catch {
+    setLegalStatus(tr('settings_sound_test_failed'), 'error');
+  }
+}
+
+function collectPrivacyExportPayload() {
+  const syncCfg = loadSyncApiConfig();
+  const fbCfg = loadFirebaseConfig();
+  const fbAuth = loadFirebaseAuthState();
+  return {
+    exportedAt: new Date().toISOString(),
+    app: 'F1 Clash Companion Ultimate',
+    profile: loadRegistrationProfile(),
+    activeProfileId: getActiveProfileIdLocal(),
+    syncConsent: loadSyncConsent(),
+    syncConfig: {
+      baseUrl: syncCfg.baseUrl || '',
+      clientId: syncCfg.clientId || '',
+      endpoint: syncCfg.endpoint || '',
+      tokenStored: Boolean(syncCfg.token)
+    },
+    firebase: {
+      projectId: fbCfg.projectId || '',
+      apiKeyStored: Boolean(fbCfg.apiKey),
+      userEmail: fbAuth?.email || '',
+      userId: fbAuth?.localId || '',
+      refreshTokenStored: Boolean(fbAuth?.refreshToken),
+      autoSyncEnabled: loadFirebaseAutoSyncEnabled()
+    },
+    sound: loadSoundSettings(),
+    localStorageKeys: Object.keys(localStorage).filter((key) => String(key).startsWith('f1clash'))
+  };
+}
+
+function downloadJson(filename, data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportPrivacyDataFromUi() {
+  const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+  downloadJson(`f1clash-privacy-export-${stamp}.json`, collectPrivacyExportPayload());
+  setLegalStatus(tr('settings_legal_export_done'), 'success');
+}
+
+function clearLocalDataFromUi() {
+  if (!window.confirm(tr('settings_legal_clear_confirm'))) return;
+
+  const langKey = window.AppI18n?.LANG_KEY || 'f1clashLang';
+  const keepLang = localStorage.getItem(langKey);
+  const localKeys = Object.keys(localStorage);
+  localKeys.forEach((key) => {
+    if (String(key).startsWith('f1clash') && key !== langKey) {
+      localStorage.removeItem(key);
+    }
+  });
+
+  const sessionKeys = Object.keys(sessionStorage);
+  sessionKeys.forEach((key) => {
+    if (String(key).startsWith('f1clash')) {
+      sessionStorage.removeItem(key);
+    }
+  });
+
+  if (keepLang != null) {
+    localStorage.setItem(langKey, keepLang);
+  }
+
+  ownedParts = loadOwnedParts();
+  renderDashboardSettingsProfile();
+  renderSyncConsentState();
+  renderFirebaseAuthState();
+  renderSoundSettings();
+  updateKpis();
+
+  setLegalStatus(tr('settings_legal_clear_done'), 'warning');
+  setSyncResult(tr('settings_legal_clear_done_short'));
+}
+
+function openSettingsOverlay() {
+  const overlay = byId('settingsOverlay');
+  if (!overlay) return;
+  renderDashboardSettingsProfile();
+  renderSyncConsentState();
+  renderSyncModeLabel();
+  renderFirebaseConfigState();
+  renderFirebaseAuthState();
+  renderSoundSettings();
+  overlay.hidden = false;
+  document.body.classList.add('settings-overlay-open');
+}
+
+function closeSettingsOverlay() {
+  const overlay = byId('settingsOverlay');
+  if (!overlay) return;
+  overlay.hidden = true;
+  document.body.classList.remove('settings-overlay-open');
+}
+
+function initDashboardSettingsOverlay() {
+  const overlay = byId('settingsOverlay');
+  const button = byId('settingsOverlayButton');
+  if (!overlay || !button) return;
+
+  addListener('settingsOverlayButton', 'click', openSettingsOverlay);
+  addListener('settingsOverlayClose', 'click', closeSettingsOverlay);
+  overlay.addEventListener('click', (event) => {
+    const target = event.target;
+    if (target instanceof HTMLElement && target.dataset.settingsClose === 'true') {
+      closeSettingsOverlay();
+    }
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !overlay.hidden) closeSettingsOverlay();
+  });
 }
 
 function collectFirebaseAuthCredentials() {
@@ -1105,6 +1409,7 @@ function applyPlayerCloudPayload(payload) {
   if (hasUi('partsInventory')) buildInventory();
   if (hasUi('driversStandardList')) buildDriverInventory();
   updateKpis();
+  renderDashboardSettingsProfile();
 
     if (isOptimizerPageContext()) {
       optimizeSelectedTrack();
@@ -1376,6 +1681,7 @@ function initSyncConsentPanel() {
   renderSyncModeLabel();
   renderFirebaseConfigState();
   renderFirebaseAuthState();
+  renderSoundSettings();
   addListener('f1SyncGrantButton', 'click', saveSyncConsentFromUi);
   addListener('f1SyncRevokeButton', 'click', revokeSyncConsentFromUi);
   addListener('f1SyncFetchButton', 'click', runSyncFetchFlow);
@@ -1409,6 +1715,14 @@ function initSyncConsentPanel() {
   addListener('firebaseLoadButton', 'click', () => {
     loadPlayerFromFirebase().catch((error) => setSyncResult(error.message || String(error)));
   });
+  addListener('settingsExportDataButton', 'click', exportPrivacyDataFromUi);
+  addListener('settingsClearDataButton', 'click', clearLocalDataFromUi);
+  addListener('settingsSoundEnabled', 'change', persistSoundSettingsFromUi);
+  addListener('settingsSoundUiVolume', 'input', persistSoundSettingsFromUi);
+  addListener('settingsSoundMusicVolume', 'input', persistSoundSettingsFromUi);
+  addListener('settingsSoundAnnouncer', 'change', persistSoundSettingsFromUi);
+  addListener('settingsSoundTestButton', 'click', playSoundPreviewFromUi);
+  addListener('settingsSoundResetButton', 'click', resetSoundSettingsFromUi);
   addListener('f1SyncPreviewMock', 'click', previewMockSnapshot);
   addListener('f1SyncMockMode', 'change', renderSyncModeLabel);
   addListener('f1SyncMethod', 'change', () => {
@@ -2875,7 +3189,7 @@ function buildInventory() {
       <div class="part-meta" data-part-quality="${part.name}">Kategorie: ${part.category} | Qualität: ${quality}</div>
       <div class="part-meta" data-part-legend="${part.name}">${renderPartLegendStats(part, level, mod)}</div>
       <div class="part-meta" data-part-updated="${part.name}">Letztes Update: ${updatedAtText}</div>
-      <button class="part-ownership" type="button">${owned ? 'Im Besitz' : 'Nicht im Besitz'}</button>
+      <button class="part-ownership" type="button">${owned ? tr('inventory_owned') : tr('inventory_not_owned')}</button>
       <div class="part-controls">
         <label for="part_level_${part.dbId || part.name}">Level</label>
         <select id="part_level_${part.dbId || part.name}">${PART_LEVELS.map((lvl) => `<option value="${lvl}" ${lvl === level ? 'selected' : ''}>Level ${lvl}</option>`).join('')}</select>
@@ -3056,6 +3370,7 @@ function buildDriverInventory() {
 
   driversDb.forEach((driver) => {
     const stage = DRIVER_STAGES.includes(stageMap[driver.name]?.stage) ? stageMap[driver.name].stage : 'S1';
+    const owned = !!(stageMap[driver.name] && DRIVER_STAGES.includes(stageMap[driver.name].stage));
     const rank = qualityRanks[driver.name] || 1;
     const corePoolTag = USER_CORE_DRIVER_POOL.has(driver.name) ? 'Core Pool' : 'Extended Pool';
     const updatedAtText = formatLocalDateTime(stageMap[driver.name]?.updatedAt);
@@ -3069,11 +3384,13 @@ function buildDriverInventory() {
       <div class="driver-meta">Seltenheit: ${driver.rarity} | Qualität ${rank}/10 | ${corePoolTag}</div>
       <div class="driver-meta" data-driver-legend="${driver.name}">${renderDriverLegendStats(driver, stage)}</div>
       <div class="driver-meta" data-driver-updated="${driver.name}">Letztes Update: ${updatedAtText}</div>
+      <button class="part-ownership driver-ownership" type="button">${owned ? tr('inventory_owned') : tr('inventory_not_owned')}</button>
       <div class="driver-controls">
         <label for="driver_stage_${driver.name.replace(/\s+/g, '_')}">Stufe</label>
         <select id="driver_stage_${driver.name.replace(/\s+/g, '_')}">${DRIVER_STAGES.map((entry) => `<option value="${entry}" ${entry === stage ? 'selected' : ''}>${entry}</option>`).join('')}</select>
       </div>
     `;
+    card.style.opacity = owned ? '1' : '.45';
 
     const targetType = driverEditionType(driver);
     let targetWrap = standardWrap;
@@ -3104,6 +3421,20 @@ function buildDriverInventory() {
       });
       applyCandidate();
     }
+
+    const ownBtn = card.querySelector('.driver-ownership');
+    ownBtn?.addEventListener('click', () => {
+      if (stageMap[driver.name] && DRIVER_STAGES.includes(stageMap[driver.name].stage)) {
+        delete stageMap[driver.name];
+      } else {
+        stageMap[driver.name] = {
+          stage,
+          updatedAt: new Date().toISOString()
+        };
+      }
+      saveDriverStageMap(stageMap);
+      buildDriverInventory();
+    });
 
     const select = card.querySelector('select');
     select?.addEventListener('change', (event) => {
@@ -4628,8 +4959,10 @@ function registerServiceWorker() {
 }
 
 function rerenderLocalizedRuntime() {
+  renderDashboardSettingsProfile();
   renderSyncConsentState();
   renderSyncModeLabel();
+  renderSoundSettings();
   renderCommunityTrackInsight(byId('trackSelect')?.value || byId('strategyTrackSelect')?.value || '');
   renderCommunityTrackInsight(byId('builderTrackSelect')?.value || byId('trackSelect')?.value || '', 'communityBuilderInsight');
   if (hasUi('trackRadarChart') && shouldAutoRunHeavyTasks()) renderTrackRadar();
@@ -4665,6 +4998,7 @@ async function init() {
   document.addEventListener('app:language-changed', rerenderLocalizedRuntime);
   setupNeonButtonPalette();
   applyActiveSubnavByPath();
+  initDashboardSettingsOverlay();
   registerServiceWorker();
   await detectSeason();
   ensureAllClashReferenceKnowledgeUpToDate();

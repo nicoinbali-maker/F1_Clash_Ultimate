@@ -1014,6 +1014,16 @@ body.main-cockpit {
   font-size: 1.12rem;
 }
 
+.main-cockpit .topbar-side {
+  display: grid;
+  gap: 0.85rem;
+  justify-items: end;
+}
+
+.main-cockpit .settings-launch {
+  min-width: max-content;
+}
+
 .main-cockpit .main-subnav {
   width: min(1180px, 100%);
   margin: 0 auto;
@@ -1241,6 +1251,239 @@ body.main-cockpit {
   margin-top: 1rem;
 }
 
+.main-cockpit .settings-dialog {
+  width: min(1180px, 100%);
+  max-height: min(90vh, 960px);
+}
+
+.main-cockpit .settings-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  overflow: auto;
+  padding-right: 0.2rem;
+}
+
+.main-cockpit .settings-card {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.main-cockpit .settings-card--full {
+  grid-column: 1 / -1;
+}
+
+.main-cockpit .settings-card header {
+  margin: 0;
+}
+
+.main-cockpit .settings-card header h4 {
+  margin: 0;
+}
+
+.main-cockpit .settings-card header p {
+  margin: 0.35rem 0 0;
+}
+
+.main-cockpit .settings-profile-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.7rem;
+}
+
+.main-cockpit .settings-profile-item {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 0.9rem;
+  background: linear-gradient(180deg, rgba(121, 233, 255, 0.03), rgba(255, 154, 61, 0.05));
+  border: 1px solid rgba(121, 233, 255, 0.11);
+}
+
+.main-cockpit .settings-profile-item span {
+  color: var(--main-muted);
+  font-size: 0.8rem;
+}
+
+.main-cockpit .settings-profile-item strong {
+  color: var(--main-text);
+  font-size: 1rem;
+}
+
+.main-cockpit .settings-actions {
+  margin-top: 0.15rem;
+}
+
+.main-cockpit .settings-sync-meta {
+  margin-top: auto;
+}
+
+.main-cockpit .settings-billing-methods {
+  margin-top: 0.55rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.main-cockpit .settings-billing-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(121, 233, 255, 0.24);
+  background: rgba(121, 233, 255, 0.08);
+  color: var(--main-text);
+  font-size: 0.82rem;
+}
+
+.main-cockpit .settings-pricing-wrap {
+  margin-top: 0.25rem;
+}
+
+.main-cockpit .settings-pricing-table {
+  margin-top: 0;
+}
+
+.main-cockpit .settings-pricing-table th,
+.main-cockpit .settings-pricing-table td {
+  white-space: normal;
+  vertical-align: top;
+}
+
+.main-cockpit .settings-legal-list {
+  margin: 0;
+  padding-left: 1.05rem;
+  display: grid;
+  gap: 0.45rem;
+  color: var(--main-text);
+}
+
+.main-cockpit .settings-legal-details {
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(121, 233, 255, 0.04);
+}
+
+.main-cockpit .settings-legal-details summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.main-cockpit .settings-legal-details p {
+  margin: 0.55rem 0 0;
+  color: var(--main-muted);
+}
+
+.main-cockpit .settings-sound-toggle-row {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.main-cockpit .settings-sound-status {
+  font-size: 0.84rem;
+  color: var(--main-text);
+  border-radius: 999px;
+  padding: 0.28rem 0.7rem;
+  border: 1px solid rgba(121, 233, 255, 0.22);
+  background: rgba(121, 233, 255, 0.1);
+}
+
+.main-cockpit .settings-sound-grid {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) minmax(160px, 2fr) auto;
+  gap: 0.55rem 0.75rem;
+  align-items: center;
+}
+
+.main-cockpit .settings-sound-grid input[type='range'] {
+  width: 100%;
+}
+
+.main-cockpit .settings-sound-grid strong {
+  justify-self: end;
+  color: var(--main-text);
+}
+
+.main-cockpit .settings-sound-grid label[for='settingsSoundAnnouncer'] {
+  grid-column: 1 / -1;
+}
+
+.main-cockpit #settingsLegalStatus {
+  margin-top: 0.1rem;
+}
+
+.legal-page .legal-layout {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 1rem;
+}
+
+.legal-page .legal-hero {
+  background: linear-gradient(145deg, rgba(121, 233, 255, 0.08), rgba(255, 153, 102, 0.06));
+}
+
+.legal-page .legal-quicknav {
+  margin-top: 0.7rem;
+}
+
+.legal-page .legal-section {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.legal-page .legal-subsection {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.8rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(121, 233, 255, 0.13);
+  background: rgba(121, 233, 255, 0.04);
+}
+
+.legal-page .legal-subsection h4 {
+  margin: 0;
+}
+
+.legal-page .legal-list {
+  margin: 0;
+  padding-left: 1.05rem;
+  display: grid;
+  gap: 0.42rem;
+}
+
+.legal-page .legal-updated {
+  margin-top: 0.2rem;
+}
+
+@media print {
+  body.legal-page {
+    background: #fff;
+    color: #000;
+  }
+
+  .legal-page .lang-bar,
+  .legal-page .main-subnav,
+  .legal-page .topbar-side,
+  .legal-page .legal-quicknav,
+  .legal-page .footer {
+    display: none !important;
+  }
+
+  .legal-page .neon-card,
+  .legal-page .panel {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    background: #fff !important;
+    color: #111 !important;
+  }
+}
+
 .main-cockpit .qr-grid {
   margin-top: 0.9rem;
   display: grid;
@@ -1388,10 +1631,24 @@ body.main-cockpit {
     grid-template-columns: 1fr;
   }
 
+  .main-cockpit .topbar-side,
   .main-cockpit .season-control,
+  .main-cockpit .settings-sections,
   .main-cockpit .main-hero-stats,
   .main-cockpit .db-row {
     grid-template-columns: 1fr;
+  }
+
+  .main-cockpit .topbar-side {
+    justify-items: stretch;
+  }
+
+  .main-cockpit .settings-sound-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .main-cockpit .settings-sound-grid strong {
+    justify-self: start;
   }
 }
 
