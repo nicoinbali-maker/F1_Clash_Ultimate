@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>F1 Clash Companion 2026 - Rechtliches</title>
+  <meta name="theme-color" content="#0a0d17" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/ferrari2000_candyred_192.png" />
+  <link rel="apple-touch-icon" href="assets/ferrari2000_candyred_192.png" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="i18n.js"></script>
+  <script defer src="script.js"></script>
+</head>
+<body class="neon-body main-cockpit legal-page">
+  <div class="app-shell">
+    <div class="lang-bar neon-card app-lang-bar" style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 1.2rem;">
+      <span data-i18n="lang_label" style="color:var(--text-muted,#9aa2c0);font-size:0.9rem;">Sprache</span>
+      <select id="appLangSelect" style="background:#0d0f1e;color:#f7f8fc;border:1px solid rgba(255,255,255,.18);border-radius:0.5rem;padding:0.3rem 0.7rem;font-size:0.9rem;cursor:pointer;">
+        <option value="de">Deutsch</option>
+        <option value="it">Italiano</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+
+    <header class="topbar neon-card main-topbar">
+      <div class="brand">
+        <img src="assets/ferrari2000_candyred_192.png" alt="F1 Clash Companion" class="brand-icon" />
+        <div>
+          <h1>F1 Clash Companion</h1>
+          <p data-i18n="legal_intro">Rechtliches, Datenschutz und Nutzungsrahmen transparent auf einen Blick.</p>
+        </div>
+      </div>
+      <div class="topbar-side">
+        <a href="index.html" class="pill ghost-link" data-i18n="legal_back_dashboard">Zurueck zum Dashboard</a>
+        <button class="pill" type="button" onclick="window.print()" data-i18n="legal_print_btn">Drucken / PDF</button>
+      </div>
+    </header>
+
+    <nav class="subnav neon-card main-subnav">
+      <a href="index.html" data-i18n="nav_dashboard">Dashboard</a>
+      <a href="garage.html" data-i18n="nav_garage">Garage</a>
+      <a href="fahrerlager.html" data-i18n="nav_paddock">Fahrerlager</a>
+      <a href="boosts.html">Boosts</a>
+      <a href="optimizer.html" data-i18n="nav_optimizer">Optimizer</a>
+      <a href="sync.html" data-i18n="nav_sync">Account-Sync</a>
+      <a href="team.html" data-i18n="nav_clan">Clan</a>
+      <a href="leaderboard.html" data-i18n="nav_leaderboard">Leaderboard</a>
+      <a href="hall-of-fame.html" data-i18n="nav_hof">Hall of Fame</a>
+      <a href="personal.html" data-i18n="nav_personal">Persoenlich</a>
+      <a href="registration.html?next=legal.html" data-i18n="nav_registration">Registrierung</a>
+      <a href="legal.html" class="is-active" aria-current="page" data-i18n="nav_legal">Rechtliches</a>
+    </nav>
+
+    <main class="legal-layout">
+      <section class="panel neon-card legal-hero" aria-labelledby="legalTitle">
+        <header>
+          <h2 id="legalTitle" data-i18n="legal_h1">Rechtliches und Datenschutz</h2>
+          <p data-i18n="legal_intro">Rechtliches, Datenschutz und Nutzungsrahmen transparent auf einen Blick.</p>
+        </header>
+        <div class="main-hero-actions legal-quicknav">
+          <a href="#imprint" class="pill ghost-link" data-i18n="legal_quick_imprint">Impressum</a>
+          <a href="#privacy" class="pill ghost-link" data-i18n="legal_quick_privacy">Datenschutz</a>
+          <a href="#terms" class="pill ghost-link" data-i18n="legal_quick_terms">Nutzungsbedingungen</a>
+          <a href="#billing" class="pill ghost-link" data-i18n="legal_quick_billing">Abo und Bezahlung</a>
+        </div>
+      </section>
+
+      <section id="imprint" class="panel neon-card legal-section" aria-labelledby="imprintTitle">
+        <header>
+          <h3 id="imprintTitle" data-i18n="legal_imprint_title">Impressum</h3>
+        </header>
+        <p data-i18n="legal_imprint_placeholder">Bitte hier Anbieter, Kontakt, Anschrift und ggf. Vertretungsberechtigte ergaenzen. Dieser Platzhalter muss vor produktivem Einsatz ersetzt werden.</p>
+      </section>
+
+      <section id="privacy" class="panel neon-card legal-section" aria-labelledby="privacyTitle">
+        <header>
+          <h3 id="privacyTitle" data-i18n="legal_privacy_title">Datenschutz</h3>
+        </header>
+        <p data-i18n="legal_privacy_intro">Die Anwendung verarbeitet nur Daten, die du aktiv eingibst oder importierst.</p>
+        <ul class="legal-list">
+          <li data-i18n="legal_privacy_local">Lokale Speicherung: Profil, Setup, Inventar und Einstellungen werden lokal auf deinem Geraet gespeichert.</li>
+          <li data-i18n="legal_privacy_cloud">Cloud-Speicherung: Firebase-Funktionen werden nur nach aktiver Zustimmung genutzt.</li>
+          <li data-i18n="legal_privacy_retention">Datenkontrolle: Du kannst jederzeit einen Datenschutz-Export erstellen und lokale Daten loeschen.</li>
+        </ul>
+
+        <section class="legal-subsection" aria-labelledby="rightsTitle">
+          <h4 id="rightsTitle" data-i18n="legal_rights_title">Deine Rechte</h4>
+          <ul class="legal-list">
+            <li data-i18n="legal_rights_export">Auskunft/Export: Nutze im Einstellungen-Overlay den Button Datenschutz-Export erstellen.</li>
+            <li data-i18n="legal_rights_delete">Loeschung: Nutze Lokale Daten loeschen, um alle lokalen F1-Clash-Daten auf diesem Geraet zu entfernen.</li>
+          </ul>
+        </section>
+      </section>
+
+      <section id="terms" class="panel neon-card legal-section" aria-labelledby="termsTitle">
+        <header>
+          <h3 id="termsTitle" data-i18n="legal_terms_title">Nutzungsbedingungen</h3>
+        </header>
+        <ul class="legal-list">
+          <li data-i18n="legal_terms_tool">Das Tool unterstuetzt Spielplanung und Datenorganisation, ersetzt aber keine offiziellen Spielregeln.</li>
+          <li data-i18n="legal_terms_noliability">Es besteht keine Gewaehr fuer staendige Verfuegbarkeit externer APIs oder Drittanbieter-Dienste.</li>
+          <li data-i18n="legal_terms_changes">Features, Preise und Integrationen koennen bei Updates angepasst werden.</li>
+        </ul>
+      </section>
+
+      <section id="billing" class="panel neon-card legal-section" aria-labelledby="billingTitle">
+        <header>
+          <h3 id="billingTitle" data-i18n="legal_billing_title">Abo und Bezahlung</h3>
+        </header>
+        <ul class="legal-list">
+          <li data-i18n="legal_billing_prices">Aktuelle Abo-Preise werden in den Einstellungen als Referenz angezeigt und koennen kuenftig je Plattform variieren.</li>
+          <li data-i18n="legal_billing_methods">Unterstuetzte Methoden: Kartenzahlung, PayPal sowie Apple Pay/Google Pay (plattformabhaengig).</li>
+          <li data-i18n="legal_billing_cancel">Verwaltung, Verlaengerung und Kuendigung erfolgen ueber den jeweiligen Store/Abrechnungsanbieter.</li>
+        </ul>
+      </section>
+
+      <section class="panel neon-card legal-section" aria-labelledby="contactTitle">
+        <header>
+          <h3 id="contactTitle" data-i18n="legal_contact_title">Kontakt</h3>
+        </header>
+        <p data-i18n="legal_contact_text">Bei Datenschutzfragen oder rechtlichen Anfragen nutze bitte die im Impressum angegebenen Kontaktdaten.</p>
+        <p class="hint legal-updated" data-i18n="legal_last_update">Stand: 15.03.2026</p>
+      </section>
+    </main>
+
+    <footer class="footer neon-card">
+      <p data-i18n="copyright">Copyright © Sunwalker NP</p>
+    </footer>
+  </div>
+</body>
+</html>

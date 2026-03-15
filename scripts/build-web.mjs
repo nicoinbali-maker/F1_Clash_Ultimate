@@ -14,6 +14,7 @@ const files = [
   'personal.html',
   'registration.html',
   'hall-of-fame.html',
+  'legal.html',
   'hallOfFame.js',
   'i18n.js',
   'script.js',
