@@ -7,6 +7,8 @@ const dist = resolve(root, 'dist');
 const files = [
   'index.html',
   'garage.html',
+  'fahrerlager.html',
+  'boosts.html',
   'optimizer.html',
   'sync.html',
   'team.html',
@@ -15,10 +17,14 @@ const files = [
   'registration.html',
   'hall-of-fame.html',
   'legal.html',
+  'track-selection.html',
   'hallOfFame.js',
   'i18n.js',
   'script.js',
   'advanced.js',
+  'boosts.js',
+  'boots-data.js',
+  'optimizer-lite.js',
   'style.css',
   'manifest.json',
   'sw.js'
